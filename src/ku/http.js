@@ -90,7 +90,7 @@ ku.Http.prototype = {
             return;
         }
 
-        if (ku.isModel(data)) {
+        if (ku.utils.isModel(data)) {
             data = data.raw();
         }
 

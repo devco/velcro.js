@@ -12,54 +12,67 @@ if (typeof ko === 'undefined') {
     throw 'KnockoutJS is required. Download at https://github.com/SteveSanderson/knockout.';
 }
 
-ku.bindings = {
-    model: function(element, value) {
-        if (this.attr(element, 'view')) {
-            return;
+ku.App = function() {
+    this.attributePrefix = 'data-ku-';
+    this.bindings        = ku.defaultBindings;
+    this.context         = null;
+};
+
+ku.App.prototype = {
+    run: function(element, context) {
+        if (!context) {
+            context = element;
+            element = document;
         }
 
-        ko.applyBindings(this.get(value), element);
+        this.context = context;
+        this.bindAll(element);
     },
 
-    router: function(element, value) {
-        var router = this.get(value);
-
-        if (!router) {
-            ku.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it does not exist.');
-        }
-
-        if (!router instanceof this.Router) {
-            ku.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it is not an instanceof "ku.Router".');
-        }
-
-        router.view.target = element;
-        router.bind();
+    bindAll: function(element) {
+        this.bindOne(element);
+        this.bindDescendants(element);
+        return this;
     },
 
-    view: function(element, value) {
-        var path  = this.attr(element, 'path'),
-            model = this.get(this.attr(element, 'model')),
-            view;
+    bindOne: function(element) {
+        var $this = this;
 
-        if (path) {
-            view = this.get(value);
-        } else {
-            var prefix = this.attr(element, 'prefix'),
-                suffix = this.attr(element, 'suffix');
+        each(element.attributes, function(i, node) {
+            var name = node.nodeName.substring($this.attributePrefix.length);
 
-            view = new ku.View();
-
-            if (prefix) {
-                view.http.prefix = prefix;
+            if (typeof $this.bindings[name] === 'function') {
+                $this.bindAttribute(element, name, ku.utils.parseBinding(node.nodeValue, $this.context));
             }
+        });
 
-            if (suffix) {
-                view.http.suffix = suffix;
+        return this;
+    },
+
+    bindDescendants: function(parent) {
+        var $this = this;
+
+        each(parent.childNodes, function(index, element) {
+            $this.bindAll(element, $this.context);
+        });
+
+        return this;
+    },
+
+    bindAttribute: function(element, name, context) {
+        var $this = this;
+
+        this.bindings[name].call($this, element, context);
+
+        each(context, function(index, value) {
+            if (typeof value.subscribe === 'function') {
+                value.subscribe(function() {
+                    $this.bindAttribute(element, name, context);
+                });
             }
-        }
+        });
 
-        view.target = element;
-        view.render(path, model);
+        return this;
     }
 };
 ku.collection = function(model) {
@@ -135,7 +148,7 @@ ku.collection = function(model) {
         };
 
         this.insert = function(at, item) {
-            item         = ku.isModel(item) ? item : new model(item);
+            item         = ku.utils.isModel(item) ? item : new model(item);
             item.$parent = this.$parent;
 
             Array.prototype.splice.call(this, at, 0, item);
@@ -145,7 +158,7 @@ ku.collection = function(model) {
         };
 
         this.replace = function (at, item) {
-            item         = ku.isModel(item) ? item : new model(item);
+            item         = ku.utils.isModel(item) ? item : new model(item);
             item.$parent = this.$parent;
 
             Array.prototype.splice.call(this, at, 1, item);
@@ -170,7 +183,7 @@ ku.collection = function(model) {
         this.from = function(data) {
             var that = this;
 
-            if (ku.isCollection(data)) {
+            if (ku.utils.isCollection(data)) {
                 data = data.raw();
             }
 
@@ -206,7 +219,7 @@ ku.collection = function(model) {
             var collection     = new this.$self.Model.Collection();
             collection.$parent = this.$parent;
 
-            if (ku.isModel(query)) {
+            if (ku.utils.isModel(query)) {
                 query = query.raw();
             }
 
@@ -268,33 +281,65 @@ ku.collection = function(model) {
 
     return Collection;
 };
-var globals = {};
-
-ku.set = function(name, value) {
-    globals[name] = value;
-
-    return this;
+ku.Context = function(data) {
+    this.data   = data || {};
+    this.parent = null;
 };
 
-ku.get = function(name) {
-    return this.has(name) ? globals[name] : null;
-};
+ku.Context.prototype = {
+    get: function(name) {
+        if (this.has(name)) {
+            return this.data[name];
+        }
+    },
 
-ku.has = function(name) {
-    return typeof globals[name] !== 'undefined';
-};
+    set: function(name, value) {
+        this.data[name] = value;
+        return this;
+    },
 
-ku.remove = function(name) {
-    if (this.has(name)) {
-        delete globals[name];
+    has: function(name, value) {
+        return typeof this.data[name] !== 'undefined';
+    },
+
+    remove: function(name, value) {
+        if (this.has(name)) {
+            delete this.data[name];
+        }
+        return this;
     }
-
-    return this;
 };
+ku.defaultBindings = {
+    context: function(element, context) {
+        this.context = context.context();
+    },
 
-ku.reset = function() {
-    globals = {};
-    return this;
+    include: function(element, context) {
+        var view = context.view || new ku.View();
+
+        view.target = element;
+
+        view.render(context.path, context.context);
+    },
+
+    routable: function(element, context) {
+        var router = context.router;
+
+        if (!router) {
+            ku.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it does not exist.');
+        }
+
+        if (!router instanceof ku.Router) {
+            ku.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it is not an instanceof "ku.Router".');
+        }
+
+        router.view.target = element;
+        router.bind();
+    },
+
+    text: function(element, context) {
+        element.innerText = context.text();
+    }
 };
 ku.Event = function() {
     this.stack = [];
@@ -462,7 +507,7 @@ ku.Http.prototype = {
             return;
         }
 
-        if (ku.isModel(data)) {
+        if (ku.utils.isModel(data)) {
             data = data.raw();
         }
 
@@ -565,119 +610,6 @@ function generateObserver(obj) {
         owner: obj
     });
 }
-ku.prefix = 'data-ku-';
-
-ku.element = document;
-
-ku.run = function(element) {
-    element = element || this.element;
-
-    if (typeof element === 'function') {
-        element = element();
-    }
-
-    if (typeof element === 'string') {
-        element = document.getElementById(element);
-    }
-
-    if (element !== document) {
-        ku.bindOne(element);
-    }
-
-    ku.bindDescendants(element);
-};
-
-ku.bindOne = function(element) {
-    var self = this;
-
-    each(element.attributes, function(i, node) {
-        if (node.name.indexOf(self.prefix) === 0) {
-            var name = node.name.substring(self.prefix.length);
-
-            if (typeof self.bindings[name] === 'function') {
-                self.bindings[name].call(self, element, node.value);
-            }
-        }
-    });
-};
-
-ku.bindDescendants = function(element) {
-    each(element.childNodes, function(i, el) {
-        ku.run(el);
-    });
-};
-
-ku.attr = function(element, attribute, value) {
-    attribute = ku.prefix + attribute;
-
-    if (typeof value === 'undefined') {
-        if (element.getAttribute) {
-            return element.getAttribute(attribute);
-        }
-
-        return typeof element[attribute] === 'undefined' ? null : element[attribute];
-    }
-
-    if (!value) {
-        if (element.removeAttribute) {
-            element.removeAttribute(attribute);
-        } else if (typeof element[attribute] !== 'undefined') {
-            delete element[attribute];
-        }
-
-        return this;
-    }
-
-    if (element.setAttribute) {
-        element.setAttribute(attribute, value);
-    } else {
-        element[attribute] = value;
-    }
-
-    return this;
-};
-
-ku.outerHtml = function(element) {
-    var div = document.createElement('div');
-    div.appendChild(element);
-    return div.innerHTML;
-};
-
-ku.throwForElement = function(element, message) {
-    throw message + "\n" + ku.outerHtml(element);
-};
-
-ku.isReader = function(name) {
-    return name.indexOf('read') === 0;
-};
-
-ku.isWriter = function(name) {
-    return name.indexOf('write') === 0;
-};
-
-ku.toReader = function(name) {
-    return 'read' + name.substring(0, 1).toUpperCase() + name.substring(1);
-};
-
-ku.toWriter = function(name) {
-    return 'write' + name.substring(0, 1).toUpperCase() + name.substring(1);
-};
-
-ku.fromReader = function(name) {
-    return name.substring(4, 5).toLowerCase() + name.substring(5);
-};
-
-ku.fromWriter = function(name) {
-    return name.substring(5, 6).toLowerCase() + name.substring(6);
-};
-
-ku.isModel = function(fn) {
-    return fnCompare(fn, ku.model().toString());
-};
-
-ku.isCollection = function(fn) {
-    return fnCompare(fn, ku.collection().toString());
-};
 ku.model = function(definition) {
     var Model = function(data) {
         var that = this;
@@ -689,7 +621,7 @@ ku.model = function(definition) {
         };
 
         this.from = function(obj) {
-            if (ku.isModel(obj)) {
+            if (ku.utils.isModel(obj)) {
                 obj = obj.raw();
             }
 
@@ -750,7 +682,7 @@ ku.model = function(definition) {
     Model.prototype.$self = Model;
 
     Model.extend = function(OtherModel) {
-        OtherModel = ku.isModel(OtherModel) ? OtherModel : ku.model(OtherModel);
+        OtherModel = ku.utils.isModel(OtherModel) ? OtherModel : ku.model(OtherModel);
 
         each(Model.computed, function(i, v) {
             if (typeof OtherModel.computed[i] === 'undefined') {
@@ -790,7 +722,7 @@ ku.model = function(definition) {
 
 function interpretDefinition(Model, definition) {
     each(definition, function(i, v) {
-        if (ku.isModel(v) || ku.isCollection(v)) {
+        if (ku.utils.isModel(v) || ku.utils.isCollection(v)) {
             Model.relations[i] = v;
             return;
         }
@@ -1202,6 +1134,69 @@ function dispatch() {
         bound[i].dispatch();
     }
 }
+ku.utils = {
+    parseBinding: function(json, context) {
+        var code = '';
+
+        for (var i in context || {}) {
+            if (i === 'import' || i === 'export' || i === '') {
+                continue;
+            }
+
+            code += 'var ' + i + '=__context[\'' + i + '\'];';
+        }
+
+        code += 'return {' + json + '};';
+
+        try {
+            return new Function('__context', code)(context);
+        } catch (e) {
+            throw 'Error parsing binding "' + json + '" with message: "' + e + '"';
+        }
+    },
+
+    outerHtml: function(element) {
+        var div = document.createElement('div');
+        div.appendChild(element);
+        return div.innerHTML;
+    },
+
+    throwForElement: function(element, message) {
+        throw message + "\n" + ku.outerHtml(element);
+    },
+
+    isReader: function(name) {
+        return name.indexOf('read') === 0;
+    },
+
+    isWriter: function(name) {
+        return name.indexOf('write') === 0;
+    },
+
+    toReader: function(name) {
+        return 'read' + name.substring(0, 1).toUpperCase() + name.substring(1);
+    },
+
+    toWriter: function(name) {
+        return 'write' + name.substring(0, 1).toUpperCase() + name.substring(1);
+    },
+
+    fromReader: function(name) {
+        return name.substring(4, 5).toLowerCase() + name.substring(5);
+    },
+
+    fromWriter: function(name) {
+        return name.substring(5, 6).toLowerCase() + name.substring(6);
+    },
+
+    isModel: function(fn) {
+        return fnCompare(fn, ku.model().toString());
+    },
+
+    isCollection: function(fn) {
+        return fnCompare(fn, ku.collection().toString());
+    }
+};
 ku.View = function() {
     this.cache       = {};
     this.http        = new ku.Http();

@@ -9,7 +9,7 @@ ku.model = function(definition) {
         };
 
         this.from = function(obj) {
-            if (ku.isModel(obj)) {
+            if (ku.utils.isModel(obj)) {
                 obj = obj.raw();
             }
 
@@ -70,7 +70,7 @@ ku.model = function(definition) {
     Model.prototype.$self = Model;
 
     Model.extend = function(OtherModel) {
-        OtherModel = ku.isModel(OtherModel) ? OtherModel : ku.model(OtherModel);
+        OtherModel = ku.utils.isModel(OtherModel) ? OtherModel : ku.model(OtherModel);
 
         each(Model.computed, function(i, v) {
             if (typeof OtherModel.computed[i] === 'undefined') {
@@ -110,7 +110,7 @@ ku.model = function(definition) {
 
 function interpretDefinition(Model, definition) {
     each(definition, function(i, v) {
-        if (ku.isModel(v) || ku.isCollection(v)) {
+        if (ku.utils.isModel(v) || ku.utils.isCollection(v)) {
             Model.relations[i] = v;
             return;
         }

@@ -66,7 +66,7 @@ module.exports = function(grunt) {
         var wrapper     = fs.readFileSync('./' + this.data.wrapper, 'UTF-8') || this.data.wrapper,
             placeholder = this.data.placeholder || '{content}',
             content     = wrapper.replace(placeholder, fs.readFileSync('./' + this.data.file, 'UTF-8'));
-        
+
         fs.writeFileSync(this.data.file, content);
     });
 };

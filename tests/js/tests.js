@@ -3,26 +3,35 @@ var _undefined;
 module('Attribute Bindings');
 
 test('Model', function() {
-    var div = document.createElement('div');
-    div.setAttribute('data-ku-model', 'test.model');
-
+    var div  = document.createElement('div');
     var span = document.createElement('span');
-    span.setAttribute('data-bind', 'text: name');
 
+    div.setAttribute('data-ku-context', 'context: context');
+    span.setAttribute('data-ku-text', 'text: name');
     div.appendChild(span);
 
-    ku.set('test.model', {
-        name: 'test'
+    var Person = ku.model({
+        name: 'Default Value'
     });
 
-    ku.run(div);
+    var App = ku.model({
+        context: Person
+    });
 
-    ok(div.childNodes[0].innerHTML === 'test', 'Inner text on div\'s child span should update.');
+    var app = new App;
+
+    new ku.App().run(div, app);
+
+    ok(div.childNodes[0].innerText === app.context().name(), 'Inner text on div child should be initialised.');
+
+    app.context().name('Updated Value');
+
+    ok(div.childNodes[0].innerText === app.context().name(), 'Inner text on div child should be updated.');
 });
 
 asyncTest('Router', function() {
     var div = document.createElement('div');
-    div.setAttribute('data-ku-router', 'test.router');
+    div.setAttribute('data-ku-routable', 'router: router');
 
     var router = new ku.Router();
     router.view.http.events.on('success', function() {
@@ -35,28 +44,32 @@ asyncTest('Router', function() {
         };
     });
 
-    ku.set('test.router', router);
-    ku.run(div);
-    ku.get('test.router').go('index');
+    new ku.App().run(div, {
+        router: router
+    });
+
+    router.go('index');
 });
+
+/*
 
 asyncTest('View', function() {
     var div = document.createElement('div');
-    div.setAttribute('data-ku-view', 'test.view');
-    div.setAttribute('data-ku-path', 'index');
-    div.setAttribute('data-ku-model', 'test.model');
+    div.setAttribute('data-ku-view', 'index');
+    div.setAttribute('data-ku-model', 'model');
 
-    ku.set('test.view', new ku.View());
-    ku.set('test.model', {
-        name: 'test'
-    });
-
-    ku.get('test.view').http.events.on('success', function() {
+    var view = new ku.View();
+    view.http.events.on('success', function() {
         ok(div.childNodes[0].innerHTML === 'test', 'Inner text on div\'s child span should update.');
         start();
     });
 
-    ku.run(div);
+    new ku.App().run(div, {
+        model: {
+            name: 'test'
+        },
+        view: view
+    });
 });
 
 
@@ -303,3 +316,5 @@ test('Overloading Data and Callback Parameters', function() {
         ok(r.data.arg === 'yes');
     });
 });
+
+*/
