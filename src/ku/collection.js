@@ -2,7 +2,7 @@ ku.collection = function(model) {
     var Collection = function(data) {
         Array.prototype.push.apply(this, []);
 
-        this.observer = generateObserver(this);
+        this.observer = generateValueObserver(this);
 
         this.aggregate = function(joiner, fields) {
             var arr = [];
@@ -49,7 +49,7 @@ ku.collection = function(model) {
             if (this.has(at)) {
                 Array.prototype.splice.call(this, at, 1);
 
-                this.observer.notifySubscribers();
+                this.observer.publish();
             }
 
             return this;
@@ -57,7 +57,7 @@ ku.collection = function(model) {
 
         this.empty = function() {
             Array.prototype.splice.call(this, 0, this.length);
-            this.observer.notifySubscribers();
+            this.observer.publish();
 
             return this;
         };
@@ -75,7 +75,7 @@ ku.collection = function(model) {
             item.$parent = this.$parent;
 
             Array.prototype.splice.call(this, at, 0, item);
-            this.observer.notifySubscribers();
+            this.observer.publish();
 
             return this;
         };
@@ -85,7 +85,7 @@ ku.collection = function(model) {
             item.$parent = this.$parent;
 
             Array.prototype.splice.call(this, at, 1, item);
-            this.observer.notifySubscribers();
+            this.observer.publish();
 
             return this;
         };

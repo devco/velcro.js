@@ -23,6 +23,9 @@ module.exports = function(grunt) {
             }
         },
         jshint: {
+            options: {
+                evil: true
+            },
             files: [
                 'src/ku/*.js',
                 'tests/*.js'

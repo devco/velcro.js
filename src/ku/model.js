@@ -19,7 +19,7 @@ ku.model = function(definition) {
                 }
             });
 
-            this.observer.notifySubscribers();
+            this.observer.publish();
 
             return this;
         };
@@ -118,12 +118,12 @@ function interpretDefinition(Model, definition) {
         if (typeof v === 'function') {
             var name, type;
 
-            if (ku.isReader(i)) {
-                name = ku.fromReader(i);
-                type = 'read';
-            } else if (ku.isWriter(i)) {
-                name = ku.fromWriter(i);
-                type = 'write';
+            if (ku.utils.isReader(i)) {
+                name = ku.utils.fromReader(i);
+                type = 'getter';
+            } else if (ku.utils.isWriter(i)) {
+                name = ku.utils.fromWriter(i);
+                type = 'setter';
             }
 
             if (type) {
@@ -144,7 +144,7 @@ function interpretDefinition(Model, definition) {
 }
 
 function define(obj) {
-    obj.observer = generateObserver(obj);
+    obj.observer = generateValueObserver(obj);
 
     defineComputed(obj);
     defineMethods(obj);
@@ -154,11 +154,10 @@ function define(obj) {
 
 function defineComputed(obj) {
     each(obj.$self.computed, function(name, computed) {
-        obj[name] = ko.computed({
+        obj[name] = ku.value({
             owner: obj,
-            deferEvaluation: true,
-            read: computed.read,
-            write: computed.write
+            getter: computed.getter,
+            setter: computed.setter
         });
     });
 }
@@ -173,11 +172,9 @@ function defineMethods(obj) {
 
 function defineProperties(obj) {
     each(obj.$self.properties, function(name, property) {
-        if (Object.prototype.toString.call(property) === '[object Array]') {
-            obj[name] = ko.observableArray(property);
-        } else {
-            obj[name] = ko.observable(property);
-        }
+        obj[name] = ku.value({
+            value: property
+        });
     });
 }
 

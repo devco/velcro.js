@@ -1,6 +1,7 @@
 var bound = [];
 
 ku.Router = function() {
+    this.app    = new ku.App();
     this.events = new ku.Events();
     this.routes = {};
     this.state  = new ku.State();
@@ -10,9 +11,24 @@ ku.Router = function() {
 };
 
 ku.Router.prototype = {
-    route: false,
+    handler: function(execute) {
+        execute();
+    },
 
-    bind: function() {
+    renderer: function(route, params) {
+        var $this = this;
+
+        this.app.context = route.controller.apply(route.controller, params);
+        this.app.context = new (ku.model(this.app.context))();
+
+        this.view.render(route.view, function() {
+            $this.app.bindDescendants(this.target);
+            $this.events.trigger('render', [$this, route, params]);
+        });
+    },
+
+    bind: function(binder) {
+        this.unbind();
         bound.push(this);
 
         if (!('onpopstate' in window) || (!this.state.enabled || (this.state.enabled && !window.location.hash))) {
@@ -71,52 +87,30 @@ ku.Router.prototype = {
     },
 
     dispatch: function(request) {
+        var $this = this;
+
         if (typeof request === 'undefined') {
             request = this.state.get();
         }
 
+        var executor = function() {
+            $this.renderer(route);
+        };
+
         for (var i in this.routes) {
-            var route  = this.routes[i],
-                params = route.query(request);
+            var route  = this.routes[i];
+            var params = route.query(request);
 
             if (typeof params.length !== 'number') {
                 continue;
             }
 
-            if (this.events.trigger('exit', [this]) === false) {
-                return this;
-            }
-
-            if (this.route && this.events.trigger('exit.' + i, [this, this.route]) === false) {
-                return this;
-            }
-
-            if (this.events.trigger('enter', [this]) === false) {
-                return this;
-            }
-
-            if (this.events.trigger('enter.' + i, [this, route]) === false) {
-                return this;
-            }
-
-            var model = route.controller.apply(route.controller, params);
-
-            if (model && model.constructor === Object) {
-                model = new (ku.model(model))();
-            }
-
-            if (model !== false) {
-                this.view.render(route.view, model);
-            }
-
-            this.route = route;
+            this.events.trigger('match', [this, request, route, params]);
 
             this.state.previous = request;
 
-            return this;
+            this.handler(executor);
         }
-
-        this.route = false;
 
         return this;
     },

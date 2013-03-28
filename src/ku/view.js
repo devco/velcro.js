@@ -19,24 +19,27 @@ ku.View.prototype = {
 
     idSeparator: '-',
 
-    render: function(name, model) {
-        var self = this,
-            id   = this.idPrefix + name.replace(/\//g, this.idSeparator) + this.idSuffix;
+    render: function(name, callback) {
+        var $this = this;
+        var id    = this.idPrefix + name.replace(/\//g, this.idSeparator) + this.idSuffix;
 
         if (this.cache[name]) {
-            this.renderer(this.cache[name], model);
+            this.renderer(this.cache[name]);
+            callback.call(this, name);
         } else if (document.getElementById(id)) {
-            this.renderer(this.cache[name] = document.getElementById(id).innerHTML, model);
+            this.renderer(this.cache[name] = document.getElementById(id).innerHTML);
+            callback.call(this, name);
         } else if (this.http) {
             this.http.get(name, function(html) {
-                self.renderer(self.cache[name] = html, model);
+                $this.renderer($this.cache[name] = html);
+                callback.call($this, name);
             });
         }
 
         return this;
     },
 
-    renderer: function(view, model) {
+    renderer: function(view) {
         var target = this.target;
 
         if (!target) {
@@ -50,8 +53,5 @@ ku.View.prototype = {
         }
 
         target.innerHTML = view;
-
-        ku.bindDescendants(target);
-        ko.applyBindings(model, target);
     }
 };

@@ -1,13 +1,23 @@
 var _undefined;
 
-module('Attribute Bindings');
+module('Model');
+
+test('Default Values', function() {
+    var Model = ku.model({
+        value: 'default'
+    });
+
+    var modelInstance = new Model;
+
+    ok(modelInstance.value() === 'default', 'Default value not set.');
+});
 
 test('Model', function() {
     var div  = document.createElement('div');
     var span = document.createElement('span');
 
-    div.setAttribute('data-ku-context', 'context: context');
-    span.setAttribute('data-ku-text', 'text: name');
+    div.setAttribute('data-ku-context', 'context: context()');
+    span.setAttribute('data-ku-text', 'text: name()');
     div.appendChild(span);
 
     var Person = ku.model({
@@ -33,18 +43,21 @@ asyncTest('Router', function() {
     var div = document.createElement('div');
     div.setAttribute('data-ku-routable', 'router: router');
 
+    var app    = new ku.App()
     var router = new ku.Router();
-    router.view.http.events.on('success', function() {
-        ok(div.childNodes[0].innerHTML === 'test', 'Inner text on div\'s child span should update.');
-        start();
-    });
+
     router.set('index', function() {
         return {
             name: 'test'
         };
     });
 
-    new ku.App().run(div, {
+    router.events.on('render', function() {
+        ok(div.childNodes[0].innerHTML === 'test', 'Inner text on div\'s child span should update.');
+        start();
+    });
+
+    app.run(div, {
         router: router
     });
 

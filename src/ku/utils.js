@@ -19,6 +19,14 @@ ku.utils = {
         }
     },
 
+    isObserved: function(value) {
+        return ku.utils.canBeObserved(value) && value.__ku_observer;
+    },
+
+    canBeObserved: function(value) {
+        return typeof value !== 'undefined' && value !== null;
+    },
+
     outerHtml: function(element) {
         var div = document.createElement('div');
         div.appendChild(element);

@@ -1,21 +1,17 @@
 !function(factory) {
     if (typeof require === 'function' && typeof exports === 'object' && typeof module === 'object') {
-        factory(require('knockout'), module.exports || exports);
+        factory(module.exports || exports);
     } else if (typeof define === 'function' && define.amd) {
-        define(['knockout', 'exports'], factory);
+        define(['exports'], factory);
     } else {
-        factory(ko, window.ku = {});
+        factory(window.ku = {});
     }
-}(function(ko, ku) {
-    
-if (typeof ko === 'undefined') {
-    throw 'KnockoutJS is required. Download at https://github.com/SteveSanderson/knockout.';
-}
+}(function(ku) {
 
 ku.App = function() {
     this.attributePrefix = 'data-ku-';
     this.bindings        = ku.defaultBindings;
-    this.context         = null;
+    this.context         = {};
 };
 
 ku.App.prototype = {
@@ -42,7 +38,7 @@ ku.App.prototype = {
             var name = node.nodeName.substring($this.attributePrefix.length);
 
             if (typeof $this.bindings[name] === 'function') {
-                $this.bindAttribute(element, name, ku.utils.parseBinding(node.nodeValue, $this.context));
+                $this.bindAttribute(element, name, node);
             }
         });
 
@@ -59,15 +55,16 @@ ku.App.prototype = {
         return this;
     },
 
-    bindAttribute: function(element, name, context) {
-        var $this = this;
+    bindAttribute: function(element, name, attribute) {
+        var $this   = this;
+        var options = ku.utils.parseBinding(attribute.nodeValue, $this.context);
 
-        this.bindings[name].call($this, element, context);
+        this.bindings[name].call(this.bindings[name], this, element, options);
 
-        each(context, function(index, value) {
-            if (typeof value.subscribe === 'function') {
-                value.subscribe(function() {
-                    $this.bindAttribute(element, name, context);
+        each(options, function(index, value) {
+            if (ku.utils.isObserved(value)) {
+                value.__ku_observer.subscribe(function() {
+                    $this.bindAttribute(element, name, attribute);
                 });
             }
         });
@@ -79,7 +76,7 @@ ku.collection = function(model) {
     var Collection = function(data) {
         Array.prototype.push.apply(this, []);
 
-        this.observer = generateObserver(this);
+        this.observer = generateValueObserver(this);
 
         this.aggregate = function(joiner, fields) {
             var arr = [];
@@ -126,7 +123,7 @@ ku.collection = function(model) {
             if (this.has(at)) {
                 Array.prototype.splice.call(this, at, 1);
 
-                this.observer.notifySubscribers();
+                this.observer.publish();
             }
 
             return this;
@@ -134,7 +131,7 @@ ku.collection = function(model) {
 
         this.empty = function() {
             Array.prototype.splice.call(this, 0, this.length);
-            this.observer.notifySubscribers();
+            this.observer.publish();
 
             return this;
         };
@@ -152,7 +149,7 @@ ku.collection = function(model) {
             item.$parent = this.$parent;
 
             Array.prototype.splice.call(this, at, 0, item);
-            this.observer.notifySubscribers();
+            this.observer.publish();
 
             return this;
         };
@@ -162,7 +159,7 @@ ku.collection = function(model) {
             item.$parent = this.$parent;
 
             Array.prototype.splice.call(this, at, 1, item);
-            this.observer.notifySubscribers();
+            this.observer.publish();
 
             return this;
         };
@@ -281,65 +278,42 @@ ku.collection = function(model) {
 
     return Collection;
 };
-ku.Context = function(data) {
-    this.data   = data || {};
-    this.parent = null;
+var context = function(app, element, options) {
+    app.context = options.context;
 };
 
-ku.Context.prototype = {
-    get: function(name) {
-        if (this.has(name)) {
-            return this.data[name];
-        }
-    },
+var include = function(app, element, options) {
+    var view = options.view || new ku.View();
 
-    set: function(name, value) {
-        this.data[name] = value;
-        return this;
-    },
+    view.target = element;
 
-    has: function(name, value) {
-        return typeof this.data[name] !== 'undefined';
-    },
+    view.render(options.path, options.context);
+};
 
-    remove: function(name, value) {
-        if (this.has(name)) {
-            delete this.data[name];
-        }
-        return this;
+var routable = function(app, element, options) {
+    var router = options.router;
+
+    if (!router) {
+        ku.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it does not exist.');
     }
+
+    if (!router instanceof ku.Router) {
+        ku.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it is not an instanceof "ku.Router".');
+    }
+
+    router.view.target = element;
+    router.bind();
 };
+
+var text = function(app, element, options) {
+    element.innerText = options.text;
+};
+
 ku.defaultBindings = {
-    context: function(element, context) {
-        this.context = context.context();
-    },
-
-    include: function(element, context) {
-        var view = context.view || new ku.View();
-
-        view.target = element;
-
-        view.render(context.path, context.context);
-    },
-
-    routable: function(element, context) {
-        var router = context.router;
-
-        if (!router) {
-            ku.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it does not exist.');
-        }
-
-        if (!router instanceof ku.Router) {
-            ku.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it is not an instanceof "ku.Router".');
-        }
-
-        router.view.target = element;
-        router.bind();
-    },
-
-    text: function(element, context) {
-        element.innerText = context.text();
-    }
+    context: context,
+    include: include,
+    routable: routable,
+    text: text
 };
 ku.Event = function() {
     this.stack = [];
@@ -599,16 +573,20 @@ function each(items, fn) {
     }
 }
 
-function generateObserver(obj) {
-    return ko.computed({
-        read: function() {
-            return obj;
-        },
-        write: function(value) {
-            obj.from(value);
-        },
-        owner: obj
-    });
+function generateValueObserver(obj) {
+    var value = ku.value();
+
+    value.owner = obj;
+
+    value.getter = function() {
+        return this;
+    };
+
+    value.setter = function(value) {
+        this.from(value);
+    };
+
+    return value;
 }
 ku.model = function(definition) {
     var Model = function(data) {
@@ -631,7 +609,7 @@ ku.model = function(definition) {
                 }
             });
 
-            this.observer.notifySubscribers();
+            this.observer.publish();
 
             return this;
         };
@@ -730,12 +708,12 @@ function interpretDefinition(Model, definition) {
         if (typeof v === 'function') {
             var name, type;
 
-            if (ku.isReader(i)) {
-                name = ku.fromReader(i);
-                type = 'read';
-            } else if (ku.isWriter(i)) {
-                name = ku.fromWriter(i);
-                type = 'write';
+            if (ku.utils.isReader(i)) {
+                name = ku.utils.fromReader(i);
+                type = 'getter';
+            } else if (ku.utils.isWriter(i)) {
+                name = ku.utils.fromWriter(i);
+                type = 'setter';
             }
 
             if (type) {
@@ -756,7 +734,7 @@ function interpretDefinition(Model, definition) {
 }
 
 function define(obj) {
-    obj.observer = generateObserver(obj);
+    obj.observer = generateValueObserver(obj);
 
     defineComputed(obj);
     defineMethods(obj);
@@ -766,11 +744,10 @@ function define(obj) {
 
 function defineComputed(obj) {
     each(obj.$self.computed, function(name, computed) {
-        obj[name] = ko.computed({
+        obj[name] = ku.value({
             owner: obj,
-            deferEvaluation: true,
-            read: computed.read,
-            write: computed.write
+            getter: computed.getter,
+            setter: computed.setter
         });
     });
 }
@@ -785,11 +762,9 @@ function defineMethods(obj) {
 
 function defineProperties(obj) {
     each(obj.$self.properties, function(name, property) {
-        if (Object.prototype.toString.call(property) === '[object Array]') {
-            obj[name] = ko.observableArray(property);
-        } else {
-            obj[name] = ko.observable(property);
-        }
+        obj[name] = ku.value({
+            value: property
+        });
     });
 }
 
@@ -803,6 +778,7 @@ function defineRelations(obj) {
 var bound = [];
 
 ku.Router = function() {
+    this.app    = new ku.App();
     this.events = new ku.Events();
     this.routes = {};
     this.state  = new ku.State();
@@ -812,9 +788,24 @@ ku.Router = function() {
 };
 
 ku.Router.prototype = {
-    route: false,
+    handler: function(execute) {
+        execute();
+    },
 
-    bind: function() {
+    renderer: function(route, params) {
+        var $this = this;
+
+        this.app.context = route.controller.apply(route.controller, params);
+        this.app.context = new (ku.model(this.app.context))();
+
+        this.view.render(route.view, function() {
+            $this.app.bindDescendants(this.target);
+            $this.events.trigger('render', [$this, route, params]);
+        });
+    },
+
+    bind: function(binder) {
+        this.unbind();
         bound.push(this);
 
         if (!('onpopstate' in window) || (!this.state.enabled || (this.state.enabled && !window.location.hash))) {
@@ -873,52 +864,30 @@ ku.Router.prototype = {
     },
 
     dispatch: function(request) {
+        var $this = this;
+
         if (typeof request === 'undefined') {
             request = this.state.get();
         }
 
+        var executor = function() {
+            $this.renderer(route);
+        };
+
         for (var i in this.routes) {
-            var route  = this.routes[i],
-                params = route.query(request);
+            var route  = this.routes[i];
+            var params = route.query(request);
 
             if (typeof params.length !== 'number') {
                 continue;
             }
 
-            if (this.events.trigger('exit', [this]) === false) {
-                return this;
-            }
-
-            if (this.route && this.events.trigger('exit.' + i, [this, this.route]) === false) {
-                return this;
-            }
-
-            if (this.events.trigger('enter', [this]) === false) {
-                return this;
-            }
-
-            if (this.events.trigger('enter.' + i, [this, route]) === false) {
-                return this;
-            }
-
-            var model = route.controller.apply(route.controller, params);
-
-            if (model && model.constructor === Object) {
-                model = new (ku.model(model))();
-            }
-
-            if (model !== false) {
-                this.view.render(route.view, model);
-            }
-
-            this.route = route;
+            this.events.trigger('match', [this, request, route, params]);
 
             this.state.previous = request;
 
-            return this;
+            this.handler(executor);
         }
-
-        this.route = false;
 
         return this;
     },
@@ -1155,6 +1124,14 @@ ku.utils = {
         }
     },
 
+    isObserved: function(value) {
+        return ku.utils.canBeObserved(value) && value.__ku_observer;
+    },
+
+    canBeObserved: function(value) {
+        return typeof value !== 'undefined' && value !== null;
+    },
+
     outerHtml: function(element) {
         var div = document.createElement('div');
         div.appendChild(element);
@@ -1197,6 +1174,70 @@ ku.utils = {
         return fnCompare(fn, ku.collection().toString());
     }
 };
+ku.value = function(options) {
+    var func = function(value) {
+        if (arguments.length === 0) {
+            value = func.getter.call(func.owner);
+
+            if (ku.utils.canBeObserved(value)) {
+                value.__ku_observer = func;
+            }
+
+            return value;
+        } else {
+            func.setter.call(func.owner, value);
+            func.publish();
+            return func.owner;
+        }
+    };
+
+    if (!options) {
+        options = {};
+    }
+
+    if (typeof options.getter !== 'function') {
+        options.getter = function() {
+            return _value;
+        };
+    }
+
+    if (typeof options.setter !== 'function') {
+        options.setter = function(value) {
+            _value = value;
+        };
+    }
+
+    var _value       = options.value;
+    var _subscribers = [];
+
+    func.owner  = options.owner;
+    func.getter = options.getter;
+    func.setter = options.setter;
+
+    func.subscribe = function(callback) {
+        _subscribers.push(callback);
+        return func;
+    };
+
+    func.unsubscribe = function(callback) {
+        each(_subscribers, function(index, subscriber) {
+            if (callback === subscriber) {
+                _subscribers.splice(index, 1);
+                return;
+            }
+        });
+
+        return func;
+    };
+
+    func.publish = function() {
+        each(_subscribers, function(index, subscriber) {
+            subscriber(_value);
+        });
+    };
+
+    return func;
+};
 ku.View = function() {
     this.cache       = {};
     this.http        = new ku.Http();
@@ -1218,24 +1259,27 @@ ku.View.prototype = {
 
     idSeparator: '-',
 
-    render: function(name, model) {
-        var self = this,
-            id   = this.idPrefix + name.replace(/\//g, this.idSeparator) + this.idSuffix;
+    render: function(name, callback) {
+        var $this = this;
+        var id    = this.idPrefix + name.replace(/\//g, this.idSeparator) + this.idSuffix;
 
         if (this.cache[name]) {
-            this.renderer(this.cache[name], model);
+            this.renderer(this.cache[name]);
+            callback.call(this, name);
         } else if (document.getElementById(id)) {
-            this.renderer(this.cache[name] = document.getElementById(id).innerHTML, model);
+            this.renderer(this.cache[name] = document.getElementById(id).innerHTML);
+            callback.call(this, name);
         } else if (this.http) {
             this.http.get(name, function(html) {
-                self.renderer(self.cache[name] = html, model);
+                $this.renderer($this.cache[name] = html);
+                callback.call($this, name);
             });
         }
 
         return this;
     },
 
-    renderer: function(view, model) {
+    renderer: function(view) {
         var target = this.target;
 
         if (!target) {
@@ -1249,9 +1293,6 @@ ku.View.prototype = {
         }
 
         target.innerHTML = view;
-
-        ku.bindDescendants(target);
-        ko.applyBindings(model, target);
     }
 };
 

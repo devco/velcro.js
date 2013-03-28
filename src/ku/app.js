@@ -1,7 +1,7 @@
 ku.App = function() {
     this.attributePrefix = 'data-ku-';
     this.bindings        = ku.defaultBindings;
-    this.context         = null;
+    this.context         = {};
 };
 
 ku.App.prototype = {
@@ -28,7 +28,7 @@ ku.App.prototype = {
             var name = node.nodeName.substring($this.attributePrefix.length);
 
             if (typeof $this.bindings[name] === 'function') {
-                $this.bindAttribute(element, name, ku.utils.parseBinding(node.nodeValue, $this.context));
+                $this.bindAttribute(element, name, node);
             }
         });
 
@@ -45,15 +45,16 @@ ku.App.prototype = {
         return this;
     },
 
-    bindAttribute: function(element, name, context) {
-        var $this = this;
+    bindAttribute: function(element, name, attribute) {
+        var $this   = this;
+        var options = ku.utils.parseBinding(attribute.nodeValue, $this.context);
 
-        this.bindings[name].call($this, element, context);
+        this.bindings[name].call(this.bindings[name], this, element, options);
 
-        each(context, function(index, value) {
-            if (typeof value.subscribe === 'function') {
-                value.subscribe(function() {
-                    $this.bindAttribute(element, name, context);
+        each(options, function(index, value) {
+            if (ku.utils.isObserved(value)) {
+                value.__ku_observer.subscribe(function() {
+                    $this.bindAttribute(element, name, attribute);
                 });
             }
         });
