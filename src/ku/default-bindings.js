@@ -1,13 +1,17 @@
 var context = function(app, element, options) {
-    app.context = options.context;
+    app.setContext(options.context);
 };
 
 var include = function(app, element, options) {
     var view = options.view || new ku.View();
 
+    app = options.app || app;
+
     view.target = element;
 
-    view.render(options.path, options.context);
+    view.render(options.path, function() {
+        app.bindDescendants(element);
+    });
 };
 
 var routable = function(app, element, options) {

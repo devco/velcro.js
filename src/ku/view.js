@@ -22,17 +22,22 @@ ku.View.prototype = {
     render: function(name, callback) {
         var $this = this;
         var id    = this.idPrefix + name.replace(/\//g, this.idSeparator) + this.idSuffix;
+        var cb    = function() {
+            if (typeof callback === 'function') {
+                callback.call($this, name);
+            }
+        };
 
         if (this.cache[name]) {
             this.renderer(this.cache[name]);
-            callback.call(this, name);
+            cb();
         } else if (document.getElementById(id)) {
             this.renderer(this.cache[name] = document.getElementById(id).innerHTML);
-            callback.call(this, name);
+            cb();
         } else if (this.http) {
             this.http.get(name, function(html) {
                 $this.renderer($this.cache[name] = html);
-                callback.call($this, name);
+                cb();
             });
         }
 

@@ -19,22 +19,18 @@ ku.utils = {
         }
     },
 
-    isObserved: function(value) {
-        return ku.utils.canBeObserved(value) && value.__ku_observer;
+    isObservable: function(value) {
+        return typeof value === 'function' && value.toString() === ku.value().toString();
     },
 
-    canBeObserved: function(value) {
-        return typeof value !== 'undefined' && value !== null;
-    },
-
-    outerHtml: function(element) {
+    html: function(element) {
         var div = document.createElement('div');
         div.appendChild(element);
         return div.innerHTML;
     },
 
     throwForElement: function(element, message) {
-        throw message + "\n" + ku.outerHtml(element);
+        throw message + "\n" + ku.html(element);
     },
 
     isReader: function(name) {

@@ -9,65 +9,125 @@
 }(function(ku) {
 
 ku.App = function() {
-    this.attributePrefix = 'data-ku-';
-    this.bindings        = ku.defaultBindings;
-    this.context         = {};
+    this.attributePrefix  = 'data-ku-';
+    this.bindings         = ku.defaultBindings;
+    this.context          = {
+        $parent: false,
+        $root: false
+    };
 };
 
 ku.App.prototype = {
-    run: function(element, context) {
-        if (!context) {
+    bind: function(element, context) {
+        if (arguments.length === 1) {
             context = element;
             element = document;
         }
 
-        this.context = context;
-        this.bindAll(element);
-    },
+        this.bindOne(element, context);
+        this.bindDescendants(element, context);
 
-    bindAll: function(element) {
-        this.bindOne(element);
-        this.bindDescendants(element);
         return this;
     },
 
-    bindOne: function(element) {
+    bindOne: function(element, context) {
         var $this = this;
 
         each(element.attributes, function(i, node) {
             var name = node.nodeName.substring($this.attributePrefix.length);
 
             if (typeof $this.bindings[name] === 'function') {
-                $this.bindAttribute(element, name, node);
+                $this.bindAttribute(element, context, name, node.nodeValue);
             }
         });
 
         return this;
     },
 
-    bindDescendants: function(parent) {
+    bindDescendants: function(parent, context) {
         var $this = this;
 
         each(parent.childNodes, function(index, element) {
-            $this.bindAll(element, $this.context);
+            $this.bind(element, context);
         });
 
         return this;
     },
 
-    bindAttribute: function(element, name, attribute) {
+    bindAttribute: function (element, context, name, value) {
+        this.setContext(context);
+
         var $this   = this;
-        var options = ku.utils.parseBinding(attribute.nodeValue, $this.context);
+        var parsed  = ku.utils.parseBinding(value, context);
+        var binding = $this.bindings[name];
 
-        this.bindings[name].call(this.bindings[name], this, element, options);
-
-        each(options, function(index, value) {
-            if (ku.utils.isObserved(value)) {
-                value.__ku_observer.subscribe(function() {
-                    $this.bindAttribute(element, name, attribute);
-                });
-            }
+        each(parsed, function(index, value) {
+            subscribeToUpdatesIfObservable(value);
         });
+
+        initialiseBinding();
+
+        return this.restoreContext();
+
+        function initialiseBinding() {
+            var options = extractObservableValues();
+
+            if (typeof binding.init === 'function') {
+                binding.init.call(binding, $this, element, options);
+            } else {
+                binding.call(binding, $this, element, options);
+            }
+        }
+
+        function subscribeToUpdatesIfObservable(value) {
+            if (!ku.utils.isObservable(value)) {
+                return;
+            }
+
+            value.subscribe(function() {
+                var options = extractObservableValues();
+
+                if (typeof binding.update === 'function') {
+                    binding.update.call(binding, $this, element, options);
+                } else {
+                    binding.call(binding, $this, element, options);
+                }
+            });
+        }
+
+        function extractObservableValues() {
+            var options = {};
+
+            each(parsed, function(index, value) {
+                if (ku.utils.isObservable(value)) {
+                    options[index] = value();
+                } else {
+                    options[index] = value;
+                }
+            });
+
+            return options;
+        }
+    },
+
+    setContext: function(context) {
+        if (typeof context === 'object') {
+            context.$parent = this.context;
+            context.$root   = this.context.$root || this.context;
+            this.context    = context;
+        }
+
+        return this;
+    },
+
+    getContext: function() {
+        return this.context;
+    },
+
+    restoreContext: function() {
+        if (typeof this.context.$parent === 'object') {
+            this.setContext(this.context.$parent);
+        }
 
         return this;
     }
@@ -279,15 +339,19 @@ ku.collection = function(model) {
     return Collection;
 };
 var context = function(app, element, options) {
-    app.context = options.context;
+    app.setContext(options.context);
 };
 
 var include = function(app, element, options) {
     var view = options.view || new ku.View();
 
+    app = options.app || app;
+
     view.target = element;
 
-    view.render(options.path, options.context);
+    view.render(options.path, function() {
+        app.bindDescendants(element);
+    });
 };
 
 var routable = function(app, element, options) {
@@ -440,7 +504,7 @@ ku.Http.prototype = {
     },
 
     request: function(url, data, type, fn) {
-        var self    = this,
+        var $this   = this,
             request = this.createRequestObject();
 
         request.open(type.toUpperCase(), this.prefix + url + this.suffix, true);
@@ -455,26 +519,26 @@ ku.Http.prototype = {
             }
 
             if (request.status !== 200 && request.status !== 304) {
-                self.events.trigger('error', [request]);
-                self.events.trigger('stop', [request]);
+                $this.events.trigger('error', [request]);
+                $this.events.trigger('stop', [request]);
                 return;
             }
 
             var response = request.responseText,
                 headers  = request.getAllResponseHeaders();
 
-            if (typeof headers['Content-Type'] === 'string' && typeof self.parsers[headers['Content-Type']] === 'function') {
-                response = self.parsers[headers['Content-Type']](response);
-            } else if (typeof self.headers.Accept === 'string' && typeof self.parsers[self.headers.Accept] === 'function') {
-                response = self.parsers[self.headers.Accept](response);
+            if (typeof headers['Content-Type'] === 'string' && typeof $this.parsers[headers['Content-Type']] === 'function') {
+                response = $this.parsers[headers['Content-Type']](response);
+            } else if (typeof $this.headers.Accept === 'string' && typeof $this.parsers[$this.headers.Accept] === 'function') {
+                response = $this.parsers[$this.headers.Accept](response);
             }
 
             if (typeof fn === 'function') {
                 fn(response, request);
             }
 
-            self.events.trigger('success', [response, request]);
-            self.events.trigger('stop', [request]);
+            $this.events.trigger('success', [response, request]);
+            $this.events.trigger('stop', [request]);
         };
 
         if (request.readyState === 4) {
@@ -576,13 +640,13 @@ function each(items, fn) {
 function generateValueObserver(obj) {
     var value = ku.value();
 
-    value.owner = obj;
+    value.bind = obj;
 
-    value.getter = function() {
+    value.get = function() {
         return this;
     };
 
-    value.setter = function(value) {
+    value.set = function(value) {
         this.from(value);
     };
 
@@ -710,10 +774,10 @@ function interpretDefinition(Model, definition) {
 
             if (ku.utils.isReader(i)) {
                 name = ku.utils.fromReader(i);
-                type = 'getter';
+                type = 'get';
             } else if (ku.utils.isWriter(i)) {
                 name = ku.utils.fromWriter(i);
-                type = 'setter';
+                type = 'set';
             }
 
             if (type) {
@@ -745,9 +809,9 @@ function define(obj) {
 function defineComputed(obj) {
     each(obj.$self.computed, function(name, computed) {
         obj[name] = ku.value({
-            owner: obj,
-            getter: computed.getter,
-            setter: computed.setter
+            bind: obj,
+            get: computed.get,
+            set: computed.set
         });
     });
 }
@@ -780,6 +844,8 @@ var bound = [];
 ku.Router = function() {
     this.app    = new ku.App();
     this.events = new ku.Events();
+    this.params = {};
+    this.route  = false;
     this.routes = {};
     this.state  = new ku.State();
     this.view   = new ku.View();
@@ -804,7 +870,7 @@ ku.Router.prototype = {
         });
     },
 
-    bind: function(binder) {
+    bind: function() {
         this.unbind();
         bound.push(this);
 
@@ -882,8 +948,14 @@ ku.Router.prototype = {
                 continue;
             }
 
-            this.events.trigger('match', [this, request, route, params]);
+            if (this.route) {
+                this.events.trigger('exit', [this, this.state.previous, this.route, this.params]);
+            }
 
+            this.events.trigger('enter', [this, request, route, params]);
+
+            this.params         = params;
+            this.route          = route;
             this.state.previous = request;
 
             this.handler(executor);
@@ -1124,22 +1196,18 @@ ku.utils = {
         }
     },
 
-    isObserved: function(value) {
-        return ku.utils.canBeObserved(value) && value.__ku_observer;
+    isObservable: function(value) {
+        return typeof value === 'function' && value.toString() === ku.value().toString();
     },
 
-    canBeObserved: function(value) {
-        return typeof value !== 'undefined' && value !== null;
-    },
-
-    outerHtml: function(element) {
+    html: function(element) {
         var div = document.createElement('div');
         div.appendChild(element);
         return div.innerHTML;
     },
 
     throwForElement: function(element, message) {
-        throw message + "\n" + ku.outerHtml(element);
+        throw message + "\n" + ku.html(element);
     },
 
     isReader: function(name) {
@@ -1177,17 +1245,11 @@ ku.utils = {
 ku.value = function(options) {
     var func = function(value) {
         if (arguments.length === 0) {
-            value = func.getter.call(func.owner);
-
-            if (ku.utils.canBeObserved(value)) {
-                value.__ku_observer = func;
-            }
-
-            return value;
+            return func.get.call(func.bind);
         } else {
-            func.setter.call(func.owner, value);
+            func.set.call(func.bind, value);
             func.publish();
-            return func.owner;
+            return func.bind;
         }
     };
 
@@ -1195,24 +1257,24 @@ ku.value = function(options) {
         options = {};
     }
 
-    if (typeof options.getter !== 'function') {
-        options.getter = function() {
-            return _value;
+    if (typeof options.get !== 'function') {
+        options.get = function() {
+            return func.value;
         };
     }
 
-    if (typeof options.setter !== 'function') {
-        options.setter = function(value) {
-            _value = value;
+    if (typeof options.set !== 'function') {
+        options.set = function(value) {
+            func.value = value;
         };
     }
 
-    var _value       = options.value;
     var _subscribers = [];
 
-    func.owner  = options.owner;
-    func.getter = options.getter;
-    func.setter = options.setter;
+    func.value = options.value;
+    func.bind  = options.bind;
+    func.get   = options.get;
+    func.set   = options.set;
 
     func.subscribe = function(callback) {
         _subscribers.push(callback);
@@ -1232,7 +1294,7 @@ ku.value = function(options) {
 
     func.publish = function() {
         each(_subscribers, function(index, subscriber) {
-            subscriber(_value);
+            subscriber(func.value);
         });
     };
 
@@ -1262,17 +1324,22 @@ ku.View.prototype = {
     render: function(name, callback) {
         var $this = this;
         var id    = this.idPrefix + name.replace(/\//g, this.idSeparator) + this.idSuffix;
+        var cb    = function() {
+            if (typeof callback === 'function') {
+                callback.call($this, name);
+            }
+        };
 
         if (this.cache[name]) {
             this.renderer(this.cache[name]);
-            callback.call(this, name);
+            cb();
         } else if (document.getElementById(id)) {
             this.renderer(this.cache[name] = document.getElementById(id).innerHTML);
-            callback.call(this, name);
+            cb();
         } else if (this.http) {
             this.http.get(name, function(html) {
                 $this.renderer($this.cache[name] = html);
-                callback.call($this, name);
+                cb();
             });
         }
 

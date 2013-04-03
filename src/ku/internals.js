@@ -39,13 +39,13 @@ function each(items, fn) {
 function generateValueObserver(obj) {
     var value = ku.value();
 
-    value.owner = obj;
+    value.bind = obj;
 
-    value.getter = function() {
+    value.get = function() {
         return this;
     };
 
-    value.setter = function(value) {
+    value.set = function(value) {
         this.from(value);
     };
 

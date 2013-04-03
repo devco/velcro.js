@@ -12,32 +12,53 @@ test('Default Values', function() {
     ok(modelInstance.value() === 'default', 'Default value not set.');
 });
 
-test('Model', function() {
+test('Observing Changes', function() {
     var div  = document.createElement('div');
     var span = document.createElement('span');
 
-    div.setAttribute('data-ku-context', 'context: context()');
-    span.setAttribute('data-ku-text', 'text: name()');
+    span.setAttribute('data-ku-text', 'text: name');
     div.appendChild(span);
 
     var Person = ku.model({
         name: 'Default Value'
     });
 
+    var dude = new Person;
+
+    new ku.App().bind(div, dude);
+
+    ok(div.childNodes[0].innerText === dude.name(), 'Inner text on div child should be initialised.');
+
+    dude.name('Updated Value');
+
+    ok(div.childNodes[0].innerText === dude.name(), 'Inner text on div child should be updated.');
+});
+
+test('Changing Context', function() {
+    var div  = document.createElement('div');
+    var span = document.createElement('span');
+
+    div.setAttribute('data-ku-context', 'context: person');
+    span.setAttribute('data-ku-text', 'text: name');
+    div.appendChild(span);
+
     var App = ku.model({
-        context: Person
+        person: ku.model({
+            name: 'Default Value'
+        })
     });
 
-    var app = new App;
+    var appsrawesome = new App;
 
-    new ku.App().run(div, app);
+    new ku.App().bind(div, appsrawesome)
+    ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be initialised.');
 
-    ok(div.childNodes[0].innerText === app.context().name(), 'Inner text on div child should be initialised.');
+    appsrawesome.person().name('Updated Value');
 
-    app.context().name('Updated Value');
-
-    ok(div.childNodes[0].innerText === app.context().name(), 'Inner text on div child should be updated.');
+    ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be updated.');
 });
+
+/*
 
 asyncTest('Router', function() {
     var div = document.createElement('div');
@@ -57,35 +78,32 @@ asyncTest('Router', function() {
         start();
     });
 
-    app.run(div, {
+    app.bind(div, {
         router: router
     });
 
     router.go('index');
 });
 
-/*
-
 asyncTest('View', function() {
     var div = document.createElement('div');
-    div.setAttribute('data-ku-view', 'index');
-    div.setAttribute('data-ku-model', 'model');
+    div.setAttribute('data-ku-include', 'path: "index", view: viewInstance, context: viewModel');
 
     var view = new ku.View();
     view.http.events.on('success', function() {
-        ok(div.childNodes[0].innerHTML === 'test', 'Inner text on div\'s child span should update.');
+        ok(div.childNodes[0].innerHTML === 'test', 'Inner text on div\'s child span should initialise.');
         start();
     });
 
-    new ku.App().run(div, {
-        model: {
+    new ku.App().bind(div, {
+        viewInstance: view,
+        viewModel: {
             name: 'test'
-        },
-        view: view
+        }
     });
 });
 
-
+/*
 
 module('Models and Collections');
 
@@ -188,7 +206,7 @@ test('Observable Arrays', function() {
     item.setAttribute('data-bind', 'text: $data');
     list.appendChild(item);
     ku.set('model', new model);
-    ku.run(list);
+    ku.bind(list);
 
     ok(ku.get('model').items.length === list.childNodes.length, 'No items should be present.');
 

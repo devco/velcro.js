@@ -1,17 +1,11 @@
 ku.value = function(options) {
     var func = function(value) {
         if (arguments.length === 0) {
-            value = func.getter.call(func.owner);
-
-            if (ku.utils.canBeObserved(value)) {
-                value.__ku_observer = func;
-            }
-
-            return value;
+            return func.get.call(func.bind);
         } else {
-            func.setter.call(func.owner, value);
+            func.set.call(func.bind, value);
             func.publish();
-            return func.owner;
+            return func.bind;
         }
     };
 
@@ -19,24 +13,24 @@ ku.value = function(options) {
         options = {};
     }
 
-    if (typeof options.getter !== 'function') {
-        options.getter = function() {
-            return _value;
+    if (typeof options.get !== 'function') {
+        options.get = function() {
+            return func.value;
         };
     }
 
-    if (typeof options.setter !== 'function') {
-        options.setter = function(value) {
-            _value = value;
+    if (typeof options.set !== 'function') {
+        options.set = function(value) {
+            func.value = value;
         };
     }
 
-    var _value       = options.value;
     var _subscribers = [];
 
-    func.owner  = options.owner;
-    func.getter = options.getter;
-    func.setter = options.setter;
+    func.value = options.value;
+    func.bind  = options.bind;
+    func.get   = options.get;
+    func.set   = options.set;
 
     func.subscribe = function(callback) {
         _subscribers.push(callback);
@@ -56,7 +50,7 @@ ku.value = function(options) {
 
     func.publish = function() {
         each(_subscribers, function(index, subscriber) {
-            subscriber(_value);
+            subscriber(func.value);
         });
     };
 

@@ -49,7 +49,7 @@ ku.Http.prototype = {
     },
 
     request: function(url, data, type, fn) {
-        var self    = this,
+        var $this   = this,
             request = this.createRequestObject();
 
         request.open(type.toUpperCase(), this.prefix + url + this.suffix, true);
@@ -64,26 +64,26 @@ ku.Http.prototype = {
             }
 
             if (request.status !== 200 && request.status !== 304) {
-                self.events.trigger('error', [request]);
-                self.events.trigger('stop', [request]);
+                $this.events.trigger('error', [request]);
+                $this.events.trigger('stop', [request]);
                 return;
             }
 
             var response = request.responseText,
                 headers  = request.getAllResponseHeaders();
 
-            if (typeof headers['Content-Type'] === 'string' && typeof self.parsers[headers['Content-Type']] === 'function') {
-                response = self.parsers[headers['Content-Type']](response);
-            } else if (typeof self.headers.Accept === 'string' && typeof self.parsers[self.headers.Accept] === 'function') {
-                response = self.parsers[self.headers.Accept](response);
+            if (typeof headers['Content-Type'] === 'string' && typeof $this.parsers[headers['Content-Type']] === 'function') {
+                response = $this.parsers[headers['Content-Type']](response);
+            } else if (typeof $this.headers.Accept === 'string' && typeof $this.parsers[$this.headers.Accept] === 'function') {
+                response = $this.parsers[$this.headers.Accept](response);
             }
 
             if (typeof fn === 'function') {
                 fn(response, request);
             }
 
-            self.events.trigger('success', [response, request]);
-            self.events.trigger('stop', [request]);
+            $this.events.trigger('success', [response, request]);
+            $this.events.trigger('stop', [request]);
         };
 
         if (request.readyState === 4) {

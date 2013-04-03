@@ -120,10 +120,10 @@ function interpretDefinition(Model, definition) {
 
             if (ku.utils.isReader(i)) {
                 name = ku.utils.fromReader(i);
-                type = 'getter';
+                type = 'get';
             } else if (ku.utils.isWriter(i)) {
                 name = ku.utils.fromWriter(i);
-                type = 'setter';
+                type = 'set';
             }
 
             if (type) {
@@ -155,9 +155,9 @@ function define(obj) {
 function defineComputed(obj) {
     each(obj.$self.computed, function(name, computed) {
         obj[name] = ku.value({
-            owner: obj,
-            getter: computed.getter,
-            setter: computed.setter
+            bind: obj,
+            get: computed.get,
+            set: computed.set
         });
     });
 }

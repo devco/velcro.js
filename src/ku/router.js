@@ -3,6 +3,8 @@ var bound = [];
 ku.Router = function() {
     this.app    = new ku.App();
     this.events = new ku.Events();
+    this.params = {};
+    this.route  = false;
     this.routes = {};
     this.state  = new ku.State();
     this.view   = new ku.View();
@@ -27,7 +29,7 @@ ku.Router.prototype = {
         });
     },
 
-    bind: function(binder) {
+    bind: function() {
         this.unbind();
         bound.push(this);
 
@@ -105,8 +107,14 @@ ku.Router.prototype = {
                 continue;
             }
 
-            this.events.trigger('match', [this, request, route, params]);
+            if (this.route) {
+                this.events.trigger('exit', [this, this.state.previous, this.route, this.params]);
+            }
 
+            this.events.trigger('enter', [this, request, route, params]);
+
+            this.params         = params;
+            this.route          = route;
             this.state.previous = request;
 
             this.handler(executor);
