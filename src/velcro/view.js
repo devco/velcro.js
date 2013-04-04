@@ -1,6 +1,6 @@
-ku.View = function() {
+Velcro.View = function() {
     this.cache       = {};
-    this.http        = new ku.Http();
+    this.http        = new Velcro.Http();
     this.http.prefix = 'views/';
     this.http.suffix = '.html';
     this.http.accept = 'text/html';
@@ -8,12 +8,12 @@ ku.View = function() {
     return this;
 };
 
-ku.View.prototype = {
+Velcro.View.prototype = {
     http: false,
 
     target: null,
 
-    idPrefix: 'ku-view-',
+    idPrefix: 'Velcro-view-',
 
     idSuffix: '',
 
@@ -24,7 +24,7 @@ ku.View.prototype = {
         var id    = this.idPrefix + name.replace(/\//g, this.idSeparator) + this.idSuffix;
         var cb    = function() {
             if (typeof callback === 'function') {
-                callback.call($this, name);
+                callback.call(callback, $this, name);
             }
         };
 
@@ -35,9 +35,12 @@ ku.View.prototype = {
             this.renderer(this.cache[name] = document.getElementById(id).innerHTML);
             cb();
         } else if (this.http) {
-            this.http.get(name, function(html) {
-                $this.renderer($this.cache[name] = html);
-                cb();
+            this.http.get({
+                url: name,
+                success: function(html) {
+                    $this.renderer($this.cache[name] = html);
+                    cb();
+                }
             });
         }
 

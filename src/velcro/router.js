@@ -1,31 +1,35 @@
 var bound = [];
 
-ku.Router = function() {
-    this.app    = new ku.App();
-    this.events = new ku.Events();
+Velcro.Router = function() {
+    this.app    = new Velcro.App();
+    this.enter  = new Velcro.Event();
+    this.exit   = new Velcro.Event();
     this.params = {};
+    this.render = new Velcro.Event();
     this.route  = false;
     this.routes = {};
-    this.state  = new ku.State();
-    this.view   = new ku.View();
+    this.state  = new Velcro.State();
+    this.view   = new Velcro.View();
 
     return this;
 };
 
-ku.Router.prototype = {
+Velcro.Router.prototype = {
     handler: function(execute) {
         execute();
     },
 
     renderer: function(route, params) {
-        var $this = this;
+        var $this   = this;
+        var context = route.controller.apply(route.controller, params);
 
-        this.app.context = route.controller.apply(route.controller, params);
-        this.app.context = new (ku.model(this.app.context))();
+        if (!Velcro.utils.isModel(context)) {
+            context = new (Velcro.model(context))();
+        }
 
-        this.view.render(route.view, function() {
-            $this.app.bindDescendants(this.target);
-            $this.events.trigger('render', [$this, route, params]);
+        this.view.render(route.view, function(view) {
+            $this.app.bindDescendants(view.target, context);
+            $this.render.trigger($this, route, params);
         });
     },
 
@@ -63,7 +67,7 @@ ku.Router.prototype = {
             options.view = name;
         }
 
-        this.routes[name] = options instanceof ku.Route ? options : new ku.Route(options);
+        this.routes[name] = options instanceof Velcro.Route ? options : new Velcro.Route(options);
 
         return this;
     },
@@ -108,10 +112,10 @@ ku.Router.prototype = {
             }
 
             if (this.route) {
-                this.events.trigger('exit', [this, this.state.previous, this.route, this.params]);
+                this.exit.trigger(this, this.state.previous, this.route, this.params);
             }
 
-            this.events.trigger('enter', [this, request, route, params]);
+            this.enter.trigger(this, request, route, params);
 
             this.params         = params;
             this.route          = route;
@@ -135,7 +139,7 @@ ku.Router.prototype = {
 
 
 
-ku.Route = function(options) {
+Velcro.Route = function(options) {
     for (var i in options) {
         this[i] = options[i];
     }
@@ -143,7 +147,7 @@ ku.Route = function(options) {
     return this;
 };
 
-ku.Route.prototype = {
+Velcro.Route.prototype = {
     match: /.*/,
 
     format: '',
@@ -183,17 +187,17 @@ var interval;
 
 var isStarted = false;
 
-ku.State = function() {
+Velcro.State = function() {
     this.states = {};
-    ku.State.start();
+    Velcro.State.start();
     return this;
 };
 
-ku.State.interval = 500;
+Velcro.State.interval = 500;
 
-ku.State.start = function() {
+Velcro.State.start = function() {
     if (isStarted) {
-        return ku.State;
+        return Velcro.State;
     }
 
     var isIeLyingAboutHashChange = 'onhashchange' in window && /MSIE\s(6|7)/.test(navigator.userAgent);
@@ -209,15 +213,15 @@ ku.State.start = function() {
                 oldState = window.location.hash;
                 trigger('hashchange');
             }
-        }, ku.State.interval);
+        }, Velcro.State.interval);
     }
 
     isStarted = true;
 
-    return ku.State;
+    return Velcro.State;
 };
 
-ku.State.stop = function() {
+Velcro.State.stop = function() {
     if (interval) {
         clearInterval(interval);
     }
@@ -234,7 +238,7 @@ ku.State.stop = function() {
     return State;
 };
 
-ku.State.prototype = {
+Velcro.State.prototype = {
     previous: false,
 
     enabled: false,

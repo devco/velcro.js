@@ -1,9 +1,9 @@
-ku.Event = function() {
+Velcro.Event = function() {
     this.stack = [];
     return this;
 };
 
-ku.Event.prototype = {
+Velcro.Event.prototype = {
     bind: function(cb) {
         this.stack.push(cb);
         return this;
@@ -27,11 +27,26 @@ ku.Event.prototype = {
         return this;
     },
 
-    trigger: function(args) {
+    once: function(cb) {
+        var $this = this;
+
+        return this.bind(function() {
+            cb.call(cb, arguments);
+            $this.unbind(cb);
+        });
+    },
+
+    trigger: function() {
+        return this.triggerArgs(Array.prototype.slice.call(arguments, 1));
+    },
+
+    triggerArgs: function(args) {
         for (var i in this.stack) {
-            if (this.stack[i].apply(this, args) === false) {
+            if (this.stack[i].apply(this.stack[i], args) === false) {
                 return false;
             }
         }
+
+        return this;
     }
 };

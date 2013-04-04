@@ -10,8 +10,8 @@ module.exports = function(grunt) {
     grunt.initConfig({
         concat: {
             dist: {
-                src: 'src/ku/*.js',
-                dest: 'dist/knockup.js'
+                src: 'src/velcro/*.js',
+                dest: 'dist/velcro.js'
             }
         },
         connect: {
@@ -27,7 +27,7 @@ module.exports = function(grunt) {
                 evil: true
             },
             files: [
-                'src/ku/*.js',
+                'src/velcro/*.js',
                 'tests/*.js'
             ]
         },
@@ -47,15 +47,15 @@ module.exports = function(grunt) {
         uglify: {
             dist: {
                 files: {
-                    'dist/knockup.min.js': [
-                        'dist/knockup.js'
+                    'dist/velcro.min.js': [
+                        'dist/velcro.js'
                     ]
                 }
             }
         },
         wrap: {
             dest: {
-                file: 'dist/knockup.js',
+                file: 'dist/velcro.js',
                 wrapper: 'src/wrapper.js'
             }
         }

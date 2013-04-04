@@ -1,4 +1,4 @@
-ku.model = function(definition) {
+Velcro.model = function(definition) {
     var Model = function(data) {
         var that = this;
 
@@ -9,7 +9,7 @@ ku.model = function(definition) {
         };
 
         this.from = function(obj) {
-            if (ku.utils.isModel(obj)) {
+            if (Velcro.utils.isModel(obj)) {
                 obj = obj.raw();
             }
 
@@ -62,7 +62,7 @@ ku.model = function(definition) {
         }
     };
 
-    Model.Collection      = ku.collection(Model);
+    Model.Collection      = Velcro.collection(Model);
     Model.computed        = {};
     Model.methods         = {};
     Model.properties      = {};
@@ -70,7 +70,7 @@ ku.model = function(definition) {
     Model.prototype.$self = Model;
 
     Model.extend = function(OtherModel) {
-        OtherModel = ku.utils.isModel(OtherModel) ? OtherModel : ku.model(OtherModel);
+        OtherModel = Velcro.utils.isModel(OtherModel) ? OtherModel : Velcro.model(OtherModel);
 
         each(Model.computed, function(i, v) {
             if (typeof OtherModel.computed[i] === 'undefined') {
@@ -110,7 +110,7 @@ ku.model = function(definition) {
 
 function interpretDefinition(Model, definition) {
     each(definition, function(i, v) {
-        if (ku.utils.isModel(v) || ku.utils.isCollection(v)) {
+        if (Velcro.utils.isModel(v) || Velcro.utils.isCollection(v)) {
             Model.relations[i] = v;
             return;
         }
@@ -118,11 +118,11 @@ function interpretDefinition(Model, definition) {
         if (typeof v === 'function') {
             var name, type;
 
-            if (ku.utils.isReader(i)) {
-                name = ku.utils.fromReader(i);
+            if (i.indexOf('get') === 0) {
+                name = i.substring(3, 4).toLowerCase() + i.substring(4);
                 type = 'get';
-            } else if (ku.utils.isWriter(i)) {
-                name = ku.utils.fromWriter(i);
+            } else if (i.indexOf('set') === 0) {
+                name = i.substring(3, 4).toLowerCase() + i.substring(4);
                 type = 'set';
             }
 
@@ -154,7 +154,7 @@ function define(obj) {
 
 function defineComputed(obj) {
     each(obj.$self.computed, function(name, computed) {
-        obj[name] = ku.value({
+        obj[name] = Velcro.value({
             bind: obj,
             get: computed.get,
             set: computed.set
@@ -172,7 +172,8 @@ function defineMethods(obj) {
 
 function defineProperties(obj) {
     each(obj.$self.properties, function(name, property) {
-        obj[name] = ku.value({
+        obj[name] = Velcro.value({
+            bind: obj,
             value: property
         });
     });

@@ -37,17 +37,11 @@ function each(items, fn) {
 }
 
 function generateValueObserver(obj) {
-    var value = ku.value();
-
-    value.bind = obj;
-
-    value.get = function() {
-        return this;
-    };
-
-    value.set = function(value) {
-        this.from(value);
-    };
-
-    return value;
+    return Velcro.value({
+        value: obj,
+        bind: obj,
+        set: function(value) {
+            this.from(value);
+        }
+    });
 }

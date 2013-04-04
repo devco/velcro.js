@@ -1,4 +1,4 @@
-ku.value = function(options) {
+Velcro.value = function(options) {
     var func = function(value) {
         if (arguments.length === 0) {
             return func.get.call(func.bind);
@@ -44,7 +44,6 @@ ku.value = function(options) {
                 return;
             }
         });
-
         return func;
     };
 
@@ -52,6 +51,7 @@ ku.value = function(options) {
         each(_subscribers, function(index, subscriber) {
             subscriber(func.value);
         });
+        return func;
     };
 
     return func;

@@ -1,9 +1,9 @@
 var _undefined;
 
-module('Model');
+module('Models and Collections');
 
 test('Default Values', function() {
-    var Model = ku.model({
+    var Model = Velcro.model({
         value: 'default'
     });
 
@@ -12,106 +12,11 @@ test('Default Values', function() {
     ok(modelInstance.value() === 'default', 'Default value not set.');
 });
 
-test('Observing Changes', function() {
-    var div  = document.createElement('div');
-    var span = document.createElement('span');
-
-    span.setAttribute('data-ku-text', 'text: name');
-    div.appendChild(span);
-
-    var Person = ku.model({
-        name: 'Default Value'
-    });
-
-    var dude = new Person;
-
-    new ku.App().bind(div, dude);
-
-    ok(div.childNodes[0].innerText === dude.name(), 'Inner text on div child should be initialised.');
-
-    dude.name('Updated Value');
-
-    ok(div.childNodes[0].innerText === dude.name(), 'Inner text on div child should be updated.');
-});
-
-test('Changing Context', function() {
-    var div  = document.createElement('div');
-    var span = document.createElement('span');
-
-    div.setAttribute('data-ku-context', 'context: person');
-    span.setAttribute('data-ku-text', 'text: name');
-    div.appendChild(span);
-
-    var App = ku.model({
-        person: ku.model({
-            name: 'Default Value'
-        })
-    });
-
-    var appsrawesome = new App;
-
-    new ku.App().bind(div, appsrawesome)
-    ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be initialised.');
-
-    appsrawesome.person().name('Updated Value');
-
-    ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be updated.');
-});
-
-/*
-
-asyncTest('Router', function() {
-    var div = document.createElement('div');
-    div.setAttribute('data-ku-routable', 'router: router');
-
-    var app    = new ku.App()
-    var router = new ku.Router();
-
-    router.set('index', function() {
-        return {
-            name: 'test'
-        };
-    });
-
-    router.events.on('render', function() {
-        ok(div.childNodes[0].innerHTML === 'test', 'Inner text on div\'s child span should update.');
-        start();
-    });
-
-    app.bind(div, {
-        router: router
-    });
-
-    router.go('index');
-});
-
-asyncTest('View', function() {
-    var div = document.createElement('div');
-    div.setAttribute('data-ku-include', 'path: "index", view: viewInstance, context: viewModel');
-
-    var view = new ku.View();
-    view.http.events.on('success', function() {
-        ok(div.childNodes[0].innerHTML === 'test', 'Inner text on div\'s child span should initialise.');
-        start();
-    });
-
-    new ku.App().bind(div, {
-        viewInstance: view,
-        viewModel: {
-            name: 'test'
-        }
-    });
-});
-
-/*
-
-module('Models and Collections');
-
 test('Defining', function() {
-    var User = ku.model({
+    var User = Velcro.model({
         name: '',
         addresses: [],
-        readComputed: function() {
+        getComputed: function() {
 
         }
     });
@@ -120,14 +25,13 @@ test('Defining', function() {
         name: 'Bob Bobberson'
     });
 
-    ok(ku.isModel(User), '`ku.model()` should return a valid model.');
-    ok(ko.isObservable(bob.name), 'The property should be an observable.');
-    ok(typeof bob.addresses.push === 'function', 'The property should be an observable array.');
-    ok(ko.isComputed(bob.computed), 'The property should be a computed observable.');
+    ok(Velcro.utils.isModel(User), '`Velcro.model()` should return a valid model.');
+    ok(Velcro.utils.isObservable(bob.name), 'The property should be an observable.');
+    ok(Velcro.utils.isObservable(bob.computed), 'The property should be a computed observable.');
 });
 
 test('Instantiating', function() {
-    var User = ku.model({
+    var User = Velcro.model({
         name: ''
     });
 
@@ -137,24 +41,28 @@ test('Instantiating', function() {
     });
 
     ok(instance instanceof User, 'The `user` instance should be an instance of the `User` model.');
-    ok(ko.isObservable(instance.observer), 'The `observer` property should be a Knockout observable.');
+    ok(Velcro.utils.isObservable(instance.observer), 'The `observer` property should be a Knockout observable.');
     ok(instance.name() === 'test', 'The instance should be filled when data is passed to the constructor.');
     ok(typeof instance.undefinedProperty === 'undefined', 'Undefined properties should not be set.');
 });
 
 test('Relationships', function() {
-    var Friend = ku.model({
+    var Friend = Velcro.model({
         name: ''
     });
 
-    var User = ku.model({
+    var User = Velcro.model({
         bestFriend: Friend,
         friends: Friend.Collection
     });
 
-    var user = new User().bestFriend({
+    var user = new User();
+
+    user.bestFriend({
         name: 'Dog'
-    }).friends([
+    });
+
+    user.friends([
         { name: 'Cat' },
         { name: 'Lizard' }
     ]);
@@ -167,11 +75,11 @@ test('Relationships', function() {
 });
 
 test('Collection Manipulation', function() {
-    var Item = ku.model({
+    var Item = Velcro.model({
         name: ''
     });
 
-    var Items = ku.model({
+    var Items = Velcro.model({
         items: Item.Collection
     });
 
@@ -194,40 +102,17 @@ test('Collection Manipulation', function() {
     ok(model.items().length === 2, 'Items should be replaced when directly set.');
 });
 
-test('Observable Arrays', function() {
-    var list  = document.createElement('ul');
-    var item  = document.createElement('li');
-    var model = ku.model({
-        items: []
-    });
-
-    list.setAttribute('data-ku-model', 'model');
-    list.setAttribute('data-bind', 'foreach: items');
-    item.setAttribute('data-bind', 'text: $data');
-    list.appendChild(item);
-    ku.set('model', new model);
-    ku.bind(list);
-
-    ok(ku.get('model').items.length === list.childNodes.length, 'No items should be present.');
-
-    ku.get('model').items([
-        'test1',
-        'test2'
-    ]);
-
-    ok(ku.get('model').items.length === list.childNodes.length, 'Changes in view model not present.');
-});
-
-test('Computed Observables - Readers and Writers', function() {
-    var User = ku.model({
+test('Observable Getters and Setters', function() {
+    var User = Velcro.model({
         forename: '',
         surname: '',
-        readName: function() {
+        getName: function() {
             return this.forename() + ' ' + this.surname();
         },
-        writeName: function(name) {
+        setName: function(name) {
             name = name.split(' ');
-            this.forename(name[0]).surname(name[1]);
+            this.forename(name[0]);
+            this.surname(name[1]);
             return this;
         }
     });
@@ -238,16 +123,16 @@ test('Computed Observables - Readers and Writers', function() {
     ok(exported.name === user.name(), 'The `name` reader should have been exported.');
 });
 
-test('Ownership Binding', function() {
-    var NoParentModel = ku.model({
+test('Parent / Child Relationships', function() {
+    var NoParentModel = Velcro.model({
         name: ''
     });
 
-    var ChildModel = ku.model({
+    var ChildModel = Velcro.model({
         name: ''
     });
 
-    var ParentModel = ku.model({
+    var ParentModel = Velcro.model({
         child: ChildModel,
         children: ChildModel.Collection
     });
@@ -265,12 +150,120 @@ test('Ownership Binding', function() {
     ok(owner.children().at(0).$parent instanceof ParentModel, 'The children collection\'s $parent should be an instanceof ParentModel.');
 });
 
+test('Chaining Method Calls', function() {
+    var Model = Velcro.model({
+        test1: '',
+        test3: '',
+        getTest2: function() {
+            return this.test3();
+        },
+        setTest2: function(value) {
+            this.test3(value);
+        }
+    });
+
+    var test = new Model;
+
+    ok(test.test1('test') instanceof Model, 'Observable property is not chainable.');
+    ok(test.test2('test') instanceof Model, 'Observable setter is not chainable.');
+});
+
+
+
+module('Application / Binding Engine');
+
+test('Observing Changes', function() {
+    var div  = document.createElement('div');
+    var span = document.createElement('span');
+
+    span.setAttribute('data-velcro-text', 'text: name');
+    div.appendChild(span);
+
+    var Person = Velcro.model({
+        name: 'Default Value'
+    });
+
+    var dude = new Person;
+
+    new Velcro.App().bind(div, dude);
+
+    ok(div.childNodes[0].innerText === dude.name(), 'Inner text on div child should be initialised.');
+
+    dude.name('Updated Value');
+
+    ok(div.childNodes[0].innerText === dude.name(), 'Inner text on div child should be updated.');
+});
+
+test('Changing Context', function() {
+    var div  = document.createElement('div');
+    var span = document.createElement('span');
+
+    div.setAttribute('data-velcro-context', 'context: person');
+    span.setAttribute('data-velcro-text', 'text: name');
+    div.appendChild(span);
+
+    var App = Velcro.model({
+        person: Velcro.model({
+            name: 'Default Value'
+        })
+    });
+
+    var appsrawesome = new App;
+
+    new Velcro.App().bind(div, appsrawesome)
+    ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be initialised.');
+
+    appsrawesome.person().name('Updated Value');
+
+    ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be updated.');
+});
+
+asyncTest('Router', function() {
+    var div = document.createElement('div');
+    div.setAttribute('data-velcro-routable', 'router: router');
+
+    var app    = new Velcro.App()
+    var router = new Velcro.Router();
+
+    router.set('index', function() {
+        return {
+            name: 'test'
+        };
+    });
+
+    router.render.bind(function() {
+        ok(div.childNodes[0].innerHTML === 'test', 'Inner text on div\'s child span should update.');
+        start();
+    });
+
+    app.bind(div, {
+        router: router
+    });
+
+    router.go('index');
+});
+
+asyncTest('View', function() {
+    var div = document.createElement('div');
+    div.setAttribute('data-velcro-include', 'path: "index", context: context, callback: callback');
+
+    new Velcro.App().bind(div, {
+        context: function () {
+            return { name: 'test' };
+        },
+        callback: function() {
+            ok(div.childNodes[0].innerHTML === 'test', 'Inner text on div\'s child span should initialise.');
+            start();
+        }
+    });
+});
+
 
 
 module('Views');
 
 test('No Model Binding', function() {
-    var view = new ku.View();
+    var view = new Velcro.View();
 
     view.target = document.createElement('div');
     view.cache.test = 'test';
@@ -285,67 +278,15 @@ test('No Model Binding', function() {
 module('Http');
 
 asyncTest('Parsing Based on Request Header', function() {
-    var http = new ku.Http();
+    var http = new Velcro.Http();
 
     http.headers.Accept = 'application/json';
 
-    http.get('data/bob.json', function(r) {
-        ok(r.name === 'Bob Bobberson', 'JSON object should be properly parsed.');
-        start();
+    http.get({
+        url: 'data/bob.json',
+        success: function(r) {
+            ok(r.name === 'Bob Bobberson', 'JSON object should be properly parsed.');
+            start();
+        }
     });
 });
-
-test('Overloading Data and Callback Parameters', function() {
-    var http = new ku.Http();
-
-    http.request = function(url, data, type, callback) {
-        callback({
-            url: url,
-            data: data,
-            type: type,
-            callback: callback
-        });
-    };
-
-    http['delete']('test', function(r) {
-        ok(!r.data.arg);
-    });
-
-    http['delete']('test', {
-        arg: 'yes'
-    }, function(r) {
-        ok(r.data.arg === 'yes');
-    });
-
-    http.get('test', function(r) {
-        ok(!r.data.arg);
-    });
-
-    http.get('test', {
-        arg: 'yes'
-    }, function(r) {
-        ok(r.data.arg === 'yes');
-    });
-
-    http.head('test', function(r) {
-        ok(!r.data.arg);
-    });
-
-    http.head('test', {
-        arg: 'yes'
-    }, function(r) {
-        ok(r.data.arg === 'yes');
-    });
-
-    http.options('test', function(r) {
-        ok(!r.data.arg);
-    });
-
-    http.options('test', {
-        arg: 'yes'
-    }, function(r) {
-        ok(r.data.arg === 'yes');
-    });
-});
-
-*/

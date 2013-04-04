@@ -4,42 +4,27 @@
     } else if (typeof define === 'function' && define.amd) {
         define(['exports'], factory);
     } else {
-        factory(window.ku = {});
+        factory(window.Velcro = {});
     }
-}(function(ku) {
+}(function(Velcro) {
 
-ku.App = function() {
-    this.attributePrefix  = 'data-ku-';
-    this.bindings         = ku.defaultBindings;
-    this.context          = {
-        $parent: false,
-        $root: false
-    };
+Velcro.App = function() {
+    this.attributePrefix  = 'data-velcro-';
+    this.bindings         = Velcro.defaultBindings;
+    this.contexts         = [];
 };
 
-ku.App.prototype = {
+Velcro.App.prototype = {
     bind: function(element, context) {
         if (arguments.length === 1) {
             context = element;
             element = document;
         }
 
-        this.bindOne(element, context);
-        this.bindDescendants(element, context);
-
-        return this;
-    },
-
-    bindOne: function(element, context) {
-        var $this = this;
-
-        each(element.attributes, function(i, node) {
-            var name = node.nodeName.substring($this.attributePrefix.length);
-
-            if (typeof $this.bindings[name] === 'function') {
-                $this.bindAttribute(element, context, name, node.nodeValue);
-            }
-        });
+        this.context(context);
+        this.bindOne(element);
+        this.bindDescendants(element);
+        this.restoreContext();
 
         return this;
     },
@@ -54,20 +39,32 @@ ku.App.prototype = {
         return this;
     },
 
-    bindAttribute: function (element, context, name, value) {
-        this.setContext(context);
+    bindOne: function(element) {
+        var $this = this;
 
+        each(element.attributes, function(i, node) {
+            var name = node.nodeName.substring($this.attributePrefix.length);
+
+            if (typeof $this.bindings[name] === 'function') {
+                $this.bindAttribute(element, name, node.nodeValue);
+            }
+        });
+
+        return this;
+    },
+
+    bindAttribute: function (element, name, value) {
         var $this   = this;
-        var parsed  = ku.utils.parseBinding(value, context);
-        var binding = $this.bindings[name];
+        var parsed  = Velcro.utils.parseBinding(value, this.context());
+        var binding = this.bindings[name];
 
-        each(parsed, function(index, value) {
-            subscribeToUpdatesIfObservable(value);
+        each(parsed, function(parsedName, parsedValue) {
+            subscribeToUpdatesIfObservable(parsedValue);
         });
 
         initialiseBinding();
 
-        return this.restoreContext();
+        return this;
 
         function initialiseBinding() {
             var options = extractObservableValues();
@@ -80,7 +77,7 @@ ku.App.prototype = {
         }
 
         function subscribeToUpdatesIfObservable(value) {
-            if (!ku.utils.isObservable(value)) {
+            if (!Velcro.utils.isObservable(value)) {
                 return;
             }
 
@@ -98,11 +95,11 @@ ku.App.prototype = {
         function extractObservableValues() {
             var options = {};
 
-            each(parsed, function(index, value) {
-                if (ku.utils.isObservable(value)) {
-                    options[index] = value();
+            each(parsed, function(name, value) {
+                if (Velcro.utils.isObservable(value)) {
+                    options[name] = value();
                 } else {
-                    options[index] = value;
+                    options[name] = value;
                 }
             });
 
@@ -110,29 +107,27 @@ ku.App.prototype = {
         }
     },
 
-    setContext: function(context) {
+    context: function(context) {
         if (typeof context === 'object') {
-            context.$parent = this.context;
-            context.$root   = this.context.$root || this.context;
-            this.context    = context;
+            if (this.contexts.length) {
+                context.$parent = this.contexts[this.contexts.length - 1];
+                context.$root   = this.contexts[0];
+            }
+
+            this.contexts.push(context);
+
+            return this;
+        } else {
+            return this.contexts.length ? this.contexts[this.contexts.length - 1] : false;
         }
-
-        return this;
-    },
-
-    getContext: function() {
-        return this.context;
     },
 
     restoreContext: function() {
-        if (typeof this.context.$parent === 'object') {
-            this.setContext(this.context.$parent);
-        }
-
+        this.contexts.pop();
         return this;
     }
 };
-ku.collection = function(model) {
+Velcro.collection = function(model) {
     var Collection = function(data) {
         Array.prototype.push.apply(this, []);
 
@@ -205,7 +200,7 @@ ku.collection = function(model) {
         };
 
         this.insert = function(at, item) {
-            item         = ku.utils.isModel(item) ? item : new model(item);
+            item         = Velcro.utils.isModel(item) ? item : new model(item);
             item.$parent = this.$parent;
 
             Array.prototype.splice.call(this, at, 0, item);
@@ -215,7 +210,7 @@ ku.collection = function(model) {
         };
 
         this.replace = function (at, item) {
-            item         = ku.utils.isModel(item) ? item : new model(item);
+            item         = Velcro.utils.isModel(item) ? item : new model(item);
             item.$parent = this.$parent;
 
             Array.prototype.splice.call(this, at, 1, item);
@@ -240,7 +235,7 @@ ku.collection = function(model) {
         this.from = function(data) {
             var that = this;
 
-            if (ku.utils.isCollection(data)) {
+            if (Velcro.utils.isCollection(data)) {
                 data = data.raw();
             }
 
@@ -276,7 +271,7 @@ ku.collection = function(model) {
             var collection     = new this.$self.Model.Collection();
             collection.$parent = this.$parent;
 
-            if (ku.utils.isModel(query)) {
+            if (Velcro.utils.isModel(query)) {
                 query = query.raw();
             }
 
@@ -339,18 +334,25 @@ ku.collection = function(model) {
     return Collection;
 };
 var context = function(app, element, options) {
-    app.setContext(options.context);
+    app.context(options.context);
 };
 
 var include = function(app, element, options) {
-    var view = options.view || new ku.View();
-
-    app = options.app || app;
-
+    var view    = options.view || new Velcro.View();
+    var subApp  = options.app || app;
+    var context = options.context;
     view.target = element;
 
+    if (typeof context === 'function') {
+        context = context();
+    }
+
     view.render(options.path, function() {
-        app.bindDescendants(element);
+        app.bindDescendants(element, context);
+
+        if (typeof options.callback === 'function') {
+            options.callback();
+        }
     });
 };
 
@@ -358,11 +360,11 @@ var routable = function(app, element, options) {
     var router = options.router;
 
     if (!router) {
-        ku.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it does not exist.');
+        Velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it does not exist.');
     }
 
-    if (!router instanceof ku.Router) {
-        ku.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it is not an instanceof "ku.Router".');
+    if (!router instanceof Velcro.Router) {
+        Velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it is not an instanceof "Velcro.Router".');
     }
 
     router.view.target = element;
@@ -373,18 +375,18 @@ var text = function(app, element, options) {
     element.innerText = options.text;
 };
 
-ku.defaultBindings = {
+Velcro.defaultBindings = {
     context: context,
     include: include,
     routable: routable,
     text: text
 };
-ku.Event = function() {
+Velcro.Event = function() {
     this.stack = [];
     return this;
 };
 
-ku.Event.prototype = {
+Velcro.Event.prototype = {
     bind: function(cb) {
         this.stack.push(cb);
         return this;
@@ -408,64 +410,38 @@ ku.Event.prototype = {
         return this;
     },
 
-    trigger: function(args) {
+    once: function(cb) {
+        var $this = this;
+
+        return this.bind(function() {
+            cb.call(cb, arguments);
+            $this.unbind(cb);
+        });
+    },
+
+    trigger: function() {
+        return this.triggerArgs(Array.prototype.slice.call(arguments, 1));
+    },
+
+    triggerArgs: function(args) {
         for (var i in this.stack) {
-            if (this.stack[i].apply(this, args) === false) {
+            if (this.stack[i].apply(this.stack[i], args) === false) {
                 return false;
             }
         }
-    }
-};
-ku.Events = function() {
-    this.events = {};
-    return this;
-};
-
-ku.Events.prototype = {
-    on: function(name, handler) {
-        if (typeof this.events[name] === 'undefined') {
-            this.events[name] = new ku.Event();
-        }
-
-        this.events[name].bind(handler);
 
         return this;
-    },
-
-    off: function(name, handler) {
-        if (!name) {
-            this.events = {};
-            return this;
-        }
-
-        if (typeof this.events[name] !== 'undefined') {
-            this.events[name].unbind(handler);
-        }
-
-        return this;
-    },
-
-    trigger: function(name, args) {
-        if (typeof this.events[name] !== 'undefined') {
-            if (this.events[name].trigger(args) === false) {
-                return false;
-            }
-        }
     }
 };
-ku.Http = function() {
-    this.events = new ku.Events();
-    return this;
-};
-
-ku.Http.prototype = {
-    prefix: '',
-
-    suffix: '',
-
-    headers: {},
-
-    parsers: {
+Velcro.Http = function() {
+    this.before  = new Velcro.Event();
+    this.after   = new Velcro.Event();
+    this.success = new Velcro.Event();
+    this.error   = new Velcro.Event();
+    this.prefix  = '',
+    this.suffix  = '',
+    this.headers = {};
+    this.parsers = {
         'application/json': function(response) {
             try {
                 return JSON.parse(response);
@@ -473,41 +449,77 @@ ku.Http.prototype = {
                 throw 'Error parsing response "' + response + '" with message "' + error + '".';
             }
         }
+    };
+    return this;
+};
+
+Velcro.Http.prototype = {
+    'delete': function(options) {
+        options.type = 'delete';
+        return this.request(options);
     },
 
-    'delete': function(url, data, fn) {
-        return this.request(url, data || {}, 'delete', fn || data);
+    get: function(options) {
+        options.type = 'get';
+        return this.request(options);
     },
 
-    get: function(url, data, fn) {
-        return this.request(url, data || {}, 'get', fn || data);
+    head: function(options) {
+        options.type = 'head';
+        return this.request(options);
     },
 
-    head: function(url, data, fn) {
-        return this.request(url, data || {}, 'head', fn || data);
+    options: function(options) {
+        options.type = 'options';
+        return this.request(options);
     },
 
-    options: function(url, data, fn) {
-        return this.request(url, data || {}, 'options', fn || data);
+    patch: function(options) {
+        options.type = 'patch';
+        return this.request(options);
     },
 
-    patch: function(url, data, fn) {
-        return this.request(url, data, 'patch', fn);
+    post: function(options) {
+        options.type = 'post';
+        return this.request(options);
     },
 
-    post: function(url, data, fn) {
-        return this.request(url, data, 'post', fn);
+    put: function(options) {
+        options.type = 'put';
+        return this.request(options);
     },
 
-    put: function(url, data, fn) {
-        return this.request(url, data, 'put', fn);
-    },
+    request: function(options) {
+        var $this   = this;
+        var request = createXmlHttpRequest();
 
-    request: function(url, data, type, fn) {
-        var $this   = this,
-            request = this.createRequestObject();
+        options = {
+            type: typeof options.type === 'string' ? options.type.toUpperCase() : 'GET',
+            url: options.url,
+            data: options.data || {},
+            success: options.success || function(){},
+            error: options.error || function(){},
+            before: options.before || function(){},
+            after: options.done || function(){}
+        };
 
-        request.open(type.toUpperCase(), this.prefix + url + this.suffix, true);
+        if (Velcro.utils.isModel(options.data)) {
+            options.data = options.data.raw();
+        }
+
+        if (typeof options.data === 'object') {
+            options.data = this.serialize(options.data);
+        }
+
+        if (options.data) {
+            if (options.type === 'get') {
+                options.url += '?' + options.data;
+            } else {
+                request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            }
+        }
+
+        request.open(options.type, this.prefix + options.url + this.suffix, true);
 
         for (var header in this.headers) {
             request.setRequestHeader(header, this.headers[header]);
@@ -519,13 +531,15 @@ ku.Http.prototype = {
             }
 
             if (request.status !== 200 && request.status !== 304) {
-                $this.events.trigger('error', [request]);
-                $this.events.trigger('stop', [request]);
+                options.error.call(options.error, request);
+                $this.error.trigger(request);
+                options.after.call(options.after, request);
+                $this.after.trigger(request);
                 return;
             }
 
-            var response = request.responseText,
-                headers  = request.getAllResponseHeaders();
+            var response = request.responseText;
+            var headers  = request.getAllResponseHeaders();
 
             if (typeof headers['Content-Type'] === 'string' && typeof $this.parsers[headers['Content-Type']] === 'function') {
                 response = $this.parsers[headers['Content-Type']](response);
@@ -533,32 +547,15 @@ ku.Http.prototype = {
                 response = $this.parsers[$this.headers.Accept](response);
             }
 
-            if (typeof fn === 'function') {
-                fn(response, request);
-            }
-
-            $this.events.trigger('success', [response, request]);
-            $this.events.trigger('stop', [request]);
+            options.success.call(options.success, response);
+            $this.success.trigger(response);
+            options.after.call(options.after, request);
+            $this.after.trigger(request);
         };
 
-        if (request.readyState === 4) {
-            return;
-        }
-
-        if (ku.utils.isModel(data)) {
-            data = data.raw();
-        }
-
-        if (typeof data === 'object') {
-            data = this.serialize(data);
-        }
-
-        if (data) {
-            request.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
-        }
-
-        this.events.trigger('start', [request]);
-        request.send(data);
+        options.before.call(options.before, request);
+        this.before.trigger(request);
+        request.send(options.data);
 
         return this;
     },
@@ -572,33 +569,32 @@ ku.Http.prototype = {
         }
 
         return str.join('&');
-    },
-
-    createRequestObject: function() {
-        var request   = false;
-            factories = [
-                function () { return new XMLHttpRequest(); },
-                function () { return new ActiveXObject('Msxml2.XMLHTTP'); },
-                function () { return new ActiveXObject('Msxml3.XMLHTTP'); },
-                function () { return new ActiveXObject('Microsoft.XMLHTTP'); }
-            ];
-
-        for (var i = 0; i < factories.length; i++) {
-            try {
-                request = factories[i]();
-            } catch (e) {
-                continue;
-            }
-        }
-
-        if (!request) {
-            throw 'An XMLHttpRequest could not be generated.';
-        }
-
-        return request;
     }
 };
 
+function createXmlHttpRequest() {
+    var request   = false;
+    var factories = [
+        function () { return new XMLHttpRequest(); },
+        function () { return new ActiveXObject('Msxml2.XMLHTTP'); },
+        function () { return new ActiveXObject('Msxml3.XMLHTTP'); },
+        function () { return new ActiveXObject('Microsoft.XMLHTTP'); }
+    ];
+
+    for (var i = 0; i < factories.length; i++) {
+        try {
+            request = factories[i]();
+        } catch (e) {
+            continue;
+        }
+    }
+
+    if (!request) {
+        throw 'An XMLHttpRequest could not be generated.';
+    }
+
+    return request;
+}
 function fnCompare(fn, str) {
     if (!fn) {
         return false;
@@ -638,21 +634,15 @@ function each(items, fn) {
 }
 
 function generateValueObserver(obj) {
-    var value = ku.value();
-
-    value.bind = obj;
-
-    value.get = function() {
-        return this;
-    };
-
-    value.set = function(value) {
-        this.from(value);
-    };
-
-    return value;
+    return Velcro.value({
+        value: obj,
+        bind: obj,
+        set: function(value) {
+            this.from(value);
+        }
+    });
 }
-ku.model = function(definition) {
+Velcro.model = function(definition) {
     var Model = function(data) {
         var that = this;
 
@@ -663,7 +653,7 @@ ku.model = function(definition) {
         };
 
         this.from = function(obj) {
-            if (ku.utils.isModel(obj)) {
+            if (Velcro.utils.isModel(obj)) {
                 obj = obj.raw();
             }
 
@@ -716,7 +706,7 @@ ku.model = function(definition) {
         }
     };
 
-    Model.Collection      = ku.collection(Model);
+    Model.Collection      = Velcro.collection(Model);
     Model.computed        = {};
     Model.methods         = {};
     Model.properties      = {};
@@ -724,7 +714,7 @@ ku.model = function(definition) {
     Model.prototype.$self = Model;
 
     Model.extend = function(OtherModel) {
-        OtherModel = ku.utils.isModel(OtherModel) ? OtherModel : ku.model(OtherModel);
+        OtherModel = Velcro.utils.isModel(OtherModel) ? OtherModel : Velcro.model(OtherModel);
 
         each(Model.computed, function(i, v) {
             if (typeof OtherModel.computed[i] === 'undefined') {
@@ -764,7 +754,7 @@ ku.model = function(definition) {
 
 function interpretDefinition(Model, definition) {
     each(definition, function(i, v) {
-        if (ku.utils.isModel(v) || ku.utils.isCollection(v)) {
+        if (Velcro.utils.isModel(v) || Velcro.utils.isCollection(v)) {
             Model.relations[i] = v;
             return;
         }
@@ -772,11 +762,11 @@ function interpretDefinition(Model, definition) {
         if (typeof v === 'function') {
             var name, type;
 
-            if (ku.utils.isReader(i)) {
-                name = ku.utils.fromReader(i);
+            if (i.indexOf('get') === 0) {
+                name = i.substring(3, 4).toLowerCase() + i.substring(4);
                 type = 'get';
-            } else if (ku.utils.isWriter(i)) {
-                name = ku.utils.fromWriter(i);
+            } else if (i.indexOf('set') === 0) {
+                name = i.substring(3, 4).toLowerCase() + i.substring(4);
                 type = 'set';
             }
 
@@ -808,7 +798,7 @@ function define(obj) {
 
 function defineComputed(obj) {
     each(obj.$self.computed, function(name, computed) {
-        obj[name] = ku.value({
+        obj[name] = Velcro.value({
             bind: obj,
             get: computed.get,
             set: computed.set
@@ -826,7 +816,8 @@ function defineMethods(obj) {
 
 function defineProperties(obj) {
     each(obj.$self.properties, function(name, property) {
-        obj[name] = ku.value({
+        obj[name] = Velcro.value({
+            bind: obj,
             value: property
         });
     });
@@ -841,32 +832,36 @@ function defineRelations(obj) {
 }
 var bound = [];
 
-ku.Router = function() {
-    this.app    = new ku.App();
-    this.events = new ku.Events();
+Velcro.Router = function() {
+    this.app    = new Velcro.App();
+    this.enter  = new Velcro.Event();
+    this.exit   = new Velcro.Event();
     this.params = {};
+    this.render = new Velcro.Event();
     this.route  = false;
     this.routes = {};
-    this.state  = new ku.State();
-    this.view   = new ku.View();
+    this.state  = new Velcro.State();
+    this.view   = new Velcro.View();
 
     return this;
 };
 
-ku.Router.prototype = {
+Velcro.Router.prototype = {
     handler: function(execute) {
         execute();
     },
 
     renderer: function(route, params) {
-        var $this = this;
+        var $this   = this;
+        var context = route.controller.apply(route.controller, params);
 
-        this.app.context = route.controller.apply(route.controller, params);
-        this.app.context = new (ku.model(this.app.context))();
+        if (!Velcro.utils.isModel(context)) {
+            context = new (Velcro.model(context))();
+        }
 
-        this.view.render(route.view, function() {
-            $this.app.bindDescendants(this.target);
-            $this.events.trigger('render', [$this, route, params]);
+        this.view.render(route.view, function(view) {
+            $this.app.bindDescendants(view.target, context);
+            $this.render.trigger($this, route, params);
         });
     },
 
@@ -904,7 +899,7 @@ ku.Router.prototype = {
             options.view = name;
         }
 
-        this.routes[name] = options instanceof ku.Route ? options : new ku.Route(options);
+        this.routes[name] = options instanceof Velcro.Route ? options : new Velcro.Route(options);
 
         return this;
     },
@@ -949,10 +944,10 @@ ku.Router.prototype = {
             }
 
             if (this.route) {
-                this.events.trigger('exit', [this, this.state.previous, this.route, this.params]);
+                this.exit.trigger(this, this.state.previous, this.route, this.params);
             }
 
-            this.events.trigger('enter', [this, request, route, params]);
+            this.enter.trigger(this, request, route, params);
 
             this.params         = params;
             this.route          = route;
@@ -976,7 +971,7 @@ ku.Router.prototype = {
 
 
 
-ku.Route = function(options) {
+Velcro.Route = function(options) {
     for (var i in options) {
         this[i] = options[i];
     }
@@ -984,7 +979,7 @@ ku.Route = function(options) {
     return this;
 };
 
-ku.Route.prototype = {
+Velcro.Route.prototype = {
     match: /.*/,
 
     format: '',
@@ -1024,17 +1019,17 @@ var interval;
 
 var isStarted = false;
 
-ku.State = function() {
+Velcro.State = function() {
     this.states = {};
-    ku.State.start();
+    Velcro.State.start();
     return this;
 };
 
-ku.State.interval = 500;
+Velcro.State.interval = 500;
 
-ku.State.start = function() {
+Velcro.State.start = function() {
     if (isStarted) {
-        return ku.State;
+        return Velcro.State;
     }
 
     var isIeLyingAboutHashChange = 'onhashchange' in window && /MSIE\s(6|7)/.test(navigator.userAgent);
@@ -1050,15 +1045,15 @@ ku.State.start = function() {
                 oldState = window.location.hash;
                 trigger('hashchange');
             }
-        }, ku.State.interval);
+        }, Velcro.State.interval);
     }
 
     isStarted = true;
 
-    return ku.State;
+    return Velcro.State;
 };
 
-ku.State.stop = function() {
+Velcro.State.stop = function() {
     if (interval) {
         clearInterval(interval);
     }
@@ -1075,7 +1070,7 @@ ku.State.stop = function() {
     return State;
 };
 
-ku.State.prototype = {
+Velcro.State.prototype = {
     previous: false,
 
     enabled: false,
@@ -1175,7 +1170,7 @@ function dispatch() {
         bound[i].dispatch();
     }
 }
-ku.utils = {
+Velcro.utils = {
     parseBinding: function(json, context) {
         var code = '';
 
@@ -1197,7 +1192,7 @@ ku.utils = {
     },
 
     isObservable: function(value) {
-        return typeof value === 'function' && value.toString() === ku.value().toString();
+        return typeof value === 'function' && value.toString() === Velcro.value().toString();
     },
 
     html: function(element) {
@@ -1207,42 +1202,18 @@ ku.utils = {
     },
 
     throwForElement: function(element, message) {
-        throw message + "\n" + ku.html(element);
-    },
-
-    isReader: function(name) {
-        return name.indexOf('read') === 0;
-    },
-
-    isWriter: function(name) {
-        return name.indexOf('write') === 0;
-    },
-
-    toReader: function(name) {
-        return 'read' + name.substring(0, 1).toUpperCase() + name.substring(1);
-    },
-
-    toWriter: function(name) {
-        return 'write' + name.substring(0, 1).toUpperCase() + name.substring(1);
-    },
-
-    fromReader: function(name) {
-        return name.substring(4, 5).toLowerCase() + name.substring(5);
-    },
-
-    fromWriter: function(name) {
-        return name.substring(5, 6).toLowerCase() + name.substring(6);
+        throw message + "\n" + Velcro.html(element);
     },
 
     isModel: function(fn) {
-        return fnCompare(fn, ku.model().toString());
+        return fnCompare(fn, Velcro.model().toString());
     },
 
     isCollection: function(fn) {
-        return fnCompare(fn, ku.collection().toString());
+        return fnCompare(fn, Velcro.collection().toString());
     }
 };
-ku.value = function(options) {
+Velcro.value = function(options) {
     var func = function(value) {
         if (arguments.length === 0) {
             return func.get.call(func.bind);
@@ -1288,7 +1259,6 @@ ku.value = function(options) {
                 return;
             }
         });
-
         return func;
     };
 
@@ -1296,13 +1266,14 @@ ku.value = function(options) {
         each(_subscribers, function(index, subscriber) {
             subscriber(func.value);
         });
+        return func;
     };
 
     return func;
 };
-ku.View = function() {
+Velcro.View = function() {
     this.cache       = {};
-    this.http        = new ku.Http();
+    this.http        = new Velcro.Http();
     this.http.prefix = 'views/';
     this.http.suffix = '.html';
     this.http.accept = 'text/html';
@@ -1310,12 +1281,12 @@ ku.View = function() {
     return this;
 };
 
-ku.View.prototype = {
+Velcro.View.prototype = {
     http: false,
 
     target: null,
 
-    idPrefix: 'ku-view-',
+    idPrefix: 'Velcro-view-',
 
     idSuffix: '',
 
@@ -1326,7 +1297,7 @@ ku.View.prototype = {
         var id    = this.idPrefix + name.replace(/\//g, this.idSeparator) + this.idSuffix;
         var cb    = function() {
             if (typeof callback === 'function') {
-                callback.call($this, name);
+                callback.call(callback, $this, name);
             }
         };
 
@@ -1337,9 +1308,12 @@ ku.View.prototype = {
             this.renderer(this.cache[name] = document.getElementById(id).innerHTML);
             cb();
         } else if (this.http) {
-            this.http.get(name, function(html) {
-                $this.renderer($this.cache[name] = html);
-                cb();
+            this.http.get({
+                url: name,
+                success: function(html) {
+                    $this.renderer($this.cache[name] = html);
+                    cb();
+                }
             });
         }
 
