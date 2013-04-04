@@ -4,17 +4,17 @@
     } else if (typeof define === 'function' && define.amd) {
         define(['exports'], factory);
     } else {
-        factory(window.Velcro = {});
+        factory(window.velcro = {});
     }
-}(function(Velcro) {
+}(function(velcro) {
 
-Velcro.App = function() {
+velcro.App = function() {
     this.attributePrefix  = 'data-velcro-';
-    this.bindings         = Velcro.defaultBindings;
+    this.bindings         = velcro.defaultBindings;
     this.contexts         = [];
 };
 
-Velcro.App.prototype = {
+velcro.App.prototype = {
     bind: function(element, context) {
         if (arguments.length === 1) {
             context = element;
@@ -55,7 +55,7 @@ Velcro.App.prototype = {
 
     bindAttribute: function (element, name, value) {
         var $this   = this;
-        var parsed  = Velcro.utils.parseBinding(value, this.context());
+        var parsed  = velcro.utils.parseBinding(value, this.context());
         var binding = this.bindings[name];
 
         each(parsed, function(parsedName, parsedValue) {
@@ -77,7 +77,7 @@ Velcro.App.prototype = {
         }
 
         function subscribeToUpdatesIfObservable(value) {
-            if (!Velcro.utils.isObservable(value)) {
+            if (!velcro.utils.isObservable(value)) {
                 return;
             }
 
@@ -96,7 +96,7 @@ Velcro.App.prototype = {
             var options = {};
 
             each(parsed, function(name, value) {
-                if (Velcro.utils.isObservable(value)) {
+                if (velcro.utils.isObservable(value)) {
                     options[name] = value();
                 } else {
                     options[name] = value;
@@ -127,7 +127,7 @@ Velcro.App.prototype = {
         return this;
     }
 };
-Velcro.collection = function(model) {
+velcro.collection = function(model) {
     var Collection = function(data) {
         Array.prototype.push.apply(this, []);
 
@@ -200,7 +200,7 @@ Velcro.collection = function(model) {
         };
 
         this.insert = function(at, item) {
-            item         = Velcro.utils.isModel(item) ? item : new model(item);
+            item         = velcro.utils.isModel(item) ? item : new model(item);
             item.$parent = this.$parent;
 
             Array.prototype.splice.call(this, at, 0, item);
@@ -210,7 +210,7 @@ Velcro.collection = function(model) {
         };
 
         this.replace = function (at, item) {
-            item         = Velcro.utils.isModel(item) ? item : new model(item);
+            item         = velcro.utils.isModel(item) ? item : new model(item);
             item.$parent = this.$parent;
 
             Array.prototype.splice.call(this, at, 1, item);
@@ -235,7 +235,7 @@ Velcro.collection = function(model) {
         this.from = function(data) {
             var that = this;
 
-            if (Velcro.utils.isCollection(data)) {
+            if (velcro.utils.isCollection(data)) {
                 data = data.raw();
             }
 
@@ -271,7 +271,7 @@ Velcro.collection = function(model) {
             var collection     = new this.$self.Model.Collection();
             collection.$parent = this.$parent;
 
-            if (Velcro.utils.isModel(query)) {
+            if (velcro.utils.isModel(query)) {
                 query = query.raw();
             }
 
@@ -338,7 +338,7 @@ var context = function(app, element, options) {
 };
 
 var include = function(app, element, options) {
-    var view    = options.view || new Velcro.View();
+    var view    = options.view || new velcro.View();
     var subApp  = options.app || app;
     var context = options.context;
     view.target = element;
@@ -360,11 +360,11 @@ var routable = function(app, element, options) {
     var router = options.router;
 
     if (!router) {
-        Velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it does not exist.');
+        velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it does not exist.');
     }
 
-    if (!router instanceof Velcro.Router) {
-        Velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it is not an instanceof "Velcro.Router".');
+    if (!router instanceof velcro.Router) {
+        velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it is not an instanceof "velcro.Router".');
     }
 
     router.view.target = element;
@@ -375,18 +375,18 @@ var text = function(app, element, options) {
     element.innerText = options.text;
 };
 
-Velcro.defaultBindings = {
+velcro.defaultBindings = {
     context: context,
     include: include,
     routable: routable,
     text: text
 };
-Velcro.Event = function() {
+velcro.Event = function() {
     this.stack = [];
     return this;
 };
 
-Velcro.Event.prototype = {
+velcro.Event.prototype = {
     bind: function(cb) {
         this.stack.push(cb);
         return this;
@@ -433,11 +433,11 @@ Velcro.Event.prototype = {
         return this;
     }
 };
-Velcro.Http = function() {
-    this.before  = new Velcro.Event();
-    this.after   = new Velcro.Event();
-    this.success = new Velcro.Event();
-    this.error   = new Velcro.Event();
+velcro.Http = function() {
+    this.before  = new velcro.Event();
+    this.after   = new velcro.Event();
+    this.success = new velcro.Event();
+    this.error   = new velcro.Event();
     this.prefix  = '',
     this.suffix  = '',
     this.headers = {};
@@ -453,7 +453,7 @@ Velcro.Http = function() {
     return this;
 };
 
-Velcro.Http.prototype = {
+velcro.Http.prototype = {
     'delete': function(options) {
         options.type = 'delete';
         return this.request(options);
@@ -503,7 +503,7 @@ Velcro.Http.prototype = {
             after: options.done || function(){}
         };
 
-        if (Velcro.utils.isModel(options.data)) {
+        if (velcro.utils.isModel(options.data)) {
             options.data = options.data.raw();
         }
 
@@ -639,7 +639,7 @@ function each(items, fn) {
 }
 
 function generateValueObserver(obj) {
-    return Velcro.value({
+    return velcro.value({
         value: obj,
         bind: obj,
         set: function(value) {
@@ -647,7 +647,7 @@ function generateValueObserver(obj) {
         }
     });
 }
-Velcro.model = function(definition) {
+velcro.model = function(definition) {
     var Model = function(data) {
         var that = this;
 
@@ -658,7 +658,7 @@ Velcro.model = function(definition) {
         };
 
         this.from = function(obj) {
-            if (Velcro.utils.isModel(obj)) {
+            if (velcro.utils.isModel(obj)) {
                 obj = obj.raw();
             }
 
@@ -711,7 +711,7 @@ Velcro.model = function(definition) {
         }
     };
 
-    Model.Collection      = Velcro.collection(Model);
+    Model.Collection      = velcro.collection(Model);
     Model.computed        = {};
     Model.methods         = {};
     Model.properties      = {};
@@ -719,7 +719,7 @@ Velcro.model = function(definition) {
     Model.prototype.$self = Model;
 
     Model.extend = function(OtherModel) {
-        OtherModel = Velcro.utils.isModel(OtherModel) ? OtherModel : Velcro.model(OtherModel);
+        OtherModel = velcro.utils.isModel(OtherModel) ? OtherModel : velcro.model(OtherModel);
 
         each(Model.computed, function(i, v) {
             if (typeof OtherModel.computed[i] === 'undefined') {
@@ -759,7 +759,7 @@ Velcro.model = function(definition) {
 
 function interpretDefinition(Model, definition) {
     each(definition, function(i, v) {
-        if (Velcro.utils.isModel(v) || Velcro.utils.isCollection(v)) {
+        if (velcro.utils.isModel(v) || velcro.utils.isCollection(v)) {
             Model.relations[i] = v;
             return;
         }
@@ -803,7 +803,7 @@ function define(obj) {
 
 function defineComputed(obj) {
     each(obj.$self.computed, function(name, computed) {
-        obj[name] = Velcro.value({
+        obj[name] = velcro.value({
             bind: obj,
             get: computed.get,
             set: computed.set
@@ -821,7 +821,7 @@ function defineMethods(obj) {
 
 function defineProperties(obj) {
     each(obj.$self.properties, function(name, property) {
-        obj[name] = Velcro.value({
+        obj[name] = velcro.value({
             bind: obj,
             value: property
         });
@@ -837,21 +837,21 @@ function defineRelations(obj) {
 }
 var bound = [];
 
-Velcro.Router = function() {
-    this.app    = new Velcro.App();
-    this.enter  = new Velcro.Event();
-    this.exit   = new Velcro.Event();
+velcro.Router = function() {
+    this.app    = new velcro.App();
+    this.enter  = new velcro.Event();
+    this.exit   = new velcro.Event();
     this.params = {};
-    this.render = new Velcro.Event();
+    this.render = new velcro.Event();
     this.route  = false;
     this.routes = {};
-    this.state  = new Velcro.State();
-    this.view   = new Velcro.View();
+    this.state  = new velcro.State();
+    this.view   = new velcro.View();
 
     return this;
 };
 
-Velcro.Router.prototype = {
+velcro.Router.prototype = {
     handler: function(execute) {
         execute();
     },
@@ -860,8 +860,8 @@ Velcro.Router.prototype = {
         var $this   = this;
         var context = route.controller.apply(route.controller, params);
 
-        if (!Velcro.utils.isModel(context)) {
-            context = new (Velcro.model(context))();
+        if (!velcro.utils.isModel(context)) {
+            context = new (velcro.model(context))();
         }
 
         this.view.render(route.view, function(view) {
@@ -904,7 +904,7 @@ Velcro.Router.prototype = {
             options.view = name;
         }
 
-        this.routes[name] = options instanceof Velcro.Route ? options : new Velcro.Route(options);
+        this.routes[name] = options instanceof velcro.Route ? options : new velcro.Route(options);
 
         return this;
     },
@@ -976,7 +976,7 @@ Velcro.Router.prototype = {
 
 
 
-Velcro.Route = function(options) {
+velcro.Route = function(options) {
     for (var i in options) {
         this[i] = options[i];
     }
@@ -984,7 +984,7 @@ Velcro.Route = function(options) {
     return this;
 };
 
-Velcro.Route.prototype = {
+velcro.Route.prototype = {
     match: /.*/,
 
     format: '',
@@ -1024,17 +1024,17 @@ var interval;
 
 var isStarted = false;
 
-Velcro.State = function() {
+velcro.State = function() {
     this.states = {};
-    Velcro.State.start();
+    velcro.State.start();
     return this;
 };
 
-Velcro.State.interval = 500;
+velcro.State.interval = 500;
 
-Velcro.State.start = function() {
+velcro.State.start = function() {
     if (isStarted) {
-        return Velcro.State;
+        return velcro.State;
     }
 
     var isIeLyingAboutHashChange = 'onhashchange' in window && /MSIE\s(6|7)/.test(navigator.userAgent);
@@ -1050,15 +1050,15 @@ Velcro.State.start = function() {
                 oldState = window.location.hash;
                 trigger('hashchange');
             }
-        }, Velcro.State.interval);
+        }, velcro.State.interval);
     }
 
     isStarted = true;
 
-    return Velcro.State;
+    return velcro.State;
 };
 
-Velcro.State.stop = function() {
+velcro.State.stop = function() {
     if (interval) {
         clearInterval(interval);
     }
@@ -1075,7 +1075,7 @@ Velcro.State.stop = function() {
     return State;
 };
 
-Velcro.State.prototype = {
+velcro.State.prototype = {
     previous: false,
 
     enabled: false,
@@ -1175,7 +1175,7 @@ function dispatch() {
         bound[i].dispatch();
     }
 }
-Velcro.utils = {
+velcro.utils = {
     parseBinding: function(json, context) {
         var code = '';
 
@@ -1197,7 +1197,7 @@ Velcro.utils = {
     },
 
     isObservable: function(value) {
-        return typeof value === 'function' && value.toString() === Velcro.value().toString();
+        return typeof value === 'function' && value.toString() === velcro.value().toString();
     },
 
     html: function(element) {
@@ -1207,18 +1207,18 @@ Velcro.utils = {
     },
 
     throwForElement: function(element, message) {
-        throw message + "\n" + Velcro.html(element);
+        throw message + "\n" + velcro.html(element);
     },
 
     isModel: function(fn) {
-        return fnCompare(fn, Velcro.model().toString());
+        return fnCompare(fn, velcro.model().toString());
     },
 
     isCollection: function(fn) {
-        return fnCompare(fn, Velcro.collection().toString());
+        return fnCompare(fn, velcro.collection().toString());
     }
 };
-Velcro.value = function(options) {
+velcro.value = function(options) {
     var func = function(value) {
         if (arguments.length === 0) {
             return func.get.call(func.bind);
@@ -1276,9 +1276,9 @@ Velcro.value = function(options) {
 
     return func;
 };
-Velcro.View = function() {
+velcro.View = function() {
     this.cache       = {};
-    this.http        = new Velcro.Http();
+    this.http        = new velcro.Http();
     this.http.prefix = 'views/';
     this.http.suffix = '.html';
     this.http.accept = 'text/html';
@@ -1286,12 +1286,12 @@ Velcro.View = function() {
     return this;
 };
 
-Velcro.View.prototype = {
+velcro.View.prototype = {
     http: false,
 
     target: null,
 
-    idPrefix: 'Velcro-view-',
+    idPrefix: 'velcro-view-',
 
     idSuffix: '',
 

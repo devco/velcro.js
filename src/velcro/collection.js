@@ -1,4 +1,4 @@
-Velcro.collection = function(model) {
+velcro.collection = function(model) {
     var Collection = function(data) {
         Array.prototype.push.apply(this, []);
 
@@ -71,7 +71,7 @@ Velcro.collection = function(model) {
         };
 
         this.insert = function(at, item) {
-            item         = Velcro.utils.isModel(item) ? item : new model(item);
+            item         = velcro.utils.isModel(item) ? item : new model(item);
             item.$parent = this.$parent;
 
             Array.prototype.splice.call(this, at, 0, item);
@@ -81,7 +81,7 @@ Velcro.collection = function(model) {
         };
 
         this.replace = function (at, item) {
-            item         = Velcro.utils.isModel(item) ? item : new model(item);
+            item         = velcro.utils.isModel(item) ? item : new model(item);
             item.$parent = this.$parent;
 
             Array.prototype.splice.call(this, at, 1, item);
@@ -106,7 +106,7 @@ Velcro.collection = function(model) {
         this.from = function(data) {
             var that = this;
 
-            if (Velcro.utils.isCollection(data)) {
+            if (velcro.utils.isCollection(data)) {
                 data = data.raw();
             }
 
@@ -142,7 +142,7 @@ Velcro.collection = function(model) {
             var collection     = new this.$self.Model.Collection();
             collection.$parent = this.$parent;
 
-            if (Velcro.utils.isModel(query)) {
+            if (velcro.utils.isModel(query)) {
                 query = query.raw();
             }
 

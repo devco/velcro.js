@@ -1,4 +1,4 @@
-Velcro.utils = {
+velcro.utils = {
     parseBinding: function(json, context) {
         var code = '';
 
@@ -20,7 +20,7 @@ Velcro.utils = {
     },
 
     isObservable: function(value) {
-        return typeof value === 'function' && value.toString() === Velcro.value().toString();
+        return typeof value === 'function' && value.toString() === velcro.value().toString();
     },
 
     html: function(element) {
@@ -30,14 +30,14 @@ Velcro.utils = {
     },
 
     throwForElement: function(element, message) {
-        throw message + "\n" + Velcro.html(element);
+        throw message + "\n" + velcro.html(element);
     },
 
     isModel: function(fn) {
-        return fnCompare(fn, Velcro.model().toString());
+        return fnCompare(fn, velcro.model().toString());
     },
 
     isCollection: function(fn) {
-        return fnCompare(fn, Velcro.collection().toString());
+        return fnCompare(fn, velcro.collection().toString());
     }
 };
