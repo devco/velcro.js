@@ -1,4 +1,4 @@
-Velcro.model = function(definition) {
+velcro.model = function(definition) {
     var Model = function(data) {
         var that = this;
 
@@ -9,7 +9,7 @@ Velcro.model = function(definition) {
         };
 
         this.from = function(obj) {
-            if (Velcro.utils.isModel(obj)) {
+            if (velcro.utils.isModel(obj)) {
                 obj = obj.raw();
             }
 
@@ -62,7 +62,7 @@ Velcro.model = function(definition) {
         }
     };
 
-    Model.Collection      = Velcro.collection(Model);
+    Model.Collection      = velcro.collection(Model);
     Model.computed        = {};
     Model.methods         = {};
     Model.properties      = {};
@@ -70,7 +70,7 @@ Velcro.model = function(definition) {
     Model.prototype.$self = Model;
 
     Model.extend = function(OtherModel) {
-        OtherModel = Velcro.utils.isModel(OtherModel) ? OtherModel : Velcro.model(OtherModel);
+        OtherModel = velcro.utils.isModel(OtherModel) ? OtherModel : velcro.model(OtherModel);
 
         each(Model.computed, function(i, v) {
             if (typeof OtherModel.computed[i] === 'undefined') {
@@ -110,7 +110,7 @@ Velcro.model = function(definition) {
 
 function interpretDefinition(Model, definition) {
     each(definition, function(i, v) {
-        if (Velcro.utils.isModel(v) || Velcro.utils.isCollection(v)) {
+        if (velcro.utils.isModel(v) || velcro.utils.isCollection(v)) {
             Model.relations[i] = v;
             return;
         }
@@ -154,7 +154,7 @@ function define(obj) {
 
 function defineComputed(obj) {
     each(obj.$self.computed, function(name, computed) {
-        obj[name] = Velcro.value({
+        obj[name] = velcro.value({
             bind: obj,
             get: computed.get,
             set: computed.set
@@ -172,7 +172,7 @@ function defineMethods(obj) {
 
 function defineProperties(obj) {
     each(obj.$self.properties, function(name, property) {
-        obj[name] = Velcro.value({
+        obj[name] = velcro.value({
             bind: obj,
             value: property
         });

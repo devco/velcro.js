@@ -1,6 +1,6 @@
-Velcro.View = function() {
+velcro.View = function() {
     this.cache       = {};
-    this.http        = new Velcro.Http();
+    this.http        = new velcro.Http();
     this.http.prefix = 'views/';
     this.http.suffix = '.html';
     this.http.accept = 'text/html';
@@ -8,12 +8,12 @@ Velcro.View = function() {
     return this;
 };
 
-Velcro.View.prototype = {
+velcro.View.prototype = {
     http: false,
 
     target: null,
 
-    idPrefix: 'Velcro-view-',
+    idPrefix: 'velcro-view-',
 
     idSuffix: '',
 

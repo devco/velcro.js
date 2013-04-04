@@ -3,7 +3,7 @@ var _undefined;
 module('Models and Collections');
 
 test('Default Values', function() {
-    var Model = Velcro.model({
+    var Model = velcro.model({
         value: 'default'
     });
 
@@ -13,7 +13,7 @@ test('Default Values', function() {
 });
 
 test('Defining', function() {
-    var User = Velcro.model({
+    var User = velcro.model({
         name: '',
         addresses: [],
         getComputed: function() {
@@ -25,13 +25,13 @@ test('Defining', function() {
         name: 'Bob Bobberson'
     });
 
-    ok(Velcro.utils.isModel(User), '`Velcro.model()` should return a valid model.');
-    ok(Velcro.utils.isObservable(bob.name), 'The property should be an observable.');
-    ok(Velcro.utils.isObservable(bob.computed), 'The property should be a computed observable.');
+    ok(velcro.utils.isModel(User), '`velcro.model()` should return a valid model.');
+    ok(velcro.utils.isObservable(bob.name), 'The property should be an observable.');
+    ok(velcro.utils.isObservable(bob.computed), 'The property should be a computed observable.');
 });
 
 test('Instantiating', function() {
-    var User = Velcro.model({
+    var User = velcro.model({
         name: ''
     });
 
@@ -41,17 +41,17 @@ test('Instantiating', function() {
     });
 
     ok(instance instanceof User, 'The `user` instance should be an instance of the `User` model.');
-    ok(Velcro.utils.isObservable(instance.observer), 'The `observer` property should be a Knockout observable.');
+    ok(velcro.utils.isObservable(instance.observer), 'The `observer` property should be a Knockout observable.');
     ok(instance.name() === 'test', 'The instance should be filled when data is passed to the constructor.');
     ok(typeof instance.undefinedProperty === 'undefined', 'Undefined properties should not be set.');
 });
 
 test('Relationships', function() {
-    var Friend = Velcro.model({
+    var Friend = velcro.model({
         name: ''
     });
 
-    var User = Velcro.model({
+    var User = velcro.model({
         bestFriend: Friend,
         friends: Friend.Collection
     });
@@ -75,11 +75,11 @@ test('Relationships', function() {
 });
 
 test('Collection Manipulation', function() {
-    var Item = Velcro.model({
+    var Item = velcro.model({
         name: ''
     });
 
-    var Items = Velcro.model({
+    var Items = velcro.model({
         items: Item.Collection
     });
 
@@ -103,7 +103,7 @@ test('Collection Manipulation', function() {
 });
 
 test('Observable Getters and Setters', function() {
-    var User = Velcro.model({
+    var User = velcro.model({
         forename: '',
         surname: '',
         getName: function() {
@@ -124,15 +124,15 @@ test('Observable Getters and Setters', function() {
 });
 
 test('Parent / Child Relationships', function() {
-    var NoParentModel = Velcro.model({
+    var NoParentModel = velcro.model({
         name: ''
     });
 
-    var ChildModel = Velcro.model({
+    var ChildModel = velcro.model({
         name: ''
     });
 
-    var ParentModel = Velcro.model({
+    var ParentModel = velcro.model({
         child: ChildModel,
         children: ChildModel.Collection
     });
@@ -151,7 +151,7 @@ test('Parent / Child Relationships', function() {
 });
 
 test('Chaining Method Calls', function() {
-    var Model = Velcro.model({
+    var Model = velcro.model({
         test1: '',
         test3: '',
         getTest2: function() {
@@ -179,13 +179,13 @@ test('Observing Changes', function() {
     span.setAttribute('data-velcro-text', 'text: name');
     div.appendChild(span);
 
-    var Person = Velcro.model({
+    var Person = velcro.model({
         name: 'Default Value'
     });
 
     var dude = new Person;
 
-    new Velcro.App().bind(div, dude);
+    new velcro.App().bind(div, dude);
 
     ok(div.childNodes[0].innerText === dude.name(), 'Inner text on div child should be initialised.');
 
@@ -202,15 +202,15 @@ test('Changing Context', function() {
     span.setAttribute('data-velcro-text', 'text: name');
     div.appendChild(span);
 
-    var App = Velcro.model({
-        person: Velcro.model({
+    var App = velcro.model({
+        person: velcro.model({
             name: 'Default Value'
         })
     });
 
     var appsrawesome = new App;
 
-    new Velcro.App().bind(div, appsrawesome)
+    new velcro.App().bind(div, appsrawesome)
     ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be initialised.');
 
     appsrawesome.person().name('Updated Value');
@@ -222,8 +222,8 @@ asyncTest('Router', function() {
     var div = document.createElement('div');
     div.setAttribute('data-velcro-routable', 'router: router');
 
-    var app    = new Velcro.App()
-    var router = new Velcro.Router();
+    var app    = new velcro.App()
+    var router = new velcro.Router();
 
     router.set('index', function() {
         return {
@@ -247,7 +247,7 @@ asyncTest('View', function() {
     var div = document.createElement('div');
     div.setAttribute('data-velcro-include', 'path: "index", context: context, callback: callback');
 
-    new Velcro.App().bind(div, {
+    new velcro.App().bind(div, {
         context: function () {
             return { name: 'test' };
         },
@@ -263,7 +263,7 @@ asyncTest('View', function() {
 module('Views');
 
 test('No Model Binding', function() {
-    var view = new Velcro.View();
+    var view = new velcro.View();
 
     view.target = document.createElement('div');
     view.cache.test = 'test';
@@ -278,7 +278,7 @@ test('No Model Binding', function() {
 module('Http');
 
 asyncTest('Parsing Based on Request Header', function() {
-    var http = new Velcro.Http();
+    var http = new velcro.Http();
 
     http.headers.Accept = 'application/json';
 

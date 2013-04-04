@@ -1,10 +1,10 @@
-Velcro.App = function() {
+velcro.App = function() {
     this.attributePrefix  = 'data-velcro-';
-    this.bindings         = Velcro.defaultBindings;
+    this.bindings         = velcro.defaultBindings;
     this.contexts         = [];
 };
 
-Velcro.App.prototype = {
+velcro.App.prototype = {
     bind: function(element, context) {
         if (arguments.length === 1) {
             context = element;
@@ -45,7 +45,7 @@ Velcro.App.prototype = {
 
     bindAttribute: function (element, name, value) {
         var $this   = this;
-        var parsed  = Velcro.utils.parseBinding(value, this.context());
+        var parsed  = velcro.utils.parseBinding(value, this.context());
         var binding = this.bindings[name];
 
         each(parsed, function(parsedName, parsedValue) {
@@ -67,7 +67,7 @@ Velcro.App.prototype = {
         }
 
         function subscribeToUpdatesIfObservable(value) {
-            if (!Velcro.utils.isObservable(value)) {
+            if (!velcro.utils.isObservable(value)) {
                 return;
             }
 
@@ -86,7 +86,7 @@ Velcro.App.prototype = {
             var options = {};
 
             each(parsed, function(name, value) {
-                if (Velcro.utils.isObservable(value)) {
+                if (velcro.utils.isObservable(value)) {
                     options[name] = value();
                 } else {
                     options[name] = value;
