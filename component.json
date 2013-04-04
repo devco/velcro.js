@@ -1,7 +1,7 @@
 {
-  "name": "knockup",
-  "version": "1.0.0",
-  "main": "src/knockup.js",
+  "name": "velcro.js",
+  "version": "0.1.0",
+  "main": "src/velcro.js",
   "dependencies": {
     "qunit": "latest"
   }
