@@ -512,7 +512,7 @@ Velcro.Http.prototype = {
         }
 
         if (options.data) {
-            if (options.type === 'get') {
+            if (options.type === 'GET') {
                 options.url += '?' + options.data;
             } else {
                 request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -555,7 +555,12 @@ Velcro.Http.prototype = {
 
         options.before.call(options.before, request);
         this.before.trigger(request);
-        request.send(options.data);
+
+        if (options.type === 'GET') {
+            request.send();
+        } else {
+            request.send(options.data);
+        }
 
         return this;
     },
