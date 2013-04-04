@@ -1,4 +1,4 @@
-Velcro.value = function(options) {
+velcro.value = function(options) {
     var func = function(value) {
         if (arguments.length === 0) {
             return func.get.call(func.bind);

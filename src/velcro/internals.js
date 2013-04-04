@@ -37,7 +37,7 @@ function each(items, fn) {
 }
 
 function generateValueObserver(obj) {
-    return Velcro.value({
+    return velcro.value({
         value: obj,
         bind: obj,
         set: function(value) {

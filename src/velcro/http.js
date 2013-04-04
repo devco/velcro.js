@@ -1,8 +1,8 @@
-Velcro.Http = function() {
-    this.before  = new Velcro.Event();
-    this.after   = new Velcro.Event();
-    this.success = new Velcro.Event();
-    this.error   = new Velcro.Event();
+velcro.Http = function() {
+    this.before  = new velcro.Event();
+    this.after   = new velcro.Event();
+    this.success = new velcro.Event();
+    this.error   = new velcro.Event();
     this.prefix  = '',
     this.suffix  = '',
     this.headers = {};
@@ -18,7 +18,7 @@ Velcro.Http = function() {
     return this;
 };
 
-Velcro.Http.prototype = {
+velcro.Http.prototype = {
     'delete': function(options) {
         options.type = 'delete';
         return this.request(options);
@@ -68,7 +68,7 @@ Velcro.Http.prototype = {
             after: options.done || function(){}
         };
 
-        if (Velcro.utils.isModel(options.data)) {
+        if (velcro.utils.isModel(options.data)) {
             options.data = options.data.raw();
         }
 

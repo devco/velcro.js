@@ -1,14 +1,14 @@
-Velcro - MVC Binding Framework
+velcro - MVC Binding Framework
 ==============================
 
 [![Build Status](https://api.travis-ci.org/devco/velcro.png)](http://travis-ci.org/devco/velcro)
 
-Velcro gives you a complete MVC solution for building RESTful JavaScript web applications. There are no dependencies and it works with or without CommonJS / AMD libraries.
+velcro gives you a complete MVC solution for building RESTful JavaScript web applications. There are no dependencies and it works with or without CommonJS / AMD libraries.
 
 Features include:
 
 - Full MVC separation.
-- Full AMD / CommonJS support while falling back to setting the global `Velcro` object.
+- Full AMD / CommonJS support while falling back to setting the global `velcro` object.
 - Complete Model / Collection and relationship management.
 - View component allowing views ot be separated into their own HTML files and cached for reuse.
 - Attribute bindings similar to AngularJS.
@@ -41,7 +41,7 @@ Using with RequireJS
 
 Use with RequireJS just as you would any other AMD module:
 
-    require(['path/to/velcro'], function(Velcro) {
+    require(['path/to/velcro'], function(velcro) {
         ...
     });
 

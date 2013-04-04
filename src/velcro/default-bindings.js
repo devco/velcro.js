@@ -3,7 +3,7 @@ var context = function(app, element, options) {
 };
 
 var include = function(app, element, options) {
-    var view    = options.view || new Velcro.View();
+    var view    = options.view || new velcro.View();
     var subApp  = options.app || app;
     var context = options.context;
     view.target = element;
@@ -25,11 +25,11 @@ var routable = function(app, element, options) {
     var router = options.router;
 
     if (!router) {
-        Velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it does not exist.');
+        velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it does not exist.');
     }
 
-    if (!router instanceof Velcro.Router) {
-        Velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it is not an instanceof "Velcro.Router".');
+    if (!router instanceof velcro.Router) {
+        velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it is not an instanceof "velcro.Router".');
     }
 
     router.view.target = element;
@@ -40,7 +40,7 @@ var text = function(app, element, options) {
     element.innerText = options.text;
 };
 
-Velcro.defaultBindings = {
+velcro.defaultBindings = {
     context: context,
     include: include,
     routable: routable,
