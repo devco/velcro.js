@@ -76,7 +76,7 @@ velcro.Http.prototype = {
             options.data = this.serialize(options.data);
         }
 
-        if (options.data) {
+        if (typeof options.data === 'string') {
             if (options.type === 'GET') {
                 options.url += '?' + options.data;
             } else {
