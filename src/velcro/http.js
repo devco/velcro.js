@@ -1,82 +1,86 @@
-velcro.Http = function() {
+velcro.Http = function(options) {
     this.before  = new velcro.Event();
     this.after   = new velcro.Event();
     this.success = new velcro.Event();
     this.error   = new velcro.Event();
-    this.prefix  = '',
-    this.suffix  = '',
-    this.headers = {};
-    this.parsers = {
-        'application/json': function(response) {
-            try {
-                return JSON.parse(response);
-            } catch (error) {
-                throw 'Error parsing response "' + response + '" with message "' + error + '".';
-            }
-        }
-    };
+    this.options = velcro.utils.merge({
+        async: true,
+        headers: {},
+        parsers: { 'application/json': velcro.utils.parseJson },
+        prefix: '',
+        suffix: ''
+    }, options);
+
     return this;
 };
 
 velcro.Http.prototype = {
     'delete': function(options) {
-        options.type = 'delete';
-        return this.request(options);
+        return this.request(velcro.utils.merge(options, {
+            type: 'delete'
+        }));
     },
 
     get: function(options) {
-        options.type = 'get';
-        return this.request(options);
+        return this.request(velcro.utils.merge(options, {
+            type: 'get'
+        }));
     },
 
     head: function(options) {
-        options.type = 'head';
-        return this.request(options);
+        return this.request(velcro.utils.merge(options, {
+            type: 'head'
+        }));
     },
 
     options: function(options) {
-        options.type = 'options';
-        return this.request(options);
+        return this.request(velcro.utils.merge(options, {
+            type: 'options'
+        }));
     },
 
     patch: function(options) {
-        options.type = 'patch';
-        return this.request(options);
+        return this.request(velcro.utils.merge(options, {
+            type: 'patch'
+        }));
     },
 
     post: function(options) {
-        options.type = 'post';
-        return this.request(options);
+        return this.request(velcro.utils.merge(options, {
+            type: 'post'
+        }));
     },
 
     put: function(options) {
-        options.type = 'put';
-        return this.request(options);
+        return this.request(velcro.utils.merge(options, {
+            type: 'put'
+        }));
     },
 
     request: function(options) {
         var $this   = this;
         var request = createXmlHttpRequest();
 
-        options = {
-            type: typeof options.type === 'string' ? options.type.toUpperCase() : 'GET',
-            url: options.url,
-            data: options.data || {},
-            success: options.success || function(){},
-            error: options.error || function(){},
-            before: options.before || function(){},
-            after: options.done || function(){}
-        };
+        options = velcro.utils.merge({
+            type: 'GET',
+            data: {},
+            success: function(){},
+            error: function(){},
+            before: function(){},
+            after: function(){}
+        }, options);
+
+        options.type = options.type.toUpperCase();
 
         if (velcro.utils.isModel(options.data)) {
             options.data = options.data.raw();
         }
 
-        if (typeof options.data === 'object') {
+        if (velcro.utils.isObject(options.data)) {
             options.data = this.serialize(options.data);
         }
 
-        if (typeof options.data === 'string') {
+        if (options.data) {
             if (options.type === 'GET') {
                 options.url += '?' + options.data;
             } else {
@@ -84,10 +88,10 @@ velcro.Http.prototype = {
             }
         }
 
-        request.open(options.type, this.prefix + options.url + this.suffix, true);
+        request.open(options.type, this.options.prefix + options.url + this.options.suffix, this.options.async);
 
-        for (var header in this.headers) {
-            request.setRequestHeader(header, this.headers[header]);
+        for (var header in this.options.headers) {
+            request.setRequestHeader(header, this.options.headers[header]);
         }
 
         request.onreadystatechange = function () {
@@ -106,10 +110,10 @@ velcro.Http.prototype = {
             var response = request.responseText;
             var headers  = request.getAllResponseHeaders();
 
-            if (typeof headers['Content-Type'] === 'string' && typeof $this.parsers[headers['Content-Type']] === 'function') {
-                response = $this.parsers[headers['Content-Type']](response);
-            } else if (typeof $this.headers.Accept === 'string' && typeof $this.parsers[$this.headers.Accept] === 'function') {
-                response = $this.parsers[$this.headers.Accept](response);
+            if (typeof headers['Content-Type'] === 'string' && typeof $this.options.parsers[headers['Content-Type']] === 'function') {
+                response = $this.options.parsers[headers['Content-Type']](response);
+            } else if (typeof $this.options.headers.Accept === 'string' && typeof $this.options.parsers[$this.options.headers.Accept] === 'function') {
+                response = $this.options.parsers[$this.options.headers.Accept](response);
             }
 
             options.success.call(options.success, response);

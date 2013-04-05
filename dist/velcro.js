@@ -360,11 +360,11 @@ var routable = function(app, element, options) {
     var router = options.router;
 
     if (!router) {
-        velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it does not exist.');
+        velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" because it does not exist.');
     }
 
     if (!router instanceof velcro.Router) {
-        velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it is not an instanceof "velcro.Router".');
+        velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" because it is not an instanceof "velcro.Router".');
     }
 
     router.view.target = element;
@@ -433,81 +433,85 @@ velcro.Event.prototype = {
         return this;
     }
 };
-velcro.Http = function() {
+velcro.Http = function(options) {
     this.before  = new velcro.Event();
     this.after   = new velcro.Event();
     this.success = new velcro.Event();
     this.error   = new velcro.Event();
-    this.prefix  = '',
-    this.suffix  = '',
-    this.headers = {};
-    this.parsers = {
-        'application/json': function(response) {
-            try {
-                return JSON.parse(response);
-            } catch (error) {
-                throw 'Error parsing response "' + response + '" with message "' + error + '".';
-            }
-        }
-    };
+    this.options = velcro.utils.merge({
+        async: true,
+        headers: {},
+        parsers: { 'application/json': velcro.utils.parseJson },
+        prefix: '',
+        suffix: ''
+    }, options);
+
     return this;
 };
 
 velcro.Http.prototype = {
     'delete': function(options) {
-        options.type = 'delete';
-        return this.request(options);
+        return this.request(velcro.utils.merge(options, {
+            type: 'delete'
+        }));
     },
 
     get: function(options) {
-        options.type = 'get';
-        return this.request(options);
+        return this.request(velcro.utils.merge(options, {
+            type: 'get'
+        }));
     },
 
     head: function(options) {
-        options.type = 'head';
-        return this.request(options);
+        return this.request(velcro.utils.merge(options, {
+            type: 'head'
+        }));
     },
 
     options: function(options) {
-        options.type = 'options';
-        return this.request(options);
+        return this.request(velcro.utils.merge(options, {
+            type: 'options'
+        }));
     },
 
     patch: function(options) {
-        options.type = 'patch';
-        return this.request(options);
+        return this.request(velcro.utils.merge(options, {
+            type: 'patch'
+        }));
     },
 
     post: function(options) {
-        options.type = 'post';
-        return this.request(options);
+        return this.request(velcro.utils.merge(options, {
+            type: 'post'
+        }));
     },
 
     put: function(options) {
-        options.type = 'put';
-        return this.request(options);
+        return this.request(velcro.utils.merge(options, {
+            type: 'put'
+        }));
     },
 
     request: function(options) {
         var $this   = this;
         var request = createXmlHttpRequest();
 
-        options = {
-            type: typeof options.type === 'string' ? options.type.toUpperCase() : 'GET',
-            url: options.url,
-            data: options.data || {},
-            success: options.success || function(){},
-            error: options.error || function(){},
-            before: options.before || function(){},
-            after: options.done || function(){}
-        };
+        options = velcro.utils.merge({
+            type: 'GET',
+            data: {},
+            success: function(){},
+            error: function(){},
+            before: function(){},
+            after: function(){}
+        }, options);
+
+        options.type = options.type.toUpperCase();
 
         if (velcro.utils.isModel(options.data)) {
             options.data = options.data.raw();
         }
 
-        if (typeof options.data === 'object') {
+        if (velcro.utils.isObject(options.data)) {
             options.data = this.serialize(options.data);
         }
 
@@ -519,10 +523,10 @@ velcro.Http.prototype = {
             }
         }
 
-        request.open(options.type, this.prefix + options.url + this.suffix, true);
+        request.open(options.type, this.options.prefix + options.url + this.options.suffix, this.options.async);
 
-        for (var header in this.headers) {
-            request.setRequestHeader(header, this.headers[header]);
+        for (var header in this.options.headers) {
+            request.setRequestHeader(header, this.options.headers[header]);
         }
 
         request.onreadystatechange = function () {
@@ -541,10 +545,10 @@ velcro.Http.prototype = {
             var response = request.responseText;
             var headers  = request.getAllResponseHeaders();
 
-            if (typeof headers['Content-Type'] === 'string' && typeof $this.parsers[headers['Content-Type']] === 'function') {
-                response = $this.parsers[headers['Content-Type']](response);
-            } else if (typeof $this.headers.Accept === 'string' && typeof $this.parsers[$this.headers.Accept] === 'function') {
-                response = $this.parsers[$this.headers.Accept](response);
+            if (typeof headers['Content-Type'] === 'string' && typeof $this.options.parsers[headers['Content-Type']] === 'function') {
+                response = $this.options.parsers[headers['Content-Type']](response);
+            } else if (typeof $this.options.headers.Accept === 'string' && typeof $this.options.parsers[$this.options.headers.Accept] === 'function') {
+                response = $this.options.parsers[$this.options.headers.Accept](response);
             }
 
             options.success.call(options.success, response);
@@ -1176,26 +1180,6 @@ function dispatch() {
     }
 }
 velcro.utils = {
-    parseBinding: function(json, context) {
-        var code = '';
-
-        for (var i in context || {}) {
-            if (i === 'import' || i === 'export' || i === '') {
-                continue;
-            }
-
-            code += 'var ' + i + '=__context[\'' + i + '\'];';
-        }
-
-        code += 'return {' + json + '};';
-
-        try {
-            return new Function('__context', code)(context);
-        } catch (e) {
-            throw 'Error parsing binding "' + json + '" with message: "' + e + '"';
-        }
-    },
-
     isObservable: function(value) {
         return typeof value === 'function' && value.toString() === velcro.value().toString();
     },
@@ -1216,6 +1200,71 @@ velcro.utils = {
 
     isCollection: function(fn) {
         return fnCompare(fn, velcro.collection().toString());
+    },
+
+    isObject: function(obj) {
+        return Object.prototype.toString.call(obj) === '[object Object]';
+    },
+
+    isArray: function(obj) {
+        return Object.prototype.toString.call(obj) === '[object Array]';
+    },
+
+    merge: function() {
+        var merged  = arguments[0];
+        var params = Array.prototype.slice.call(arguments, 1);
+
+        for (var i = 0; i < params.length; i++) {
+            var param = params[i];
+
+            if (!velcro.utils.isObject(param)) {
+                continue;
+            }
+
+            for (var ii in param) {
+                var value = param[ii];
+
+                if (velcro.utils.isObject(value)) {
+                    if (typeof merged[ii] === 'undefined') {
+                        merged[ii] = value;
+                    } else {
+                        merged[ii] = velcro.utils.merge(merged[ii], value);
+                    }
+                } else {
+                    merged[ii] = value;
+                }
+            }
+        }
+
+        return merged;
+    },
+
+    parseBinding: function(json, context) {
+        var code = '';
+
+        for (var i in context || {}) {
+            if (i === 'import' || i === 'export' || i === '') {
+                continue;
+            }
+
+            code += 'var ' + i + '=__context[\'' + i + '\'];';
+        }
+
+        code += 'return {' + json + '};';
+
+        try {
+            return new Function('__context', code)(context);
+        } catch (e) {
+            throw 'Error parsing binding "' + json + '" with message: "' + e + '"';
+        }
+    },
+
+    parseJson: function(json) {
+        try {
+            return JSON.parse(json);
+        } catch (error) {
+            throw 'Error parsing response "' + response + '" with message "' + error + '".';
+        }
     }
 };
 velcro.value = function(options) {
@@ -1276,27 +1325,26 @@ velcro.value = function(options) {
 
     return func;
 };
-velcro.View = function() {
-    this.cache       = {};
-    this.http        = new velcro.Http();
-    this.http.prefix = 'views/';
-    this.http.suffix = '.html';
-    this.http.accept = 'text/html';
+velcro.View = function(options) {
+    this.cache  = {};
+    this.target = false;
+    this.http   = new velcro.Http({
+        prefix: 'views/',
+        suffix: '.html',
+        headers: {
+            Accept: 'text/html'
+        }
+    });
+    this.options = velcro.utils.merge({
+        idPrefix: 'velcro-view-',
+        idSuffix: '',
+        idSeparator: '-'
+    }, options);
 
     return this;
 };
 
 velcro.View.prototype = {
-    http: false,
-
-    target: null,
-
-    idPrefix: 'velcro-view-',
-
-    idSuffix: '',
-
-    idSeparator: '-',
-
     render: function(name, callback) {
         var $this = this;
         var id    = this.idPrefix + name.replace(/\//g, this.idSeparator) + this.idSuffix;

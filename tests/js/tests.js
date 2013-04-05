@@ -1,5 +1,28 @@
 var _undefined;
 
+
+
+module('Utils');
+
+test('Object Merging', function() {
+    var merged = velcro.utils.merge({
+        prop1: 'old',
+        prop3: { prop1: 'old', prop3: [ 1 ] },
+    }, {
+        prop1: 'new',
+        prop2: 'new',
+        prop3: { prop1: 'new', prop2: 'new', prop3: [ 1, 2 ] },
+    });
+
+    ok(merged.prop1 === 'new', 'Shallow properties not merged.');
+    ok(merged.prop2 === 'new', 'Shallow properties not added.');
+    ok(merged.prop3.prop1 === 'new', 'Deep properties not merged.');
+    ok(merged.prop3.prop2 === 'new', 'Deep properties not added');
+    ok(merged.prop3.prop3.length === 2, 'Arrays should be overridden.');
+});
+
+
+
 module('Models and Collections');
 
 test('Default Values', function() {
@@ -278,15 +301,22 @@ test('No Model Binding', function() {
 module('Http');
 
 asyncTest('Parsing Based on Request Header', function() {
-    var http = new velcro.Http();
-
-    http.headers.Accept = 'application/json';
+    var http = new velcro.Http({
+        headers: {
+            Accept: 'application/json'
+        }
+    });
 
     http.get({
         url: 'data/bob.json',
-        success: function(r) {
-            ok(r.name === 'Bob Bobberson', 'JSON object should be properly parsed.');
+        success: function(response) {
+            ok(response.name === 'Bob Bobberson', 'JSON object should be properly parsed.');
+        },
+        after: function() {
             start();
+        },
+        error: function(request) {
+            ok(false, request.statusText)
         }
     });
 });

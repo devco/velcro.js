@@ -1,24 +1,23 @@
-velcro.View = function() {
-    this.cache       = {};
-    this.http        = new velcro.Http();
-    this.http.prefix = 'views/';
-    this.http.suffix = '.html';
-    this.http.accept = 'text/html';
+velcro.View = function(options) {
+    this.cache  = {};
+    this.target = false;
+    this.http   = new velcro.Http({
+        prefix: 'views/',
+        suffix: '.html',
+        headers: {
+            Accept: 'text/html'
+        }
+    });
+    this.options = velcro.utils.merge({
+        idPrefix: 'velcro-view-',
+        idSuffix: '',
+        idSeparator: '-'
+    }, options);
 
     return this;
 };
 
 velcro.View.prototype = {
-    http: false,
-
-    target: null,
-
-    idPrefix: 'velcro-view-',
-
-    idSuffix: '',
-
-    idSeparator: '-',
-
     render: function(name, callback) {
         var $this = this;
         var id    = this.idPrefix + name.replace(/\//g, this.idSeparator) + this.idSuffix;

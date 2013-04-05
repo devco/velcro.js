@@ -25,11 +25,11 @@ var routable = function(app, element, options) {
     var router = options.router;
 
     if (!router) {
-        velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it does not exist.');
+        velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" because it does not exist.');
     }
 
     if (!router instanceof velcro.Router) {
-        velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" to the main view because it is not an instanceof "velcro.Router".');
+        velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" because it is not an instanceof "velcro.Router".');
     }
 
     router.view.target = element;
