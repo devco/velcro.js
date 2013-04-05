@@ -8,10 +8,13 @@
     }
 }(function(velcro) {
 
-velcro.App = function() {
-    this.attributePrefix  = 'data-velcro-';
-    this.bindings         = velcro.defaultBindings;
-    this.contexts         = [];
+velcro.App = function(options) {
+    this.options = velcro.utils.merge({
+        attributePrefix: 'data-velcro-',
+        bindings: velcro.defaultBindings
+    }, options);
+
+    this.contexts = [];
 };
 
 velcro.App.prototype = {
@@ -43,9 +46,9 @@ velcro.App.prototype = {
         var $this = this;
 
         each(element.attributes, function(i, node) {
-            var name = node.nodeName.substring($this.attributePrefix.length);
+            var name = node.nodeName.substring($this.options.attributePrefix.length);
 
-            if (typeof $this.bindings[name] === 'function') {
+            if (typeof $this.options.bindings[name] === 'function') {
                 $this.bindAttribute(element, name, node.nodeValue);
             }
         });
@@ -56,7 +59,7 @@ velcro.App.prototype = {
     bindAttribute: function (element, name, value) {
         var $this   = this;
         var parsed  = velcro.utils.parseBinding(value, this.context());
-        var binding = this.bindings[name];
+        var binding = this.options.bindings[name];
 
         each(parsed, function(parsedName, parsedValue) {
             subscribeToUpdatesIfObservable(parsedValue);
@@ -334,25 +337,36 @@ velcro.collection = function(model) {
     return Collection;
 };
 var context = function(app, element, options) {
+    if (!options.context) {
+        velcro.utils.throwForElement(element, 'A context option must be specified.');
+    }
+
     app.context(options.context);
 };
 
 var include = function(app, element, options) {
-    var view    = options.view || new velcro.View();
-    var subApp  = options.app || app;
-    var context = options.context;
-    view.target = element;
+    options = velcro.utils.merge({
+        path: '',
+        context: false,
+        callback: function(){},
+        view: {}
+    }, options);
 
-    if (typeof context === 'function') {
-        context = context();
+    var view = new velcro.View(options.view);
+
+    view.options.target = element;
+
+    if (typeof options.context === 'function') {
+        options.context = options.context();
+    }
+
+    if (!options.path) {
+        velcro.utils.throwForElement(element, 'A path option must be specified.');
     }
 
     view.render(options.path, function() {
-        app.bindDescendants(element, context);
-
-        if (typeof options.callback === 'function') {
-            options.callback();
-        }
+        app.bindDescendants(element, options.context);
+        options.callback();
     });
 };
 
@@ -367,7 +381,7 @@ var routable = function(app, element, options) {
         velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" because it is not an instanceof "velcro.Router".');
     }
 
-    router.view.target = element;
+    router.view.options.target = element;
     router.bind();
 };
 
@@ -841,16 +855,24 @@ function defineRelations(obj) {
 }
 var bound = [];
 
-velcro.Router = function() {
-    this.app    = new velcro.App();
+velcro.Router = function(options) {
+    this.options = velcro.utils.merge({
+        app: {},
+        state: {},
+        view: {}
+    }, options);
+
     this.enter  = new velcro.Event();
     this.exit   = new velcro.Event();
-    this.params = {};
     this.render = new velcro.Event();
+
+    this.params = {};
     this.route  = false;
     this.routes = {};
-    this.state  = new velcro.State();
-    this.view   = new velcro.View();
+
+    this.app   = new velcro.App(this.options.app);
+    this.state = new velcro.State(this.options.state);
+    this.view  = new velcro.View(this.options.view);
 
     return this;
 };
@@ -862,14 +884,14 @@ velcro.Router.prototype = {
 
     renderer: function(route, params) {
         var $this   = this;
-        var context = route.controller.apply(route.controller, params);
+        var context = route.options.controller.apply(route.options.controller, params);
 
         if (!velcro.utils.isModel(context)) {
             context = new (velcro.model(context))();
         }
 
-        this.view.render(route.view, function(view) {
-            $this.app.bindDescendants(view.target, context);
+        this.view.render(route.options.view, function(view) {
+            $this.app.bindDescendants(view.options.target, context);
             $this.render.trigger($this, route, params);
         });
     },
@@ -981,24 +1003,19 @@ velcro.Router.prototype = {
 
 
 velcro.Route = function(options) {
-    for (var i in options) {
-        this[i] = options[i];
-    }
+    this.options = velcro.utils.merge({
+        controller: function(){},
+        format: '',
+        match: /.*/,
+        view: false
+    }, options);
 
     return this;
 };
 
 velcro.Route.prototype = {
-    match: /.*/,
-
-    format: '',
-
-    view: false,
-
-    controller: function(){},
-
     query: function(request) {
-        var params = request.match(this.match);
+        var params = request.match(this.options.match);
 
         if (params === null) {
             return false;
@@ -1010,7 +1027,7 @@ velcro.Route.prototype = {
     },
 
     generate: function(params) {
-        var format = this.format;
+        var format = this.options.format;
 
         for (var name in params) {
             format = format.replace(new RegExp('\\:' + name, 'g'), params[name]);
@@ -1023,14 +1040,18 @@ velcro.Route.prototype = {
 
 
 var oldState = window.location.hash;
-
 var interval;
-
 var isStarted = false;
 
-velcro.State = function() {
+velcro.State = function(options) {
+    this.options = velcro.utils.merge({
+        scroll: false
+    });
+
     this.states = {};
+
     velcro.State.start();
+
     return this;
 };
 
@@ -1084,8 +1105,6 @@ velcro.State.prototype = {
 
     enabled: false,
 
-    scroll: false,
-
     get: function() {
         if (this.enabled && window.history.pushState) {
             return removeHostPart(window.location.href);
@@ -1098,7 +1117,7 @@ velcro.State.prototype = {
             window.history.pushState(data, description, uri || '.');
             dispatch();
         } else {
-            updateHash(uri, this.scroll);
+            updateHash(uri, this.options.scroll);
         }
 
         this.states[uri] = data;
@@ -1326,20 +1345,23 @@ velcro.value = function(options) {
     return func;
 };
 velcro.View = function(options) {
-    this.cache  = {};
-    this.target = false;
-    this.http   = new velcro.Http({
-        prefix: 'views/',
-        suffix: '.html',
-        headers: {
-            Accept: 'text/html'
-        }
-    });
+    this.cache = {};
+
     this.options = velcro.utils.merge({
         idPrefix: 'velcro-view-',
         idSuffix: '',
-        idSeparator: '-'
+        idSeparator: '-',
+        target: false,
+        http: {
+            prefix: 'views/',
+            suffix: '.html',
+            headers: {
+                Accept: 'text/html'
+            }
+        }
     }, options);
+
+    this.http = new velcro.Http(this.options.http);
 
     return this;
 };
@@ -1347,7 +1369,7 @@ velcro.View = function(options) {
 velcro.View.prototype = {
     render: function(name, callback) {
         var $this = this;
-        var id    = this.idPrefix + name.replace(/\//g, this.idSeparator) + this.idSuffix;
+        var id    = this.options.idPrefix + name.replace(/\//g, this.options.idSeparator) + this.options.idSuffix;
         var cb    = function() {
             if (typeof callback === 'function') {
                 callback.call(callback, $this, name);
@@ -1374,7 +1396,7 @@ velcro.View.prototype = {
     },
 
     renderer: function(view) {
-        var target = this.target;
+        var target = this.options.target;
 
         if (!target) {
             throw 'Cannot render view because no target was specified.';

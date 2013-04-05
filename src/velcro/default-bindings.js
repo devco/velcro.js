@@ -1,23 +1,34 @@
 var context = function(app, element, options) {
+    if (!options.context) {
+        velcro.utils.throwForElement(element, 'A context option must be specified.');
+    }
+
     app.context(options.context);
 };
 
 var include = function(app, element, options) {
-    var view    = options.view || new velcro.View();
-    var subApp  = options.app || app;
-    var context = options.context;
-    view.target = element;
+    options = velcro.utils.merge({
+        path: '',
+        context: false,
+        callback: function(){},
+        view: {}
+    }, options);
 
-    if (typeof context === 'function') {
-        context = context();
+    var view = new velcro.View(options.view);
+
+    view.options.target = element;
+
+    if (typeof options.context === 'function') {
+        options.context = options.context();
+    }
+
+    if (!options.path) {
+        velcro.utils.throwForElement(element, 'A path option must be specified.');
     }
 
     view.render(options.path, function() {
-        app.bindDescendants(element, context);
-
-        if (typeof options.callback === 'function') {
-            options.callback();
-        }
+        app.bindDescendants(element, options.context);
+        options.callback();
     });
 };
 
@@ -32,7 +43,7 @@ var routable = function(app, element, options) {
         velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" because it is not an instanceof "velcro.Router".');
     }
 
-    router.view.target = element;
+    router.view.options.target = element;
     router.bind();
 };
 

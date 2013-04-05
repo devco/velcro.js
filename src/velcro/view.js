@@ -1,18 +1,21 @@
 velcro.View = function(options) {
-    this.cache  = {};
-    this.target = false;
-    this.http   = new velcro.Http({
-        prefix: 'views/',
-        suffix: '.html',
-        headers: {
-            Accept: 'text/html'
-        }
-    });
+    this.cache = {};
+
     this.options = velcro.utils.merge({
         idPrefix: 'velcro-view-',
         idSuffix: '',
-        idSeparator: '-'
+        idSeparator: '-',
+        target: false,
+        http: {
+            prefix: 'views/',
+            suffix: '.html',
+            headers: {
+                Accept: 'text/html'
+            }
+        }
     }, options);
+
+    this.http = new velcro.Http(this.options.http);
 
     return this;
 };
@@ -20,7 +23,7 @@ velcro.View = function(options) {
 velcro.View.prototype = {
     render: function(name, callback) {
         var $this = this;
-        var id    = this.idPrefix + name.replace(/\//g, this.idSeparator) + this.idSuffix;
+        var id    = this.options.idPrefix + name.replace(/\//g, this.options.idSeparator) + this.options.idSuffix;
         var cb    = function() {
             if (typeof callback === 'function') {
                 callback.call(callback, $this, name);
@@ -47,7 +50,7 @@ velcro.View.prototype = {
     },
 
     renderer: function(view) {
-        var target = this.target;
+        var target = this.options.target;
 
         if (!target) {
             throw 'Cannot render view because no target was specified.';

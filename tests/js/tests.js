@@ -271,7 +271,7 @@ asyncTest('View', function() {
     div.setAttribute('data-velcro-include', 'path: "index", context: context, callback: callback');
 
     new velcro.App().bind(div, {
-        context: function () {
+        context: function() {
             return { name: 'test' };
         },
         callback: function() {
@@ -288,12 +288,12 @@ module('Views');
 test('No Model Binding', function() {
     var view = new velcro.View();
 
-    view.target = document.createElement('div');
-    view.cache.test = 'test';
+    view.options.target = document.createElement('div');
+    view.cache.test     = 'test';
 
     view.render('test');
 
-    ok(view.target.innerHTML === 'test', 'The view should render without a bound model.');
+    ok(view.options.target.innerHTML === 'test', 'The view should render without a bound model.');
 });
 
 
