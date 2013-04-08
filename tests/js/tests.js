@@ -5,7 +5,7 @@ var _undefined;
 module('Utils');
 
 test('Object Merging', function() {
-    var merged = velcro.utils.merge({
+    var merged = Velcro.utils.merge({
         prop1: 'old',
         prop3: { prop1: 'old', prop3: [ 1 ] },
     }, {
@@ -23,10 +23,50 @@ test('Object Merging', function() {
 
 
 
+module('Objects');
+
+test('Extension', function() {
+    var MyObj1 = Velcro.Class.extend({
+        method1: function() {
+            return 'test1';
+        },
+        method2: function() {
+            return 'test';
+        }
+    });
+
+    var MyObj2 = MyObj1.extend({
+        method2: function() {
+            return this.$super() + '2';
+        }
+    });
+
+    var MyObj3 = MyObj2.extend({
+        method3: function() {
+            return 'test3';
+        }
+    });
+
+    var obj3 = new MyObj3;
+
+    ok(Velcro.Model.isSubClassOf(Velcro.Class), 'Velcro.Model should be a subclass of Velcro.Class.');
+    ok(MyObj1.isSubClassOf(Velcro.Model), 'MyObj1 should be a subclass of Velcro.Model.');
+    ok(MyObj2.isSubClassOf(MyObj1), 'MyObj2 should be a subclass of MyObj1.');
+    ok(MyObj3.isSubClassOf(Velcro.Class), 'MyObj3 should be a subclass of Velcro.Class.');
+    ok(obj3 instanceof MyObj1, 'Should be instance of 1st object.');
+    ok(obj3 instanceof MyObj2, 'Should be instance of 2nd object.');
+    ok(obj3 instanceof MyObj3, 'Should be instance of 3rd object.');
+    ok(obj3.method1() === 'test1', 'Inherited method not working.');
+    ok(obj3.method2() === 'test2', 'Overridden method not working.');
+    ok(obj3.method3() === 'test3', 'Third level method not working.');
+});
+
+
+
 module('Models and Collections');
 
 test('Default Values', function() {
-    var Model = velcro.model({
+    var Model = Velcro.Model.extend({
         value: 'default'
     });
 
@@ -36,45 +76,49 @@ test('Default Values', function() {
 });
 
 test('Defining', function() {
-    var User = velcro.model({
-        name: '',
-        addresses: [],
-        getComputed: function() {
-
+    var User = Velcro.Model.extend({
+        forename: '',
+        surname: '',
+        getName: function() {
+            return this.forename() + ' ' + this.surname();
+        },
+        setName: function(name) {
+            var names = name.split(' ');
+            this.forename(names[0]);
+            this.surname(names[1]);
         }
     });
 
-    var bob = new User({
+    var bob1 = new User({
         name: 'Bob Bobberson'
     });
 
-    ok(velcro.utils.isModel(User), '`velcro.model()` should return a valid model.');
-    ok(velcro.utils.isObservable(bob.name), 'The property should be an observable.');
-    ok(velcro.utils.isObservable(bob.computed), 'The property should be a computed observable.');
-});
-
-test('Instantiating', function() {
-    var User = velcro.model({
-        name: ''
+    var bob2 = new User({
+        name: 'Bob Bobberson'
     });
 
-    var instance = new User({
-        name: 'test',
-        undefinedProperty: 'test'
-    });
+    ok(Velcro.utils.isValue(bob1.forename), 'The forename property should be an observable.');
+    ok(Velcro.utils.isValue(bob1.surname), 'The surname property should be an observable.');
+    ok(Velcro.utils.isValue(bob1.name), 'The name property should be a computed observable.');
 
-    ok(instance instanceof User, 'The `user` instance should be an instance of the `User` model.');
-    ok(velcro.utils.isObservable(instance.observer), 'The `observer` property should be a Knockout observable.');
-    ok(instance.name() === 'test', 'The instance should be filled when data is passed to the constructor.');
-    ok(typeof instance.undefinedProperty === 'undefined', 'Undefined properties should not be set.');
+    ok(bob1.forename() === 'Bob', 'Forename should be Bob.');
+    ok(bob1.surname() === 'Bobberson', 'Surname should be Bobberson.');
+    ok(bob1.name() === 'Bob Bobberson', 'Full name should be Bob Bobberson.');
+
+    bob1.name('Marge Margaretson');
+
+    ok(bob2.forename() === 'Bob', 'Second Bob should still be named Bob.');
+    ok(bob1.forename() === 'Marge', 'Forename should have changed to Marge.');
+    ok(bob1.surname() === 'Margaretson', 'Surname should have changed to Margaretson.');
+    ok(bob1.name() === 'Marge Margaretson', 'Full name should have changed to Marge Margaretson.');
 });
 
 test('Relationships', function() {
-    var Friend = velcro.model({
+    var Friend = Velcro.Model.extend({
         name: ''
     });
 
-    var User = velcro.model({
+    var User = Velcro.Model.extend({
         bestFriend: Friend,
         friends: Friend.Collection
     });
@@ -85,24 +129,25 @@ test('Relationships', function() {
         name: 'Dog'
     });
 
+return;
     user.friends([
         { name: 'Cat' },
         { name: 'Lizard' }
     ]);
 
-    var exported = user.raw();
+    var exported = user.to();
 
     ok(exported.bestFriend.name === user.bestFriend().name(), 'Dog should be the best friend.');
     ok(exported.friends[0].name === user.friends().first().name(), 'Cat should be 2nd best.');
     ok(exported.friends[1].name === user.friends().at(1).name(), 'Lizard should be 3rd best.');
 });
-
+/*
 test('Collection Manipulation', function() {
-    var Item = velcro.model({
+    var Item = Velcro.Model.extend({
         name: ''
     });
 
-    var Items = velcro.model({
+    var Items = Velcro.Model.extend({
         items: Item.Collection
     });
 
@@ -126,7 +171,7 @@ test('Collection Manipulation', function() {
 });
 
 test('Observable Getters and Setters', function() {
-    var User = velcro.model({
+    var User = Velcro.Model.extend({
         forename: '',
         surname: '',
         getName: function() {
@@ -141,21 +186,21 @@ test('Observable Getters and Setters', function() {
     });
 
     var user     = new User().name('Barbara Barberson');
-    var exported = user.raw();
+    var exported = user.to();
 
     ok(exported.name === user.name(), 'The `name` reader should have been exported.');
 });
 
 test('Parent / Child Relationships', function() {
-    var NoParentModel = velcro.model({
+    var NoParentModel = Velcro.Model.extend({
         name: ''
     });
 
-    var ChildModel = velcro.model({
+    var ChildModel = Velcro.Model.extend({
         name: ''
     });
 
-    var ParentModel = velcro.model({
+    var ParentModel = Velcro.Model.extend({
         child: ChildModel,
         children: ChildModel.Collection
     });
@@ -174,7 +219,7 @@ test('Parent / Child Relationships', function() {
 });
 
 test('Chaining Method Calls', function() {
-    var Model = velcro.model({
+    var Model = Velcro.Model.extend({
         test1: '',
         test3: '',
         getTest2: function() {
@@ -202,13 +247,13 @@ test('Observing Changes', function() {
     span.setAttribute('data-velcro-text', 'text: name');
     div.appendChild(span);
 
-    var Person = velcro.model({
+    var Person = Velcro.Model.extend({
         name: 'Default Value'
     });
 
     var dude = new Person;
 
-    new velcro.App().bind(div, dude);
+    new Velcro.App().bind(div, dude);
 
     ok(div.childNodes[0].innerText === dude.name(), 'Inner text on div child should be initialised.');
 
@@ -225,15 +270,15 @@ test('Changing Context', function() {
     span.setAttribute('data-velcro-text', 'text: name');
     div.appendChild(span);
 
-    var App = velcro.model({
-        person: velcro.model({
+    var App = Velcro.Model.extend({
+        person: Velcro.Model.extend({
             name: 'Default Value'
         })
     });
 
     var appsrawesome = new App;
 
-    new velcro.App().bind(div, appsrawesome)
+    new Velcro.App().bind(div, appsrawesome)
     ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be initialised.');
 
     appsrawesome.person().name('Updated Value');
@@ -245,8 +290,8 @@ asyncTest('Router', function() {
     var div = document.createElement('div');
     div.setAttribute('data-velcro-routable', 'router: router');
 
-    var app    = new velcro.App()
-    var router = new velcro.Router();
+    var app    = new Velcro.App()
+    var router = new Velcro.Router();
 
     router.set('index', function() {
         return {
@@ -270,7 +315,7 @@ asyncTest('View', function() {
     var div = document.createElement('div');
     div.setAttribute('data-velcro-include', 'path: "index", context: context, callback: callback');
 
-    new velcro.App().bind(div, {
+    new Velcro.App().bind(div, {
         context: function() {
             return { name: 'test' };
         },
@@ -286,7 +331,7 @@ asyncTest('View', function() {
 module('Views');
 
 test('No Model Binding', function() {
-    var view = new velcro.View();
+    var view = new Velcro.View();
 
     view.options.target = document.createElement('div');
     view.cache.test     = 'test';
@@ -301,7 +346,7 @@ test('No Model Binding', function() {
 module('Http');
 
 asyncTest('Parsing Based on Request Header', function() {
-    var http = new velcro.Http({
+    var http = new Velcro.Http({
         headers: {
             Accept: 'application/json'
         }
@@ -320,3 +365,4 @@ asyncTest('Parsing Based on Request Header', function() {
         }
     });
 });
+*/

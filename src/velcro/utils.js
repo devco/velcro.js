@@ -1,6 +1,40 @@
-velcro.utils = {
-    isObservable: function(value) {
-        return typeof value === 'function' && value.toString() === velcro.value().toString();
+Velcro.utils = {
+    each: function(items, fn) {
+        items = items || [];
+
+        if (typeof items === 'string') {
+            items = [items];
+        }
+
+        if (typeof items.length === 'number') {
+            for (var i = 0; i < items.length; i++) {
+                if (fn(i, items[i]) === false) {
+                    return;
+                }
+            }
+        } else {
+            for (var x in items) {
+                if (fn(x, items[x]) === false) {
+                    return;
+                }
+            }
+        }
+    },
+
+    fnCompare: function(fn, str) {
+        if (!fn) {
+            return false;
+        }
+
+        if (typeof fn === 'object' && fn.constructor) {
+            fn = fn.constructor;
+        }
+
+        if (typeof fn === 'function') {
+            fn = fn.toString();
+        }
+
+        return fn === str;
     },
 
     html: function(element) {
@@ -9,45 +43,40 @@ velcro.utils = {
         return div.innerHTML;
     },
 
-    throwForElement: function(element, message) {
-        throw message + "\n" + velcro.html(element);
+    isArray: function(obj) {
+        return Object.prototype.toString.call(obj) === '[object Array]';
     },
 
-    isModel: function(fn) {
-        return fnCompare(fn, velcro.model().toString());
-    },
-
-    isCollection: function(fn) {
-        return fnCompare(fn, velcro.collection().toString());
+    isClass: function(obj) {
+        return typeof obj === 'function' && typeof obj.extend === 'function' && obj.extend === Velcro.Class.extend;
     },
 
     isObject: function(obj) {
         return Object.prototype.toString.call(obj) === '[object Object]';
     },
 
-    isArray: function(obj) {
-        return Object.prototype.toString.call(obj) === '[object Array]';
+    isValue: function(value) {
+        return typeof value === 'function' && value.toString() === Velcro.value().toString();
     },
 
     merge: function() {
-        var merged  = arguments[0];
-        var params = Array.prototype.slice.call(arguments, 1);
+        var merged = {};
 
-        for (var i = 0; i < params.length; i++) {
-            var param = params[i];
+        for (var i = 0; i < arguments.length; i++) {
+            var param = arguments[i];
 
-            if (!velcro.utils.isObject(param)) {
+            if (!Velcro.utils.isObject(param)) {
                 continue;
             }
 
             for (var ii in param) {
                 var value = param[ii];
 
-                if (velcro.utils.isObject(value)) {
+                if (Velcro.utils.isObject(value)) {
                     if (typeof merged[ii] === 'undefined') {
                         merged[ii] = value;
                     } else {
-                        merged[ii] = velcro.utils.merge(merged[ii], value);
+                        merged[ii] = Velcro.utils.merge(merged[ii], value);
                     }
                 } else {
                     merged[ii] = value;
@@ -84,5 +113,9 @@ velcro.utils = {
         } catch (error) {
             throw 'Error parsing response "' + response + '" with message "' + error + '".';
         }
+    },
+
+    throwForElement: function(element, message) {
+        throw message + "\n" + Velcro.html(element);
     }
 };

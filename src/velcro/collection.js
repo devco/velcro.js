@@ -1,10 +1,22 @@
-velcro.collection = function(model) {
-    var Collection = function(data) {
-        Array.prototype.push.apply(this, []);
+(function() {
+    Velcro.Collection = Velcro.Class.extend({
+        init: function(Model, data) {
+            Array.prototype.push.apply(this, []);
 
-        this.observer = generateValueObserver(this);
+            this.$observer = Velcro.value({
+                bind: this,
+                defaultValue: this,
+                set: function(value) {
+                    this.from(value);
+                }
+            });
 
-        this.aggregate = function(joiner, fields) {
+            this.Model = Model;
+
+            this.from(data);
+        },
+
+        aggregate: function(joiner, fields) {
             var arr = [];
 
             if (!fields) {
@@ -12,10 +24,10 @@ velcro.collection = function(model) {
                 joiner = '';
             }
 
-            this.each(function(k, model) {
+            this.Velcro.utils.each(function(k, model) {
                 var parts = [];
 
-                each(fields, function(kk, field) {
+                Velcro.utils.each(fields, function(kk, field) {
                     if (typeof model[field] === 'function') {
                         parts.push(model[field]());
                     }
@@ -25,75 +37,74 @@ velcro.collection = function(model) {
             });
 
             return arr;
-        };
+        },
 
-        this.at = function(index) {
+        at: function(index) {
             return typeof this[index] === 'undefined' ? false : this[index];
-        };
+        },
 
-        this.first = function() {
+        first: function() {
             return this.at(0);
-        };
+        },
 
-        this.last = function() {
+        last: function() {
             return this.at(this.length - 1);
-        };
+        },
 
-        this.has = function(index) {
+        has: function(index) {
             return typeof this[index] !== 'undefined';
-        };
+        },
 
-        this.remove = function(at) {
+        remove: function(at) {
             at = typeof at === 'number' ? at : this.index(at);
 
             if (this.has(at)) {
                 Array.prototype.splice.call(this, at, 1);
-
-                this.observer.publish();
+                this.$observer.publish();
             }
 
             return this;
-        };
+        },
 
-        this.empty = function() {
+        empty: function() {
             Array.prototype.splice.call(this, 0, this.length);
-            this.observer.publish();
+            this.$observer.publish();
 
             return this;
-        };
+        },
 
-        this.prepend = function(item) {
+        prepend: function(item) {
             return this.insert(0, item);
-        };
+        },
 
-        this.append = function(item) {
+        append: function(item) {
             return this.insert(this.length, item);
-        };
+        },
 
-        this.insert = function(at, item) {
-            item         = velcro.utils.isModel(item) ? item : new model(item);
+        insert: function(at, item) {
+            item         = item instanceof Velcro.Model ? item : new this.Model(item);
             item.$parent = this.$parent;
 
             Array.prototype.splice.call(this, at, 0, item);
-            this.observer.publish();
+            this.$observer.publish();
 
             return this;
-        };
+        },
 
-        this.replace = function (at, item) {
-            item         = velcro.utils.isModel(item) ? item : new model(item);
+        replace: function (at, item) {
+            item         = item instanceof Velcro.Model ? item : new this.Model(item);
             item.$parent = this.$parent;
 
             Array.prototype.splice.call(this, at, 1, item);
-            this.observer.publish();
+            this.$observer.publish();
 
             return this;
-        };
+        },
 
-        this.index = function(item) {
+        index: function(item) {
             var index = -1;
 
-            this.each(function(i, it) {
+            this.Velcro.utils.each(function(i, it) {
                 if (it === item) {
                     index = i;
                     return;
@@ -101,16 +112,16 @@ velcro.collection = function(model) {
             });
 
             return index;
-        };
+        },
 
-        this.from = function(data) {
+        from: function(data) {
             var that = this;
 
-            if (velcro.utils.isCollection(data)) {
-                data = data.raw();
+            if (Velcro.utils.isCollection(data)) {
+                data = data.to();
             }
 
-            each(data, function(i, model) {
+            Velcro.utils.each(data, function(i, model) {
                 if (that.has(i)) {
                     that.replace(i, model);
                 } else {
@@ -119,31 +130,31 @@ velcro.collection = function(model) {
             });
 
             return this;
-        };
+        },
 
-        this.raw = function() {
+        to: function() {
             var out = [];
 
-            this.each(function(i, v) {
-                out.push(v.raw());
+            this.Velcro.utils.each(function(i, v) {
+                out.push(v.to());
             });
 
             return out;
-        };
+        },
 
-        this.each = function(fn) {
+        each: function(fn) {
             for (var i = 0; i < this.length; i++) {
                 fn.call(this, i, this[i]);
             }
             return this;
-        };
+        },
 
-        this.find = function(query, limit, page) {
-            var collection     = new this.$self.Model.Collection();
+        find: function(query, limit, page) {
+            var collection     = new Velcro.Collection(this.Model);
             collection.$parent = this.$parent;
 
-            if (velcro.utils.isModel(query)) {
-                query = query.raw();
+            if (query instanceof Velcro.Model) {
+                query = query.to();
             }
 
             if (typeof query === 'object') {
@@ -152,7 +163,7 @@ velcro.collection = function(model) {
                         var that = this,
                             ret  = true;
 
-                        each(query, function(k, v) {
+                        Velcro.utils.each(query, function(k, v) {
                             if (typeof that[k] === 'undefined' || that[k]() !== v) {
                                 ret = false;
                                 return false;
@@ -164,7 +175,7 @@ velcro.collection = function(model) {
                 })(query);
             }
 
-            this.each(function(i, model) {
+            this.Velcro.utils.each(function(i, model) {
                 if (limit && page) {
                     var offset = (limit * page) - limit;
 
@@ -183,24 +194,10 @@ velcro.collection = function(model) {
             });
 
             return collection;
-        };
+        },
 
-        this.findOne = function(query) {
+        findOne: function(query) {
             return this.find(query, 1).first();
-        };
-
-        // alias deprecated methods
-        this['export'] = this.raw;
-        this['import'] = this.from;
-
-        this.from(data);
-    };
-
-    Collection.Model = model;
-
-    Collection.prototype = {
-        $self: Collection
-    };
-
-    return Collection;
-};
+        }
+    });
+})();

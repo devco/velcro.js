@@ -10,7 +10,19 @@ module.exports = function(grunt) {
     grunt.initConfig({
         concat: {
             dist: {
-                src: 'src/velcro/*.js',
+                src: [
+                    'src/velcro/utils.js',
+                    'src/velcro/default-bindings.js',
+                    'src/velcro/class.js',
+                    'src/velcro/event.js',
+                    'src/velcro/http.js',
+                    'src/velcro/router.js',
+                    'src/velcro/view.js',
+                    'src/velcro/app.js',
+                    'src/velcro/value.js',
+                    'src/velcro/model.js',
+                    'src/velcro/collection.js',
+                ],
                 dest: 'dist/velcro.js'
             }
         },

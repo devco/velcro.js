@@ -1,13 +1,13 @@
-velcro.App = function(options) {
-    this.options = velcro.utils.merge({
+Velcro.App = function(options) {
+    this.options = Velcro.utils.merge({
         attributePrefix: 'data-velcro-',
-        bindings: velcro.defaultBindings
+        bindings: Velcro.defaultBindings
     }, options);
 
     this.contexts = [];
 };
 
-velcro.App.prototype = {
+Velcro.App.prototype = {
     bind: function(element, context) {
         if (arguments.length === 1) {
             context = element;
@@ -25,7 +25,7 @@ velcro.App.prototype = {
     bindDescendants: function(parent, context) {
         var $this = this;
 
-        each(parent.childNodes, function(index, element) {
+        Velcro.utils.each(parent.childNodes, function(index, element) {
             $this.bind(element, context);
         });
 
@@ -35,7 +35,7 @@ velcro.App.prototype = {
     bindOne: function(element) {
         var $this = this;
 
-        each(element.attributes, function(i, node) {
+        Velcro.utils.each(element.attributes, function(i, node) {
             var name = node.nodeName.substring($this.options.attributePrefix.length);
 
             if (typeof $this.options.bindings[name] === 'function') {
@@ -48,10 +48,10 @@ velcro.App.prototype = {
 
     bindAttribute: function (element, name, value) {
         var $this   = this;
-        var parsed  = velcro.utils.parseBinding(value, this.context());
+        var parsed  = Velcro.utils.parseBinding(value, this.context());
         var binding = this.options.bindings[name];
 
-        each(parsed, function(parsedName, parsedValue) {
+        Velcro.utils.each(parsed, function(parsedName, parsedValue) {
             subscribeToUpdatesIfObservable(parsedValue);
         });
 
@@ -70,7 +70,7 @@ velcro.App.prototype = {
         }
 
         function subscribeToUpdatesIfObservable(value) {
-            if (!velcro.utils.isObservable(value)) {
+            if (!Velcro.utils.isValue(value)) {
                 return;
             }
 
@@ -88,8 +88,8 @@ velcro.App.prototype = {
         function extractObservableValues() {
             var options = {};
 
-            each(parsed, function(name, value) {
-                if (velcro.utils.isObservable(value)) {
+            Velcro.utils.each(parsed, function(name, value) {
+                if (Velcro.utils.isValue(value)) {
                     options[name] = value();
                 } else {
                     options[name] = value;

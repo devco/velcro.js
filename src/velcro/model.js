@@ -1,188 +1,185 @@
-velcro.model = function(definition) {
-    var Model = function(data) {
-        var that = this;
 
-        this.clone = function() {
-            var clone     = new Model(this.raw());
-            clone.$parent = this.$parent;
-            return clone;
-        };
+(function() {
+    Velcro.Model = Velcro.Class.extend({
+        $observer: null,
 
-        this.from = function(obj) {
-            if (velcro.utils.isModel(obj)) {
-                obj = obj.raw();
+        $parent: null,
+
+        init: function(data) {
+            defineIfNotDefined(this);
+            applyDefinition(this);
+            this.from(data);
+        },
+
+        clone: function() {
+            return new this.$self(this.to());
+        },
+
+        each: function(fn) {
+            var def = this.$self.definition;
+
+            for (var a in def.relations) {
+                fn(a, this[a]);
             }
 
-            each(obj, function(name, value) {
-                if (typeof that[name] === 'function') {
-                    that[name](value);
+            for (var b in def.properties) {
+                fn(b, this[b]);
+            }
+
+            for (var c in def.computed) {
+                fn(c, this[c]);
+            }
+
+            return this;
+        },
+
+        from: function(obj) {
+            if (!obj) {
+                return this;
+            }
+
+            if (obj instanceof Velcro.Model) {
+                obj = obj.to();
+            }
+
+            this.each(function(name, value) {
+                if (typeof obj[name] !== 'undefined') {
+                    value(obj[name]);
                 }
             });
 
-            this.observer.publish();
+            this.$observer.publish();
 
             return this;
-        };
+        },
 
-        this.raw = function() {
+        to: function() {
             var out = {};
 
-            each(that.$self.properties, function(i, v) {
-                out[i] = that[i]();
-            });
-
-            each(that.$self.computed, function(i, v) {
-                out[i] = that[i]();
-            });
-
-            each(that.$self.relations, function(i, v) {
-                out[i] = that[i]().raw();
+            this.each(function(name, value) {
+                out[name] = value();
             });
 
             return out;
-        };
-
-        this.reset = function() {
-            each(that.$self.properties, function(i, v) {
-                that[i](v);
-            });
-
-            return this;
-        };
-
-        // alias deprecated methods
-        this['export'] = this.raw;
-        this['import'] = this.from;
-
-        define(this);
-        this.from(data);
-
-        if (typeof this.init === 'function') {
-            this.init();
         }
-    };
+    });
 
-    Model.Collection      = velcro.collection(Model);
-    Model.computed        = {};
-    Model.methods         = {};
-    Model.properties      = {};
-    Model.relations       = {};
-    Model.prototype.$self = Model;
-
-    Model.extend = function(OtherModel) {
-        OtherModel = velcro.utils.isModel(OtherModel) ? OtherModel : velcro.model(OtherModel);
-
-        each(Model.computed, function(i, v) {
-            if (typeof OtherModel.computed[i] === 'undefined') {
-                OtherModel.computed[i] = v;
-            }
-        });
-
-        each(Model.methods, function(i, v) {
-            if (typeof OtherModel.methods[i] === 'undefined') {
-                OtherModel.methods[i] = v;
-            }
-        });
-
-        each(Model.properties, function(i, v) {
-            if (typeof OtherModel.properties[i] === 'undefined') {
-                OtherModel.properties[i] = v;
-            }
-        });
-
-        each(Model.relations, function(i, v) {
-            if (typeof OtherModel.relations[i] === 'undefined') {
-                OtherModel.relations[i] = v;
-            }
-        });
-
-        return OtherModel;
-    };
-
-    Model.inherit = function(OtherModel) {
-        return OtherModel.extend(Model);
-    };
-
-    interpretDefinition(Model, definition);
-
-    return Model;
-};
-
-function interpretDefinition(Model, definition) {
-    each(definition, function(i, v) {
-        if (velcro.utils.isModel(v) || velcro.utils.isCollection(v)) {
-            Model.relations[i] = v;
-            return;
+    function defineIfNotDefined(obj) {
+        if (!obj.$self.definition) {
+            define(obj);
         }
+    }
 
-        if (typeof v === 'function') {
-            var name, type;
+    function define(obj) {
+        initDefinition(obj);
+        defineCollection(obj);
+        definePrototype(obj);
+    }
 
-            if (i.indexOf('get') === 0) {
-                name = i.substring(3, 4).toLowerCase() + i.substring(4);
-                type = 'get';
-            } else if (i.indexOf('set') === 0) {
-                name = i.substring(3, 4).toLowerCase() + i.substring(4);
-                type = 'set';
+    function initDefinition(obj) {
+        obj.$self.definition = {
+            relations: {},
+            properties: {},
+            computed: {}
+        };
+    }
+
+    function defineCollection(obj) {
+        obj.$self.Collection = Velcro.Collection.extend({
+            init: function(data) {
+                this.$super(obj.$self, data);
+            }
+        });
+    }
+
+    function definePrototype(obj) {
+        for (var i in obj) {
+            if (typeof Velcro.Model.prototype[i] !== 'undefined') {
+                continue;
             }
 
-            if (type) {
-                if (typeof Model.computed[name] === 'undefined') {
-                    Model.computed[name] = {};
+            var v = obj[i];
+
+            if (Velcro.utils.isClass(v) && (v.isSubClassOf(Velcro.Model) || v.isSubClassOf(Velcro.Collection))) {
+                obj.$self.definition.relations[i] = v;
+                continue;
+            }
+
+            if (typeof v === 'function') {
+                var name, type;
+
+                if (i.indexOf('get') === 0) {
+                    name = i.substring(3, 4).toLowerCase() + i.substring(4);
+                    type = 'get';
+                } else if (i.indexOf('set') === 0) {
+                    name = i.substring(3, 4).toLowerCase() + i.substring(4);
+                    type = 'set';
                 }
 
-                Model.computed[name][type] = v;
-                return;
+                if (!type) {
+                    continue;
+                }
+
+                if (typeof obj.$self.definition.computed[name] === 'undefined') {
+                    obj.$self.definition.computed[name] = {};
+                }
+
+                obj.$self.definition.computed[name][type] = v;
+
+                continue;
             }
 
-            Model.methods[i] = v;
-            return;
+            obj.$self.definition.properties[i] = v;
         }
+    }
 
-        Model.properties[i] = v;
-    });
-}
+    function applyDefinition(obj) {
+        applyObserver(obj);
+        applyRelations(obj);
+        applyProperties(obj);
+        applyComputed(obj);
+    }
 
-function define(obj) {
-    obj.observer = generateValueObserver(obj);
-
-    defineComputed(obj);
-    defineMethods(obj);
-    defineProperties(obj);
-    defineRelations(obj);
-}
-
-function defineComputed(obj) {
-    each(obj.$self.computed, function(name, computed) {
-        obj[name] = velcro.value({
+    function applyObserver(obj) {
+        obj.$observer = Velcro.value({
             bind: obj,
-            get: computed.get,
-            set: computed.set
+            defaultValue: obj,
+            set: function(value) {
+                this.from(value);
+            }
         });
-    });
-}
+    }
 
-function defineMethods(obj) {
-    each(obj.$self.methods, function(name, method) {
-        obj[name] = function() {
-            return method.apply(obj, arguments);
+    function applyRelations(obj) {
+        for (var i in obj.$self.definition.relations) {
+            var instance     = new obj.$self.definition.relations[i]();
+            instance.$parent = obj;
+            obj[i]           = instance.$observer;
+        }
+    }
+
+    function applyProperties(obj) {
+        for (var i in obj.$self.definition.properties) {
+            obj[i] = Velcro.value({
+                bind: obj,
+                defaultValue: obj.$self.definition.properties[i]
+            });
+        }
+    }
+
+    function applyComputed(obj) {
+        for (var i in obj.$self.definition.computed) {
+            obj[i] = Velcro.value({
+                bind: obj,
+                get: obj.$self.definition.computed[i].get ? obj.$self.definition.computed[i].get : generateGetterSetterThrower('getter', i),
+                set: obj.$self.definition.computed[i].set ? obj.$self.definition.computed[i].set : generateGetterSetterThrower('setter', i)
+            });
+        }
+    }
+
+    function generateGetterSetterThrower(type, name) {
+        return function() {
+            throw 'No ' + type + ' defined for computed property "' + name + '".';
         };
-    });
-}
-
-function defineProperties(obj) {
-    each(obj.$self.properties, function(name, property) {
-        obj[name] = velcro.value({
-            bind: obj,
-            value: property
-        });
-    });
-}
-
-function defineRelations(obj) {
-    each(obj.$self.relations, function(name, relation) {
-        var instance     = new relation();
-        obj[name]        = instance.observer;
-        instance.$parent = obj;
-    });
-}
+    }
+})();

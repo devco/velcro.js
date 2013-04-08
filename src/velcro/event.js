@@ -1,9 +1,9 @@
-velcro.Event = function() {
+Velcro.Event = function() {
     this.stack = [];
     return this;
 };
 
-velcro.Event.prototype = {
+Velcro.Event.prototype = {
     bind: function(cb) {
         this.stack.push(cb);
         return this;
