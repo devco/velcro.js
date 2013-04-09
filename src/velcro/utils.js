@@ -51,6 +51,10 @@ Velcro.utils = {
         return typeof obj === 'function' && typeof obj.extend === 'function' && obj.extend === Velcro.Class.extend;
     },
 
+    isInstance: function(obj) {
+        return obj && typeof obj.constructor === 'function';
+    },
+
     isObject: function(obj) {
         return Object.prototype.toString.call(obj) === '[object Object]';
     },
@@ -73,7 +77,7 @@ Velcro.utils = {
                 var value = param[ii];
 
                 if (Velcro.utils.isObject(value)) {
-                    if (typeof merged[ii] === 'undefined') {
+                    if (typeof merged[ii] === 'undefined' || Velcro.utils.isInstance(value)) {
                         merged[ii] = value;
                     } else {
                         merged[ii] = Velcro.utils.merge(merged[ii], value);

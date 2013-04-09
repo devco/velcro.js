@@ -58,6 +58,10 @@
 
             this.each(function(name, value) {
                 out[name] = value();
+
+                if (out[name] instanceof Velcro.Model || out[name] instanceof Velcro.Collection) {
+                    out[name] = out[name].to();
+                }
             });
 
             return out;
@@ -143,7 +147,9 @@
     function applyObserver(obj) {
         obj.$observer = Velcro.value({
             bind: obj,
-            defaultValue: obj,
+            get: function() {
+                return this;
+            },
             set: function(value) {
                 this.from(value);
             }

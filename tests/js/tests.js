@@ -120,7 +120,7 @@ test('Relationships', function() {
 
     var User = Velcro.Model.extend({
         bestFriend: Friend,
-        friends: Friend.Collection
+        friends: Velcro.Collection.make(Friend)
     });
 
     var user = new User();
@@ -129,7 +129,6 @@ test('Relationships', function() {
         name: 'Dog'
     });
 
-return;
     user.friends([
         { name: 'Cat' },
         { name: 'Lizard' }
@@ -141,14 +140,14 @@ return;
     ok(exported.friends[0].name === user.friends().first().name(), 'Cat should be 2nd best.');
     ok(exported.friends[1].name === user.friends().at(1).name(), 'Lizard should be 3rd best.');
 });
-/*
+
 test('Collection Manipulation', function() {
     var Item = Velcro.Model.extend({
         name: ''
     });
 
     var Items = Velcro.Model.extend({
-        items: Item.Collection
+        items: Velcro.Collection.make(Item)
     });
 
     var model = new Items;
@@ -202,7 +201,7 @@ test('Parent / Child Relationships', function() {
 
     var ParentModel = Velcro.Model.extend({
         child: ChildModel,
-        children: ChildModel.Collection
+        children: Velcro.Collection.make(ChildModel)
     });
 
     var owner = new ParentModel({
@@ -365,4 +364,3 @@ asyncTest('Parsing Based on Request Header', function() {
         }
     });
 });
-*/

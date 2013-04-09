@@ -1,11 +1,15 @@
 (function() {
     Velcro.Collection = Velcro.Class.extend({
+        Model: false,
+
         init: function(Model, data) {
             Array.prototype.push.apply(this, []);
 
             this.$observer = Velcro.value({
                 bind: this,
-                defaultValue: this,
+                get: function() {
+                    return this;
+                },
                 set: function(value) {
                     this.from(value);
                 }
@@ -24,7 +28,7 @@
                 joiner = '';
             }
 
-            this.Velcro.utils.each(function(k, model) {
+            this.each(function(k, model) {
                 var parts = [];
 
                 Velcro.utils.each(fields, function(kk, field) {
@@ -104,7 +108,7 @@
         index: function(item) {
             var index = -1;
 
-            this.Velcro.utils.each(function(i, it) {
+            this.each(function(i, it) {
                 if (it === item) {
                     index = i;
                     return;
@@ -117,7 +121,7 @@
         from: function(data) {
             var that = this;
 
-            if (Velcro.utils.isCollection(data)) {
+            if (data instanceof Velcro.Collection) {
                 data = data.to();
             }
 
@@ -135,7 +139,7 @@
         to: function() {
             var out = [];
 
-            this.Velcro.utils.each(function(i, v) {
+            this.each(function(i, v) {
                 out.push(v.to());
             });
 
@@ -175,7 +179,7 @@
                 })(query);
             }
 
-            this.Velcro.utils.each(function(i, model) {
+            this.each(function(i, model) {
                 if (limit && page) {
                     var offset = (limit * page) - limit;
 
@@ -200,4 +204,12 @@
             return this.find(query, 1).first();
         }
     });
+
+    Velcro.Collection.make = function(Model) {
+        return this.extend({
+            init: function(data) {
+                this.$super(Model, data);
+            }
+        });
+    };
 })();
