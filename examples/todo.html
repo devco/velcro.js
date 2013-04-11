@@ -1,0 +1,12 @@
+<!doctype html>
+<html>
+    <head>
+        <script type="text/javascript" src="../dist/knockup.min.js"></script>
+    </head>
+    <body>
+        <h1>Things To Do</h1>
+        <ul data-velcro-if="observe: todos, test: todos.length">
+            <li data-velcro-each="items: todos, key: index, value: todo" data-velcro-text"text: todo"></li>
+        </ul>
+    </body>
+</html>
