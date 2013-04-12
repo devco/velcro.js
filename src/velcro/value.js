@@ -31,7 +31,7 @@ Velcro.value = function(options) {
 
     func.subscribe = function(callback) {
         subs.push(callback);
-        return func;
+        return options.bind;
     };
 
     func.unsubscribe = function(callback) {
@@ -41,14 +41,18 @@ Velcro.value = function(options) {
                 return;
             }
         }
-        return func;
+
+        return options.bind;
     };
 
     func.publish = function() {
+        var newValue = options.get.call(options.bind);
+
         for (var i = 0; i < subs.length; i++) {
-            subs[i](func.value);
+            subs[i](newValue);
         }
-        return func;
+
+        return options.bind;
     };
 
     return func;

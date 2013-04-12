@@ -21,6 +21,14 @@ Velcro.utils = {
         }
     },
 
+    element: function(html) {
+        var div = document.createElement('div');
+        div.innerHTML = html;
+        var element = div.childNodes[0];
+        div.removeChild(element);
+        return element;
+    },
+
     fnCompare: function(fn, str) {
         if (!fn) {
             return false;
@@ -39,7 +47,7 @@ Velcro.utils = {
 
     html: function(element) {
         var div = document.createElement('div');
-        div.appendChild(element);
+        div.appendChild(element.cloneNode(true));
         return div.innerHTML;
     },
 

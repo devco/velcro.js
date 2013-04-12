@@ -1,12 +1,21 @@
 <!doctype html>
 <html>
     <head>
-        <script type="text/javascript" src="../dist/knockup.min.js"></script>
+        <script type="text/javascript" src="../dist/velcro.min.js"></script>
     </head>
     <body>
         <h1>Things To Do</h1>
-        <ul data-velcro-if="observe: todos, test: todos.length">
-            <li data-velcro-each="items: todos, key: index, value: todo" data-velcro-text"text: todo"></li>
+        <ul data-vc-if="observe: todos, test: todos.length">
+            <li data-vc-each="items: todos" data-vc-text"text: $value"></li>
         </ul>
+        <script type="text/javascript">
+            var app = new Velcro.App();
+            app.bind({
+                todos: [
+                    'Todo 1',
+                    'Todo 2'
+                ]
+            });
+        </script>
     </body>
 </html>

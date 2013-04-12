@@ -1,6 +1,6 @@
 Velcro.App = function(options) {
     this.options = Velcro.utils.merge({
-        attributePrefix: 'data-velcro-',
+        attributePrefix: 'data-vc-',
         bindings: Velcro.defaultBindings
     }, options);
 
@@ -23,7 +23,11 @@ Velcro.App.prototype = {
     },
 
     bindDescendants: function(parent, context) {
-        var $this = this;
+        var $this   = this;
+
+        if (arguments.length === 1) {
+            context = this.context();
+        }
 
         Velcro.utils.each(parent.childNodes, function(index, element) {
             $this.bind(element, context);
@@ -36,6 +40,12 @@ Velcro.App.prototype = {
         var $this = this;
 
         Velcro.utils.each(element.attributes, function(i, node) {
+            // an element may have been altered inside of a binding, therefore
+            // we must check if the binding still exists
+            if (typeof element.attributes[i] === 'undefined') {
+                return;
+            }
+
             var name = node.nodeName.substring($this.options.attributePrefix.length);
 
             if (typeof $this.options.bindings[name] === 'function') {
@@ -49,40 +59,24 @@ Velcro.App.prototype = {
     bindAttribute: function (element, name, value) {
         var $this   = this;
         var parsed  = Velcro.utils.parseBinding(value, this.context());
-        var binding = this.options.bindings[name];
+        var binding = new this.options.bindings[name](this, element, extractObservableValues());
 
         Velcro.utils.each(parsed, function(parsedName, parsedValue) {
-            subscribeToUpdatesIfObservable(parsedValue);
-        });
+            if (Velcro.utils.isValue(parsedValue)) {
+                parsedValue.subscribe(subscriber);
+            }
 
-        initialiseBinding();
+            if (parsedValue instanceof Velcro.Model || parsedValue instanceof Velcro.Collection) {
+                parsedValue.$observer.subscribe(subscriber);
+            }
+        });
 
         return this;
 
-        function initialiseBinding() {
-            var options = extractObservableValues();
-
-            if (typeof binding.init === 'function') {
-                binding.init.call(binding, $this, element, options);
-            } else {
-                binding.call(binding, $this, element, options);
+        function subscriber() {
+            if (typeof binding.update === 'function') {
+                binding.update($this, element, extractObservableValues());
             }
-        }
-
-        function subscribeToUpdatesIfObservable(value) {
-            if (!Velcro.utils.isValue(value)) {
-                return;
-            }
-
-            value.subscribe(function() {
-                var options = extractObservableValues();
-
-                if (typeof binding.update === 'function') {
-                    binding.update.call(binding, $this, element, options);
-                } else {
-                    binding.call(binding, $this, element, options);
-                }
-            });
         }
 
         function extractObservableValues() {

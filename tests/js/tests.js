@@ -237,96 +237,6 @@ test('Chaining Method Calls', function() {
 
 
 
-module('Application / Binding Engine');
-
-test('Observing Changes', function() {
-    var div  = document.createElement('div');
-    var span = document.createElement('span');
-
-    span.setAttribute('data-velcro-text', 'text: name');
-    div.appendChild(span);
-
-    var Person = Velcro.Model.extend({
-        name: 'Default Value'
-    });
-
-    var dude = new Person;
-
-    new Velcro.App().bind(div, dude);
-
-    ok(div.childNodes[0].innerText === dude.name(), 'Inner text on div child should be initialised.');
-
-    dude.name('Updated Value');
-
-    ok(div.childNodes[0].innerText === dude.name(), 'Inner text on div child should be updated.');
-});
-
-test('Changing Context', function() {
-    var div  = document.createElement('div');
-    var span = document.createElement('span');
-
-    div.setAttribute('data-velcro-context', 'context: person');
-    span.setAttribute('data-velcro-text', 'text: name');
-    div.appendChild(span);
-
-    var App = Velcro.Model.extend({
-        person: Velcro.Model.extend({
-            name: 'Default Value'
-        })
-    });
-
-    var appsrawesome = new App;
-
-    new Velcro.App().bind(div, appsrawesome)
-    ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be initialised.');
-
-    appsrawesome.person().name('Updated Value');
-
-    ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be updated.');
-});
-
-asyncTest('Router', function() {
-    var div = document.createElement('div');
-    div.setAttribute('data-velcro-routable', 'router: router');
-
-    var app    = new Velcro.App()
-    var router = new Velcro.Router();
-
-    router.set('index', function() {
-        return {
-            name: 'test'
-        };
-    });
-
-    router.render.bind(function() {
-        ok(div.childNodes[0].innerHTML === 'test', 'Inner text on div\'s child span should update.');
-        start();
-    });
-
-    app.bind(div, {
-        router: router
-    });
-
-    router.go('index');
-});
-
-asyncTest('View', function() {
-    var div = document.createElement('div');
-    div.setAttribute('data-velcro-include', 'path: "index", context: context, callback: callback');
-
-    new Velcro.App().bind(div, {
-        context: function() {
-            return { name: 'test' };
-        },
-        callback: function() {
-            ok(div.childNodes[0].innerHTML === 'test', 'Inner text on div\'s child span should initialise.');
-            start();
-        }
-    });
-});
-
-
-
 module('Views');
 
 test('No Model Binding', function() {
@@ -363,4 +273,144 @@ asyncTest('Parsing Based on Request Header', function() {
             ok(false, request.statusText)
         }
     });
+});
+
+
+
+module('Application / Binding Engine');
+
+test('Observing Changes', function() {
+    var div  = document.createElement('div');
+    var span = document.createElement('span');
+
+    span.setAttribute('data-vc-text', 'text: name');
+    div.appendChild(span);
+
+    var Person = Velcro.Model.extend({
+        name: 'Default Value'
+    });
+
+    var dude = new Person;
+
+    new Velcro.App().bind(div, dude);
+
+    ok(div.childNodes[0].innerText === dude.name(), 'Inner text on div child should be initialised.');
+
+    dude.name('Updated Value');
+
+    ok(div.childNodes[0].innerText === dude.name(), 'Inner text on div child should be updated.');
+});
+
+asyncTest('Router', function() {
+    var div = document.createElement('div');
+    div.setAttribute('data-vc-routable', 'router: router');
+
+    var app    = new Velcro.App()
+    var router = new Velcro.Router();
+
+    router.set('index', function() {
+        return {
+            name: 'test'
+        };
+    });
+
+    router.render.bind(function() {
+        ok(div.childNodes[0].innerHTML === 'test', 'Inner text on div\'s child span should update.');
+        start();
+    });
+
+    app.bind(div, {
+        router: router
+    });
+
+    router.go('index');
+});
+
+asyncTest('View', function() {
+    var div = document.createElement('div');
+    div.setAttribute('data-vc-include', 'path: "index", context: context, callback: callback');
+
+    new Velcro.App().bind(div, {
+        context: function() {
+            return { name: 'test' };
+        },
+        callback: function() {
+            ok(div.childNodes[0].innerHTML === 'test', 'Inner text on div\'s child span should initialise.');
+            start();
+        }
+    });
+});
+
+test('Document Binding - Passing Shallow Contexts to Nested Elements', function() {
+    document.body.innerHTML = '<ul data-vc-if="test: test"><li data-vc-each="items: items"></li></ul>';
+
+    try {
+        new Velcro.App().bind({
+            test: true,
+            items: [
+                'Item 1',
+                'Item 2'
+            ]
+        });
+        ok(true);
+    } catch (e) {
+        ok(false, e.toString());
+    }
+});
+
+
+
+module('Bindings');
+
+test('context', function() {
+    var div  = document.createElement('div');
+    var span = document.createElement('span');
+
+    div.setAttribute('data-vc-context', 'context: person');
+    span.setAttribute('data-vc-text', 'text: name');
+    div.appendChild(span);
+
+    var App = Velcro.Model.extend({
+        person: Velcro.Model.extend({
+            name: 'Default Value'
+        })
+    });
+
+    var appsrawesome = new App;
+
+    new Velcro.App().bind(div, appsrawesome)
+    ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be initialised.');
+
+    appsrawesome.person().name('Updated Value');
+
+    ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be updated.');
+});
+
+test('each', function() {
+    var ul    = document.createElement('ul');
+    var li    = document.createElement('li');
+    var span  = document.createElement('span');
+    var Items = Velcro.Collection.make(Velcro.Model.extend({
+        text: ''
+    }));
+
+    ul.appendChild(li);
+    li.appendChild(span);
+    li.setAttribute('data-vc-each', 'items: items');
+    span.setAttribute('data-vc-text', 'text: text');
+
+    var ctx = { items: new Items() };
+    var app = new Velcro.App().bind(ul, ctx);
+
+    ctx.items.append({
+        text: 'Item 1'
+    });
+
+    ok(ul.childNodes.length === 1 && ul.childNodes[0].innerText === 'Item 1', 'One item should exist as "Item 1".');
+
+    ctx.items.append({
+        text: 'Item 2'
+    });
+
+    ok(ul.childNodes.length === 2 && ul.childNodes[1].innerText === 'Item 2', 'Two items should exist as "Item 1, Item 2".');
 });

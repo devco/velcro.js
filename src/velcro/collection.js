@@ -148,7 +148,7 @@
 
         each: function(fn) {
             for (var i = 0; i < this.length; i++) {
-                fn.call(this, i, this[i]);
+                fn(i, this[i]);
             }
             return this;
         },

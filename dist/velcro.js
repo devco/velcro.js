@@ -31,6 +31,14 @@ Velcro.utils = {
         }
     },
 
+    element: function(html) {
+        var div = document.createElement('div');
+        div.innerHTML = html;
+        var element = div.childNodes[0];
+        div.removeChild(element);
+        return element;
+    },
+
     fnCompare: function(fn, str) {
         if (!fn) {
             return false;
@@ -49,7 +57,7 @@ Velcro.utils = {
 
     html: function(element) {
         var div = document.createElement('div');
-        div.appendChild(element);
+        div.appendChild(element.cloneNode(true));
         return div.innerHTML;
     },
 
@@ -133,65 +141,6 @@ Velcro.utils = {
         throw message + "\n" + Velcro.html(element);
     }
 };
-var context = function(app, element, options) {
-    if (!options.context) {
-        Velcro.utils.throwForElement(element, 'A context option must be specified.');
-    }
-
-    app.context(options.context);
-};
-
-var include = function(app, element, options) {
-    options = Velcro.utils.merge({
-        path: '',
-        context: false,
-        callback: function(){},
-        view: {}
-    }, options);
-
-    var view = new Velcro.View(options.view);
-
-    view.options.target = element;
-
-    if (typeof options.context === 'function') {
-        options.context = options.context();
-    }
-
-    if (!options.path) {
-        Velcro.utils.throwForElement(element, 'A path option must be specified.');
-    }
-
-    view.render(options.path, function() {
-        app.bindDescendants(element, options.context);
-        options.callback();
-    });
-};
-
-var routable = function(app, element, options) {
-    var router = options.router;
-
-    if (!router) {
-        Velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" because it does not exist.');
-    }
-
-    if (!router instanceof Velcro.Router) {
-        Velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" because it is not an instanceof "Velcro.Router".');
-    }
-
-    router.view.options.target = element;
-    router.bind();
-};
-
-var text = function(app, element, options) {
-    element.innerText = options.text;
-};
-
-Velcro.defaultBindings = {
-    context: context,
-    include: include,
-    routable: routable,
-    text: text
-};
 (function() {
     Velcro.Class = function() {};
 
@@ -263,6 +212,140 @@ Velcro.defaultBindings = {
         extensions[classes.indexOf(Child)] = Parent;
     }
 })();
+(function() {
+    Velcro.Binding = Velcro.Class.extend({
+        init: function(app, element, options) {
+            if (typeof this.update === 'function') {
+                this.update(app, element, options);
+            }
+        }
+    });
+})();
+Velcro.defaultBindings = {
+    context: Velcro.Binding.extend({
+        update: function(app, element, options) {
+            if (!options.context) {
+                Velcro.utils.throwForElement(element, 'A context option must be specified.');
+            }
+
+            app.context(options.context);
+        }
+    }),
+
+    each: Velcro.Binding.extend({
+        clones: null,
+
+        container: null,
+
+        html: null,
+
+        init: function(app, element, options) {
+            element.removeAttribute(app.options.attributePrefix + 'each');
+
+            this.clones    = [];
+            this.container = element.parentNode;
+            this.html      = Velcro.utils.html(element);
+
+            this.container.removeChild(element);
+            element.innerHTML = '';
+            this.$super(app, element, options);
+        },
+
+        update: function(app, element, options) {
+            var $this = this;
+
+            this.reset();
+
+            if (options.items instanceof Velcro.Model) {
+                options.items.each(function(key, value) {
+                    each(key, value());
+                });
+            } else if (options.items instanceof Velcro.Collection) {
+                options.items.each(each);
+            } else {
+                Velcro.utils.each(options.items, each);
+            }
+
+            function each(key, value) {
+                if (Velcro.utils.isObject(value)) {
+                    value.$key   = key;
+                    value.$value = value;
+                } else {
+                    value = {
+                        $key: key,
+                        $value: value
+                    };
+                }
+
+                var clone = Velcro.utils.element($this.html);
+                app.bindDescendants(clone, value);
+                $this.clones.push(clone);
+                $this.container.appendChild(clone);
+            }
+        },
+
+        reset: function() {
+            var $this = this;
+
+            Velcro.utils.each(this.clones, function(index, clone) {
+                $this.container.removeChild(clone);
+            });
+
+            this.clones = [];
+        }
+    }),
+
+    include: Velcro.Binding.extend({
+        update: function(app, element, options) {
+            options = Velcro.utils.merge({
+                path: '',
+                context: false,
+                callback: function(){},
+                view: {}
+            }, options);
+
+            var view = new Velcro.View(options.view);
+
+            view.options.target = element;
+
+            if (typeof options.context === 'function') {
+                options.context = options.context();
+            }
+
+            if (!options.path) {
+                Velcro.utils.throwForElement(element, 'A path option must be specified.');
+            }
+
+            view.render(options.path, function() {
+                app.bindDescendants(element, options.context);
+                options.callback();
+            });
+        }
+    }),
+
+    routable: Velcro.Binding.extend({
+        update: function(app, element, options) {
+            var router = options.router;
+
+            if (!router) {
+                Velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" because it does not exist.');
+            }
+
+            if (!router instanceof Velcro.Router) {
+                Velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" because it is not an instanceof "Velcro.Router".');
+            }
+
+            router.view.options.target = element;
+            router.bind();
+        }
+    }),
+
+    text: Velcro.Binding.extend({
+        update: function(app, element, options) {
+            element.innerText = options.text;
+        }
+    })
+};
 Velcro.Event = function() {
     this.stack = [];
     return this;
@@ -900,7 +983,7 @@ Velcro.View.prototype = {
 };
 Velcro.App = function(options) {
     this.options = Velcro.utils.merge({
-        attributePrefix: 'data-velcro-',
+        attributePrefix: 'data-vc-',
         bindings: Velcro.defaultBindings
     }, options);
 
@@ -923,7 +1006,11 @@ Velcro.App.prototype = {
     },
 
     bindDescendants: function(parent, context) {
-        var $this = this;
+        var $this   = this;
+
+        if (arguments.length === 1) {
+            context = this.context();
+        }
 
         Velcro.utils.each(parent.childNodes, function(index, element) {
             $this.bind(element, context);
@@ -936,6 +1023,12 @@ Velcro.App.prototype = {
         var $this = this;
 
         Velcro.utils.each(element.attributes, function(i, node) {
+            // an element may have been altered inside of a binding, therefore
+            // we must check if the binding still exists
+            if (typeof element.attributes[i] === 'undefined') {
+                return;
+            }
+
             var name = node.nodeName.substring($this.options.attributePrefix.length);
 
             if (typeof $this.options.bindings[name] === 'function') {
@@ -949,40 +1042,24 @@ Velcro.App.prototype = {
     bindAttribute: function (element, name, value) {
         var $this   = this;
         var parsed  = Velcro.utils.parseBinding(value, this.context());
-        var binding = this.options.bindings[name];
+        var binding = new this.options.bindings[name](this, element, extractObservableValues());
 
         Velcro.utils.each(parsed, function(parsedName, parsedValue) {
-            subscribeToUpdatesIfObservable(parsedValue);
-        });
+            if (Velcro.utils.isValue(parsedValue)) {
+                parsedValue.subscribe(subscriber);
+            }
 
-        initialiseBinding();
+            if (parsedValue instanceof Velcro.Model || parsedValue instanceof Velcro.Collection) {
+                parsedValue.$observer.subscribe(subscriber);
+            }
+        });
 
         return this;
 
-        function initialiseBinding() {
-            var options = extractObservableValues();
-
-            if (typeof binding.init === 'function') {
-                binding.init.call(binding, $this, element, options);
-            } else {
-                binding.call(binding, $this, element, options);
+        function subscriber() {
+            if (typeof binding.update === 'function') {
+                binding.update($this, element, extractObservableValues());
             }
-        }
-
-        function subscribeToUpdatesIfObservable(value) {
-            if (!Velcro.utils.isValue(value)) {
-                return;
-            }
-
-            value.subscribe(function() {
-                var options = extractObservableValues();
-
-                if (typeof binding.update === 'function') {
-                    binding.update.call(binding, $this, element, options);
-                } else {
-                    binding.call(binding, $this, element, options);
-                }
-            });
         }
 
         function extractObservableValues() {
@@ -1053,7 +1130,7 @@ Velcro.value = function(options) {
 
     func.subscribe = function(callback) {
         subs.push(callback);
-        return func;
+        return options.bind;
     };
 
     func.unsubscribe = function(callback) {
@@ -1063,14 +1140,18 @@ Velcro.value = function(options) {
                 return;
             }
         }
-        return func;
+
+        return options.bind;
     };
 
     func.publish = function() {
+        var newValue = options.get.call(options.bind);
+
         for (var i = 0; i < subs.length; i++) {
-            subs[i](func.value);
+            subs[i](newValue);
         }
-        return func;
+
+        return options.bind;
     };
 
     return func;
@@ -1416,7 +1497,7 @@ Velcro.value = function(options) {
 
         each: function(fn) {
             for (var i = 0; i < this.length; i++) {
-                fn.call(this, i, this[i]);
+                fn(i, this[i]);
             }
             return this;
         },
