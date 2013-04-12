@@ -6,8 +6,10 @@
     <body>
         <h1>Things To Do</h1>
         <ul data-vc-if="observe: todos, test: todos.length">
-            <li data-vc-each="items: todos" data-vc-text"text: $value"></li>
+            <li data-vc-each="items: todos" data-vc-text="text: $value"></li>
         </ul>
+        <p data-vc-if="observe: todos, test: !todos.length">Nothing to do.</p>
+
         <script type="text/javascript">
             var app = new Velcro.App();
             app.bind({

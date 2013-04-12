@@ -233,21 +233,34 @@ Velcro.defaultBindings = {
     }),
 
     each: Velcro.Binding.extend({
+        app: null,
+
         clones: null,
 
         container: null,
 
         html: null,
 
-        init: function(app, element, options) {
-            element.removeAttribute(app.options.attributePrefix + 'each');
+        key: '$key',
 
+        value: '$value',
+
+        init: function(app, element, options) {
+            this.app       = app;
             this.clones    = [];
             this.container = element.parentNode;
-            this.html      = Velcro.utils.html(element);
+            this.html      = Velcro.utils.html(this.clean(element));
 
-            this.container.removeChild(element);
-            element.innerHTML = '';
+            this.destroy(element);
+
+            if (options.key) {
+                this.key = options.key;
+            }
+
+            if (options.value) {
+                this.value = options.value;
+            }
+
             this.$super(app, element, options);
         },
 
@@ -267,18 +280,13 @@ Velcro.defaultBindings = {
             }
 
             function each(key, value) {
-                if (Velcro.utils.isObject(value)) {
-                    value.$key   = key;
-                    value.$value = value;
-                } else {
-                    value = {
-                        $key: key,
-                        $value: value
-                    };
-                }
+                var context = Velcro.utils.isObject(value) ? value : {};
+
+                context[$this.key]   = key;
+                context[$this.value] = value;
 
                 var clone = Velcro.utils.element($this.html);
-                app.bindDescendants(clone, value);
+                $this.app.bind(clone, context);
                 $this.clones.push(clone);
                 $this.container.appendChild(clone);
             }
@@ -288,10 +296,25 @@ Velcro.defaultBindings = {
             var $this = this;
 
             Velcro.utils.each(this.clones, function(index, clone) {
-                $this.container.removeChild(clone);
+                $this.destroy(clone);
             });
 
             this.clones = [];
+
+            return this;
+        },
+
+        clean: function(element) {
+            element.removeAttribute(this.app.options.attributePrefix + 'each');
+            return element;
+        },
+
+        destroy: function(element) {
+            element.parentNode.removeChild(element);
+            element.innerHTML = '';
+            delete element.attributes;
+            delete element.childNodes;
+            return this;
         }
     }),
 

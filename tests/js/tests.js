@@ -389,15 +389,13 @@ test('context', function() {
 test('each', function() {
     var ul    = document.createElement('ul');
     var li    = document.createElement('li');
-    var span  = document.createElement('span');
     var Items = Velcro.Collection.make(Velcro.Model.extend({
         text: ''
     }));
 
     ul.appendChild(li);
-    li.appendChild(span);
     li.setAttribute('data-vc-each', 'items: items');
-    span.setAttribute('data-vc-text', 'text: text');
+    li.setAttribute('data-vc-text', 'text: text');
 
     var ctx = { items: new Items() };
     var app = new Velcro.App().bind(ul, ctx);
