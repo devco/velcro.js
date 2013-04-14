@@ -57,26 +57,37 @@ Velcro.App.prototype = {
     },
 
     bindAttribute: function (element, name, value) {
-        var $this   = this;
-        var parsed  = Velcro.utils.parseBinding(value, this.context());
+        var $this = this;
+
+        // The context is saved so that if it changes it won't mess up a subscriber.
+        var context = this.context();
+
+        // Contains parsed information for the initial updates.
+        var parsed = parse();
+
+        // This will initialise the binding and do any initial changes to the bound elements.
         var binding = new this.options.bindings[name](this, element, Velcro.utils.extract(parsed));
 
-        Velcro.utils.each(parsed, function(parsedName, parsedValue) {
-            if (Velcro.utils.isValue(parsedValue)) {
-                parsedValue.subscribe(subscriber);
+        if (typeof binding.update === 'function') {
+            // We subscribe to anything that can publish updates in the original parsed value.
+            for (var i in parsed) {
+                if (Velcro.utils.isValue(parsed[i])) {
+                    parsed[i].subscribe(subscriber);
+                } else if (parsed[i] instanceof Velcro.Model || parsed[i] instanceof Velcro.Collection) {
+                    parsed[i]._observer.subscribe(subscriber);
+                }
             }
-
-            if (parsedValue instanceof Velcro.Model || parsedValue instanceof Velcro.Collection) {
-                parsedValue._observer.subscribe(subscriber);
-            }
-        });
+        }
 
         return this;
 
+        function parse() {
+            return Velcro.utils.parseBinding(value, context);
+        }
+
         function subscriber() {
-            if (typeof binding.update === 'function') {
-                binding.update($this, element, Velcro.utils.extract(parsed));
-            }
+            // Bindings are re-parsed for every subscriber so that no stale data is bound.
+            binding.update($this, element, Velcro.utils.extract(parse()));
         }
     },
 

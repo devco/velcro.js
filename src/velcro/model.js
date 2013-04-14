@@ -10,7 +10,7 @@
             this.from(data);
         },
 
-        parent: function(parent) {
+        parent: function() {
             return this._parent;
         },
 

@@ -32,7 +32,16 @@ Velcro.utils = {
         element.innerHTML = '';
         delete element.attributes;
         delete element.childNodes;
-        return this;
+    },
+
+    elementIndex: function(element) {
+        for (var i = 0; i < element.parentNode.childNodes; i++) {
+            if (element === element.parentNode.childNodes[i]) {
+                return i;
+            }
+        }
+
+        return false;
     },
 
     html: function(element) {
@@ -351,6 +360,36 @@ Velcro.defaultBindings = {
         clean: function(element) {
             element.removeAttribute(this.app.options.attributePrefix + 'each');
             return element;
+        }
+    }),
+
+    'if': Velcro.Binding.extend({
+        container: null,
+
+        html: null,
+
+        index: null,
+
+        init: function(app, element, options) {
+            this.container = element.parentNode;
+            this.element   = element;
+            this.index     = Velcro.utils.elementIndex(element);
+
+            if (!options.test) {
+                this.container.removeChild(this.element);
+            }
+        },
+
+        update: function(app, element, options) {
+            if (options.test) {
+                if (this.container.childNodes[this.index]) {
+                    this.container.insertBefore(this.element, this.container.childNodes[this.index]);
+                } else {
+                    this.container.appendChild(this.element);
+                }
+            } else if (this.element.parentNode) {
+                this.container.removeChild(this.element);
+            }
         }
     }),
 
@@ -1099,26 +1138,37 @@ Velcro.App.prototype = {
     },
 
     bindAttribute: function (element, name, value) {
-        var $this   = this;
-        var parsed  = Velcro.utils.parseBinding(value, this.context());
+        var $this = this;
+
+        // The context is saved so that if it changes it won't mess up a subscriber.
+        var context = this.context();
+
+        // Contains parsed information for the initial updates.
+        var parsed = parse();
+
+        // This will initialise the binding and do any initial changes to the bound elements.
         var binding = new this.options.bindings[name](this, element, Velcro.utils.extract(parsed));
 
-        Velcro.utils.each(parsed, function(parsedName, parsedValue) {
-            if (Velcro.utils.isValue(parsedValue)) {
-                parsedValue.subscribe(subscriber);
+        if (typeof binding.update === 'function') {
+            // We subscribe to anything that can publish updates in the original parsed value.
+            for (var i in parsed) {
+                if (Velcro.utils.isValue(parsed[i])) {
+                    parsed[i].subscribe(subscriber);
+                } else if (parsed[i] instanceof Velcro.Model || parsed[i] instanceof Velcro.Collection) {
+                    parsed[i]._observer.subscribe(subscriber);
+                }
             }
-
-            if (parsedValue instanceof Velcro.Model || parsedValue instanceof Velcro.Collection) {
-                parsedValue._observer.subscribe(subscriber);
-            }
-        });
+        }
 
         return this;
 
+        function parse() {
+            return Velcro.utils.parseBinding(value, context);
+        }
+
         function subscriber() {
-            if (typeof binding.update === 'function') {
-                binding.update($this, element, Velcro.utils.extract(parsed));
-            }
+            // Bindings are re-parsed for every subscriber so that no stale data is bound.
+            binding.update($this, element, Velcro.utils.extract(parse()));
         }
     },
 
@@ -1213,7 +1263,7 @@ Velcro.value = function(options) {
             this.from(data);
         },
 
-        parent: function(parent) {
+        parent: function() {
             return this._parent;
         },
 

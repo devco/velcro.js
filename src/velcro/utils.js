@@ -22,7 +22,16 @@ Velcro.utils = {
         element.innerHTML = '';
         delete element.attributes;
         delete element.childNodes;
-        return this;
+    },
+
+    elementIndex: function(element) {
+        for (var i = 0; i < element.parentNode.childNodes; i++) {
+            if (element === element.parentNode.childNodes[i]) {
+                return i;
+            }
+        }
+
+        return false;
     },
 
     html: function(element) {

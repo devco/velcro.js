@@ -99,6 +99,36 @@ Velcro.defaultBindings = {
         }
     }),
 
+    'if': Velcro.Binding.extend({
+        container: null,
+
+        html: null,
+
+        index: null,
+
+        init: function(app, element, options) {
+            this.container = element.parentNode;
+            this.element   = element;
+            this.index     = Velcro.utils.elementIndex(element);
+
+            if (!options.test) {
+                this.container.removeChild(this.element);
+            }
+        },
+
+        update: function(app, element, options) {
+            if (options.test) {
+                if (this.container.childNodes[this.index]) {
+                    this.container.insertBefore(this.element, this.container.childNodes[this.index]);
+                } else {
+                    this.container.appendChild(this.element);
+                }
+            } else if (this.element.parentNode) {
+                this.container.removeChild(this.element);
+            }
+        }
+    }),
+
     include: Velcro.Binding.extend({
         update: function(app, element, options) {
             options = Velcro.utils.merge({
