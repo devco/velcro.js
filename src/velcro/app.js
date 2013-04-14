@@ -59,7 +59,7 @@ Velcro.App.prototype = {
     bindAttribute: function (element, name, value) {
         var $this   = this;
         var parsed  = Velcro.utils.parseBinding(value, this.context());
-        var binding = new this.options.bindings[name](this, element, extractObservableValues());
+        var binding = new this.options.bindings[name](this, element, Velcro.utils.extract(parsed));
 
         Velcro.utils.each(parsed, function(parsedName, parsedValue) {
             if (Velcro.utils.isValue(parsedValue)) {
@@ -67,7 +67,7 @@ Velcro.App.prototype = {
             }
 
             if (parsedValue instanceof Velcro.Model || parsedValue instanceof Velcro.Collection) {
-                parsedValue.$observer.subscribe(subscriber);
+                parsedValue._observer.subscribe(subscriber);
             }
         });
 
@@ -75,22 +75,8 @@ Velcro.App.prototype = {
 
         function subscriber() {
             if (typeof binding.update === 'function') {
-                binding.update($this, element, extractObservableValues());
+                binding.update($this, element, Velcro.utils.extract(parsed));
             }
-        }
-
-        function extractObservableValues() {
-            var options = {};
-
-            Velcro.utils.each(parsed, function(name, value) {
-                if (Velcro.utils.isValue(value)) {
-                    options[name] = value();
-                } else {
-                    options[name] = value;
-                }
-            });
-
-            return options;
         }
     },
 

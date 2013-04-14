@@ -9,6 +9,38 @@
 }(function(Velcro) {
 
 Velcro.utils = {
+    addEvent: function(element, event, callback) {
+        if (element.attachEvent) {
+            element.attachEvent('on' + event, function() {
+                callback.call(element);
+            });
+        } else if(element.addEventListener) {
+            element.addEventListener(event, callback, false);
+        }
+    },
+
+    createElement: function(html) {
+        var div = document.createElement('div');
+        div.innerHTML = html;
+        var element = div.childNodes[0];
+        div.removeChild(element);
+        return element;
+    },
+
+    destroyElement: function(element) {
+        element.parentNode.removeChild(element);
+        element.innerHTML = '';
+        delete element.attributes;
+        delete element.childNodes;
+        return this;
+    },
+
+    html: function(element) {
+        var div = document.createElement('div');
+        div.appendChild(element.cloneNode(true));
+        return div.innerHTML;
+    },
+
     each: function(items, fn) {
         items = items || [];
 
@@ -31,14 +63,6 @@ Velcro.utils = {
         }
     },
 
-    element: function(html) {
-        var div = document.createElement('div');
-        div.innerHTML = html;
-        var element = div.childNodes[0];
-        div.removeChild(element);
-        return element;
-    },
-
     fnCompare: function(fn, str) {
         if (!fn) {
             return false;
@@ -53,12 +77,6 @@ Velcro.utils = {
         }
 
         return fn === str;
-    },
-
-    html: function(element) {
-        var div = document.createElement('div');
-        div.appendChild(element.cloneNode(true));
-        return div.innerHTML;
     },
 
     isArray: function(obj) {
@@ -135,6 +153,20 @@ Velcro.utils = {
         } catch (error) {
             throw 'Error parsing response "' + response + '" with message "' + error + '".';
         }
+    },
+
+    extract: function(obj) {
+        var options = {};
+
+        Velcro.utils.each(obj, function(name, value) {
+            if (Velcro.utils.isValue(value)) {
+                options[name] = value();
+            } else {
+                options[name] = value;
+            }
+        });
+
+        return options;
     },
 
     throwForElement: function(element, message) {
@@ -222,6 +254,14 @@ Velcro.utils = {
     });
 })();
 Velcro.defaultBindings = {
+    click: Velcro.Binding.extend({
+        init: function(app, element, options) {
+            Velcro.utils.addEvent(element, 'click', function(e) {
+                options.callback(e);
+            });
+        }
+    }),
+
     context: Velcro.Binding.extend({
         update: function(app, element, options) {
             if (!options.context) {
@@ -251,7 +291,7 @@ Velcro.defaultBindings = {
             this.container = element.parentNode;
             this.html      = Velcro.utils.html(this.clean(element));
 
-            this.destroy(element);
+            Velcro.utils.destroyElement(element);
 
             if (options.key) {
                 this.key = options.key;
@@ -285,21 +325,25 @@ Velcro.defaultBindings = {
                 context[$this.key]   = key;
                 context[$this.value] = value;
 
-                var clone = Velcro.utils.element($this.html);
+                var clone = Velcro.utils.createElement($this.html);
                 $this.app.bind(clone, context);
                 $this.clones.push(clone);
                 $this.container.appendChild(clone);
+
+                delete context[$this.key];
+                delete context[$this.value];
             }
         },
 
         reset: function() {
-            var $this = this;
-
             Velcro.utils.each(this.clones, function(index, clone) {
-                $this.destroy(clone);
+                Velcro.utils.destroyElement(clone);
             });
 
             this.clones = [];
+
+            // previous elements aren't completely destroyed unless this is done
+            this.container.innerHTML = '';
 
             return this;
         },
@@ -307,14 +351,6 @@ Velcro.defaultBindings = {
         clean: function(element) {
             element.removeAttribute(this.app.options.attributePrefix + 'each');
             return element;
-        },
-
-        destroy: function(element) {
-            element.parentNode.removeChild(element);
-            element.innerHTML = '';
-            delete element.attributes;
-            delete element.childNodes;
-            return this;
         }
     }),
 
@@ -1065,7 +1101,7 @@ Velcro.App.prototype = {
     bindAttribute: function (element, name, value) {
         var $this   = this;
         var parsed  = Velcro.utils.parseBinding(value, this.context());
-        var binding = new this.options.bindings[name](this, element, extractObservableValues());
+        var binding = new this.options.bindings[name](this, element, Velcro.utils.extract(parsed));
 
         Velcro.utils.each(parsed, function(parsedName, parsedValue) {
             if (Velcro.utils.isValue(parsedValue)) {
@@ -1073,7 +1109,7 @@ Velcro.App.prototype = {
             }
 
             if (parsedValue instanceof Velcro.Model || parsedValue instanceof Velcro.Collection) {
-                parsedValue.$observer.subscribe(subscriber);
+                parsedValue._observer.subscribe(subscriber);
             }
         });
 
@@ -1081,22 +1117,8 @@ Velcro.App.prototype = {
 
         function subscriber() {
             if (typeof binding.update === 'function') {
-                binding.update($this, element, extractObservableValues());
+                binding.update($this, element, Velcro.utils.extract(parsed));
             }
-        }
-
-        function extractObservableValues() {
-            var options = {};
-
-            Velcro.utils.each(parsed, function(name, value) {
-                if (Velcro.utils.isValue(value)) {
-                    options[name] = value();
-                } else {
-                    options[name] = value;
-                }
-            });
-
-            return options;
         }
     },
 
@@ -1179,17 +1201,20 @@ Velcro.value = function(options) {
 
     return func;
 };
-
 (function() {
     Velcro.Model = Velcro.Class.extend({
-        $observer: null,
+        _observer: null,
 
-        $parent: null,
+        _parent: null,
 
         init: function(data) {
             defineIfNotDefined(this);
             applyDefinition(this);
             this.from(data);
+        },
+
+        parent: function(parent) {
+            return this._parent;
         },
 
         clone: function() {
@@ -1229,7 +1254,7 @@ Velcro.value = function(options) {
                 }
             });
 
-            this.$observer.publish();
+            this._observer.publish();
 
             return this;
         },
@@ -1265,7 +1290,8 @@ Velcro.value = function(options) {
         obj.$self.definition = {
             relations: {},
             properties: {},
-            computed: {}
+            computed: {},
+            methods: {}
         };
     }
 
@@ -1301,15 +1327,15 @@ Velcro.value = function(options) {
                     type = 'set';
                 }
 
-                if (!type) {
-                    continue;
-                }
+                if (type) {
+                    if (typeof obj.$self.definition.computed[name] === 'undefined') {
+                        obj.$self.definition.computed[name] = {};
+                    }
 
-                if (typeof obj.$self.definition.computed[name] === 'undefined') {
-                    obj.$self.definition.computed[name] = {};
+                    obj.$self.definition.computed[name][type] = v;
+                } else {
+                    obj.$self.definition.methods[i] = v;
                 }
-
-                obj.$self.definition.computed[name][type] = v;
 
                 continue;
             }
@@ -1323,10 +1349,11 @@ Velcro.value = function(options) {
         applyRelations(obj);
         applyProperties(obj);
         applyComputed(obj);
+        applyMethods(obj);
     }
 
     function applyObserver(obj) {
-        obj.$observer = Velcro.value({
+        obj._observer = Velcro.value({
             bind: obj,
             get: function() {
                 return this;
@@ -1339,9 +1366,9 @@ Velcro.value = function(options) {
 
     function applyRelations(obj) {
         for (var i in obj.$self.definition.relations) {
-            var instance     = new obj.$self.definition.relations[i]();
-            instance.$parent = obj;
-            obj[i]           = instance.$observer;
+            var instance = new obj.$self.definition.relations[i]();
+            instance._parent = obj;
+            obj[i] = instance._observer;
         }
     }
 
@@ -1364,6 +1391,14 @@ Velcro.value = function(options) {
         }
     }
 
+    function applyMethods(obj) {
+        for (var i in obj.$self.definition.methods) {
+            obj[i] = function() {
+                obj.$self.definition.methods[i].apply(obj, Array.prototype.slice.call(arguments, 1));
+            };
+        }
+    }
+
     function generateGetterSetterThrower(type, name) {
         return function() {
             throw 'No ' + type + ' defined for computed property "' + name + '".';
@@ -1372,12 +1407,16 @@ Velcro.value = function(options) {
 })();
 (function() {
     Velcro.Collection = Velcro.Class.extend({
-        Model: false,
+        _observer: null,
+
+        _parent: null,
+
+        _model: null,
 
         init: function(Model, data) {
             Array.prototype.push.apply(this, []);
 
-            this.$observer = Velcro.value({
+            this._observer = Velcro.value({
                 bind: this,
                 get: function() {
                     return this;
@@ -1387,7 +1426,7 @@ Velcro.value = function(options) {
                 }
             });
 
-            this.Model = Model;
+            this._model = Model;
 
             this.from(data);
         },
@@ -1436,7 +1475,7 @@ Velcro.value = function(options) {
 
             if (this.has(at)) {
                 Array.prototype.splice.call(this, at, 1);
-                this.$observer.publish();
+                this._observer.publish();
             }
 
             return this;
@@ -1444,7 +1483,7 @@ Velcro.value = function(options) {
 
         empty: function() {
             Array.prototype.splice.call(this, 0, this.length);
-            this.$observer.publish();
+            this._observer.publish();
 
             return this;
         },
@@ -1458,21 +1497,21 @@ Velcro.value = function(options) {
         },
 
         insert: function(at, item) {
-            item         = item instanceof Velcro.Model ? item : new this.Model(item);
-            item.$parent = this.$parent;
+            item         = item instanceof Velcro.Model ? item : new this._model(item);
+            item._parent = this._parent;
 
             Array.prototype.splice.call(this, at, 0, item);
-            this.$observer.publish();
+            this._observer.publish();
 
             return this;
         },
 
         replace: function (at, item) {
-            item         = item instanceof Velcro.Model ? item : new this.Model(item);
-            item.$parent = this.$parent;
+            item         = item instanceof Velcro.Model ? item : new this._model(item);
+            item._parent = this._parent;
 
             Array.prototype.splice.call(this, at, 1, item);
-            this.$observer.publish();
+            this._observer.publish();
 
             return this;
         },
@@ -1526,8 +1565,8 @@ Velcro.value = function(options) {
         },
 
         find: function(query, limit, page) {
-            var collection     = new Velcro.Collection(this.Model);
-            collection.$parent = this.$parent;
+            var collection     = new Velcro.Collection(this._model);
+            collection._parent = this._parent;
 
             if (query instanceof Velcro.Model) {
                 query = query.to();

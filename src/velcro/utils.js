@@ -1,4 +1,36 @@
 Velcro.utils = {
+    addEvent: function(element, event, callback) {
+        if (element.attachEvent) {
+            element.attachEvent('on' + event, function() {
+                callback.call(element);
+            });
+        } else if(element.addEventListener) {
+            element.addEventListener(event, callback, false);
+        }
+    },
+
+    createElement: function(html) {
+        var div = document.createElement('div');
+        div.innerHTML = html;
+        var element = div.childNodes[0];
+        div.removeChild(element);
+        return element;
+    },
+
+    destroyElement: function(element) {
+        element.parentNode.removeChild(element);
+        element.innerHTML = '';
+        delete element.attributes;
+        delete element.childNodes;
+        return this;
+    },
+
+    html: function(element) {
+        var div = document.createElement('div');
+        div.appendChild(element.cloneNode(true));
+        return div.innerHTML;
+    },
+
     each: function(items, fn) {
         items = items || [];
 
@@ -21,14 +53,6 @@ Velcro.utils = {
         }
     },
 
-    element: function(html) {
-        var div = document.createElement('div');
-        div.innerHTML = html;
-        var element = div.childNodes[0];
-        div.removeChild(element);
-        return element;
-    },
-
     fnCompare: function(fn, str) {
         if (!fn) {
             return false;
@@ -43,12 +67,6 @@ Velcro.utils = {
         }
 
         return fn === str;
-    },
-
-    html: function(element) {
-        var div = document.createElement('div');
-        div.appendChild(element.cloneNode(true));
-        return div.innerHTML;
     },
 
     isArray: function(obj) {
@@ -125,6 +143,20 @@ Velcro.utils = {
         } catch (error) {
             throw 'Error parsing response "' + response + '" with message "' + error + '".';
         }
+    },
+
+    extract: function(obj) {
+        var options = {};
+
+        Velcro.utils.each(obj, function(name, value) {
+            if (Velcro.utils.isValue(value)) {
+                options[name] = value();
+            } else {
+                options[name] = value;
+            }
+        });
+
+        return options;
     },
 
     throwForElement: function(element, message) {

@@ -1,11 +1,15 @@
 (function() {
     Velcro.Collection = Velcro.Class.extend({
-        Model: false,
+        _observer: null,
+
+        _parent: null,
+
+        _model: null,
 
         init: function(Model, data) {
             Array.prototype.push.apply(this, []);
 
-            this.$observer = Velcro.value({
+            this._observer = Velcro.value({
                 bind: this,
                 get: function() {
                     return this;
@@ -15,7 +19,7 @@
                 }
             });
 
-            this.Model = Model;
+            this._model = Model;
 
             this.from(data);
         },
@@ -64,7 +68,7 @@
 
             if (this.has(at)) {
                 Array.prototype.splice.call(this, at, 1);
-                this.$observer.publish();
+                this._observer.publish();
             }
 
             return this;
@@ -72,7 +76,7 @@
 
         empty: function() {
             Array.prototype.splice.call(this, 0, this.length);
-            this.$observer.publish();
+            this._observer.publish();
 
             return this;
         },
@@ -86,21 +90,21 @@
         },
 
         insert: function(at, item) {
-            item         = item instanceof Velcro.Model ? item : new this.Model(item);
-            item.$parent = this.$parent;
+            item         = item instanceof Velcro.Model ? item : new this._model(item);
+            item._parent = this._parent;
 
             Array.prototype.splice.call(this, at, 0, item);
-            this.$observer.publish();
+            this._observer.publish();
 
             return this;
         },
 
         replace: function (at, item) {
-            item         = item instanceof Velcro.Model ? item : new this.Model(item);
-            item.$parent = this.$parent;
+            item         = item instanceof Velcro.Model ? item : new this._model(item);
+            item._parent = this._parent;
 
             Array.prototype.splice.call(this, at, 1, item);
-            this.$observer.publish();
+            this._observer.publish();
 
             return this;
         },
@@ -154,8 +158,8 @@
         },
 
         find: function(query, limit, page) {
-            var collection     = new Velcro.Collection(this.Model);
-            collection.$parent = this.$parent;
+            var collection     = new Velcro.Collection(this._model);
+            collection._parent = this._parent;
 
             if (query instanceof Velcro.Model) {
                 query = query.to();

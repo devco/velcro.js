@@ -1,4 +1,12 @@
 Velcro.defaultBindings = {
+    click: Velcro.Binding.extend({
+        init: function(app, element, options) {
+            Velcro.utils.addEvent(element, 'click', function(e) {
+                options.callback(e);
+            });
+        }
+    }),
+
     context: Velcro.Binding.extend({
         update: function(app, element, options) {
             if (!options.context) {
@@ -28,7 +36,7 @@ Velcro.defaultBindings = {
             this.container = element.parentNode;
             this.html      = Velcro.utils.html(this.clean(element));
 
-            this.destroy(element);
+            Velcro.utils.destroyElement(element);
 
             if (options.key) {
                 this.key = options.key;
@@ -62,21 +70,25 @@ Velcro.defaultBindings = {
                 context[$this.key]   = key;
                 context[$this.value] = value;
 
-                var clone = Velcro.utils.element($this.html);
+                var clone = Velcro.utils.createElement($this.html);
                 $this.app.bind(clone, context);
                 $this.clones.push(clone);
                 $this.container.appendChild(clone);
+
+                delete context[$this.key];
+                delete context[$this.value];
             }
         },
 
         reset: function() {
-            var $this = this;
-
             Velcro.utils.each(this.clones, function(index, clone) {
-                $this.destroy(clone);
+                Velcro.utils.destroyElement(clone);
             });
 
             this.clones = [];
+
+            // previous elements aren't completely destroyed unless this is done
+            this.container.innerHTML = '';
 
             return this;
         },
@@ -84,14 +96,6 @@ Velcro.defaultBindings = {
         clean: function(element) {
             element.removeAttribute(this.app.options.attributePrefix + 'each');
             return element;
-        },
-
-        destroy: function(element) {
-            element.parentNode.removeChild(element);
-            element.innerHTML = '';
-            delete element.attributes;
-            delete element.childNodes;
-            return this;
         }
     }),
 

@@ -1,14 +1,17 @@
-
 (function() {
     Velcro.Model = Velcro.Class.extend({
-        $observer: null,
+        _observer: null,
 
-        $parent: null,
+        _parent: null,
 
         init: function(data) {
             defineIfNotDefined(this);
             applyDefinition(this);
             this.from(data);
+        },
+
+        parent: function(parent) {
+            return this._parent;
         },
 
         clone: function() {
@@ -48,7 +51,7 @@
                 }
             });
 
-            this.$observer.publish();
+            this._observer.publish();
 
             return this;
         },
@@ -84,7 +87,8 @@
         obj.$self.definition = {
             relations: {},
             properties: {},
-            computed: {}
+            computed: {},
+            methods: {}
         };
     }
 
@@ -120,15 +124,15 @@
                     type = 'set';
                 }
 
-                if (!type) {
-                    continue;
-                }
+                if (type) {
+                    if (typeof obj.$self.definition.computed[name] === 'undefined') {
+                        obj.$self.definition.computed[name] = {};
+                    }
 
-                if (typeof obj.$self.definition.computed[name] === 'undefined') {
-                    obj.$self.definition.computed[name] = {};
+                    obj.$self.definition.computed[name][type] = v;
+                } else {
+                    obj.$self.definition.methods[i] = v;
                 }
-
-                obj.$self.definition.computed[name][type] = v;
 
                 continue;
             }
@@ -142,10 +146,11 @@
         applyRelations(obj);
         applyProperties(obj);
         applyComputed(obj);
+        applyMethods(obj);
     }
 
     function applyObserver(obj) {
-        obj.$observer = Velcro.value({
+        obj._observer = Velcro.value({
             bind: obj,
             get: function() {
                 return this;
@@ -158,9 +163,9 @@
 
     function applyRelations(obj) {
         for (var i in obj.$self.definition.relations) {
-            var instance     = new obj.$self.definition.relations[i]();
-            instance.$parent = obj;
-            obj[i]           = instance.$observer;
+            var instance = new obj.$self.definition.relations[i]();
+            instance._parent = obj;
+            obj[i] = instance._observer;
         }
     }
 
@@ -180,6 +185,14 @@
                 get: obj.$self.definition.computed[i].get ? obj.$self.definition.computed[i].get : generateGetterSetterThrower('getter', i),
                 set: obj.$self.definition.computed[i].set ? obj.$self.definition.computed[i].set : generateGetterSetterThrower('setter', i)
             });
+        }
+    }
+
+    function applyMethods(obj) {
+        for (var i in obj.$self.definition.methods) {
+            obj[i] = function() {
+                obj.$self.definition.methods[i].apply(obj, Array.prototype.slice.call(arguments, 1));
+            };
         }
     }
 

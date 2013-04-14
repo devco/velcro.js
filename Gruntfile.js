@@ -37,7 +37,8 @@ module.exports = function(grunt) {
         },
         jshint: {
             options: {
-                evil: true
+                evil: true,
+                loopfunc: true
             },
             files: [
                 'src/velcro/*.js',

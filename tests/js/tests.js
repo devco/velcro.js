@@ -191,30 +191,52 @@ test('Observable Getters and Setters', function() {
 });
 
 test('Parent / Child Relationships', function() {
-    var NoParentModel = Velcro.Model.extend({
-        name: ''
+    var LeafModel = Velcro.Model.extend({
+        test: function() {
+            ok(this instanceof LeafModel, 'Using `this` in a method should refer to current model.');
+            ok(this.parent() instanceof BranchModel, 'Using `this.parent()` in a method should refer to the correct parent.');
+            ok(this.parent().parent() instanceof TrunkModel, 'Correct ancestor not found.');
+        }
     });
 
-    var ChildModel = Velcro.Model.extend({
-        name: ''
+    var BranchModel = Velcro.Model.extend({
+        leaf: LeafModel,
+        leafs: Velcro.Collection.make(LeafModel)
     });
 
-    var ParentModel = Velcro.Model.extend({
-        child: ChildModel,
-        children: Velcro.Collection.make(ChildModel)
+    var TrunkModel = Velcro.Model.extend({
+        leaf: LeafModel,
+        leafs: Velcro.Collection.make(LeafModel),
+        branch: BranchModel,
+        branches: Velcro.Collection.make(BranchModel)
     });
 
-    var owner = new ParentModel({
-        child: {
-            name: 'test'
+    var trunk = new TrunkModel({
+        leaf: {},
+        leafs: [{}],
+        branch: {
+            leaf: {},
+            leafs: [{}]
         },
-        children: [{
-            name: 'test'
+        branches: [{
+            leaf: {},
+            leafs: [{}]
         }]
     });
 
-    ok(owner.child().$parent instanceof ParentModel, 'The child model\'s $parent should be an instanceof ParentModel.');
-    ok(owner.children().at(0).$parent instanceof ParentModel, 'The children collection\'s $parent should be an instanceof ParentModel.');
+    ok(trunk.leaf().parent() instanceof TrunkModel, 'Trunk -> Leaf -> parent() -> Trunk');
+    ok(trunk.leafs().at(0).parent() instanceof TrunkModel, 'Trunk -> Leafs -> 0 -> parent() -> Trunk');
+    ok(trunk.branch().parent() instanceof TrunkModel, 'Trunk -> Branch -> parent() -> Trunk');
+    ok(trunk.branch().leaf().parent() instanceof BranchModel, 'Trunk -> Branch -> Leaf -> parent() -> Branch');
+    ok(trunk.branch().leafs().at(0).parent() instanceof BranchModel, 'Trunk -> Branch -> Leafs -> 0 -> parent() -> Branch');
+    ok(trunk.branches().at(0).parent() instanceof TrunkModel, 'Trunk -> Branches -> 0 -> parent() -> Trunk');
+    ok(trunk.branches().at(0).leaf().parent() instanceof BranchModel, 'Trunk -> Branches -> 0 -> Leaf -> parent() -> Branch');
+    ok(trunk.branches().at(0).leafs().at(0).parent() instanceof BranchModel, 'Trunk -> Branches -> 0 -> Leafs -> 0 -> parent() -> Branch');
+
+    trunk.branch().leaf().test();
+    trunk.branch().leafs().at(0).test();
+    trunk.branches().at(0).leaf().test();
+    trunk.branches().at(0).leafs().at(0).test();
 });
 
 test('Chaining Method Calls', function() {
@@ -233,6 +255,17 @@ test('Chaining Method Calls', function() {
 
     ok(test.test1('test') instanceof Model, 'Observable property is not chainable.');
     ok(test.test2('test') instanceof Model, 'Observable setter is not chainable.');
+});
+
+test('Rebinding Methods to Model Instance', function() {
+    var Model = Velcro.Model.extend({
+        test: function() {
+            ok(this instanceof Model, 'Using `this` inside of a model method should refer to the model instance in which it is defined.');
+        }
+    });
+
+    var model = new Model;
+    model.test();
 });
 
 
@@ -299,6 +332,18 @@ test('Observing Changes', function() {
     dude.name('Updated Value');
 
     ok(div.childNodes[0].innerText === dude.name(), 'Inner text on div child should be updated.');
+});
+
+test('Changing Context and Scoping', function() {
+    var app = new Velcro.App();
+
+    app.context({ trunk: true });
+    app.context({ branch: true });
+    app.context({ leaf: true });
+
+    ok(app.context().leaf, 'Leaf should be current.');
+    ok(app.context().$parent.branch, 'Branch should be $parent.');
+    ok(app.context().$root.trunk, 'Trunk should be $root.');
 });
 
 asyncTest('Router', function() {
@@ -412,3 +457,43 @@ test('each', function() {
 
     ok(ul.childNodes.length === 2 && ul.childNodes[1].innerText === 'Item 2', 'Two items should exist as "Item 1, Item 2".');
 });
+
+
+
+/*
+module('Practical');
+
+test('Todo', function() {
+    var html = Velcro.utils.createElement('<ul data-vc-if="observe: todos, test: todos.length"><li data-vc-each="items: todos"><span data-vc-text="text: name"></span><button type="button" data-vc-click="callback: remove">Remove</button></li></ul>');
+
+    var Todo = Velcro.Model.extend({
+
+    });
+
+    var TodoView = Velcro.Model.extend({
+        name: '',
+        remove: function() {
+            console.log(this === this.parent());
+            this.parent().todos().remove(this);
+        }
+    });
+
+    var AppView = Velcro.Model.extend({
+        todos: Velcro.Collection.make(TodoView),
+        addTodo: function() {
+            this.todos().append({
+                name: 'Todo ' + (this.todos().length + 1)
+            });
+        }
+    });
+
+    var app = new Velcro.App();
+
+    app.bind(html, new AppView({
+        todos: [
+            { name: 'Todo 1' },
+            { name: 'Todo 2' }
+        ]
+    }));
+});
+*/
