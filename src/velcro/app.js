@@ -66,28 +66,41 @@ Velcro.App.prototype = {
         var parsed = parse();
 
         // This will initialise the binding and do any initial changes to the bound elements.
-        var binding = new this.options.bindings[name](this, element, Velcro.utils.extract(parsed));
+        // Subscribable values are also extracted and passed in so that accessing them is trivial.
+        var binding = new this.options.bindings[name](this, element, parsed.options, parsed.bound);
 
         if (typeof binding.update === 'function') {
-            // We subscribe to anything that can publish updates in the original parsed value.
-            for (var i in parsed) {
-                if (Velcro.utils.isValue(parsed[i])) {
-                    parsed[i].subscribe(subscriber);
-                } else if (parsed[i] instanceof Velcro.Model || parsed[i] instanceof Velcro.Collection) {
-                    parsed[i]._observer.subscribe(subscriber);
-                }
+            for (var i in parsed.bound) {
+                parsed.bound[i].subscribe(subscriber);
             }
         }
 
         return this;
 
+        // Returns an object that conains raw, extracted values from the passed in bindings as well as bindable members.
+        // Bindable members included any Velcro.value, Velcro.Model and Velcro.Collection.
         function parse() {
-            return Velcro.utils.parseBinding(value, context);
+            var temp = Velcro.utils.parseBinding(value, context);
+            var comp = { options: {}, bound: {} };
+
+            for (var i in temp) {
+                if (Velcro.utils.isValue(temp[i])) {
+                    comp.options[i] = temp[i]();
+                    comp.bound[i]   = temp[i];
+                } else if (temp[i] instanceof Velcro.Model || temp[i] instanceof Velcro.Collection) {
+                    comp.options[i] = temp[i]._observer();
+                    comp.bound[i]   = temp[i]._observer;
+                } else {
+                    comp.options[i] = temp[i];
+                }
+            }
+
+            return comp;
         }
 
         function subscriber() {
-            // Bindings are re-parsed for every subscriber so that no stale data is bound.
-            binding.update($this, element, Velcro.utils.extract(parse()));
+            var refreshed = parse();
+            binding.update($this, element, refreshed.options, refreshed.bound);
         }
     },
 
