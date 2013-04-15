@@ -1,23 +1,14 @@
 (function() {
     Velcro.Binding = Velcro.Class.extend({
-        app: null,
-
-        element: null,
-
         options: {},
 
-        bound: {},
-
         init: function(app, element, options, bound) {
-            this.app     = app;
-            this.element = element;
-            this.options = Velcro.utils.merge(this.options, options);
-            this.bound   = bound;
+            options = Velcro.utils.merge(this.options, options);
 
             if (typeof this.setup === 'function') {
-                this.setup();
+                this.setup(app, element, options, bound);
             } else if (typeof this.update === 'function') {
-                this.update();
+                this.update(app, element, options, bound);
             }
         }
     });

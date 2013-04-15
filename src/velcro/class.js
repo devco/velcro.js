@@ -35,8 +35,6 @@
             return Parent === Velcro.Class || Parent === Ancestor || Parent.isSubClassOf(Ancestor);
         };
 
-        Child.prototype.$self = Child;
-
         for (var i in definition) {
             if (typeof Child.prototype[i] === 'function') {
                 Child.prototype[i] = createProxy(Parent.prototype, definition, i);

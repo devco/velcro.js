@@ -1,4 +1,5 @@
 Velcro.value = function(options) {
+    var interval;
     var subs  = [];
     var value = null;
 
@@ -53,6 +54,18 @@ Velcro.value = function(options) {
         }
 
         return options.bind;
+    };
+
+    func.updateEvery = function(ms) {
+        interval = setInterval(function() {
+            func.publish();
+        }, ms);
+    };
+
+    func.stopUpdating = function() {
+        if (interval) {
+            clearInterval(interval);
+        }
     };
 
     return func;

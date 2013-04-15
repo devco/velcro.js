@@ -7,6 +7,11 @@
         init: function(data) {
             defineIfNotDefined(this);
             applyDefinition(this);
+
+            if (typeof this.setup === 'function') {
+                this.setup();
+            }
+
             this.from(data);
         },
 
@@ -15,11 +20,11 @@
         },
 
         clone: function() {
-            return new this.$self(this.to());
+            return new this.constructor(this.to());
         },
 
         each: function(fn) {
-            var def = this.$self.definition;
+            var def = this.constructor.definition;
 
             for (var a in def.relations) {
                 fn(a, this[a]);
@@ -72,7 +77,7 @@
     });
 
     function defineIfNotDefined(obj) {
-        if (!obj.$self.definition) {
+        if (!obj.constructor.definition) {
             define(obj);
         }
     }
@@ -84,7 +89,7 @@
     }
 
     function initDefinition(obj) {
-        obj.$self.definition = {
+        obj.constructor.definition = {
             relations: {},
             properties: {},
             computed: {},
@@ -93,9 +98,9 @@
     }
 
     function defineCollection(obj) {
-        obj.$self.Collection = Velcro.Collection.extend({
+        obj.constructor.Collection = Velcro.Collection.extend({
             init: function(data) {
-                this.$super(obj.$self, data);
+                this.$super(obj.constructor, data);
             }
         });
     }
@@ -109,12 +114,13 @@
             var v = obj[i];
 
             if (Velcro.utils.isClass(v) && (v.isSubClassOf(Velcro.Model) || v.isSubClassOf(Velcro.Collection))) {
-                obj.$self.definition.relations[i] = v;
+                obj.constructor.definition.relations[i] = v;
                 continue;
             }
 
             if (typeof v === 'function') {
-                var name, type;
+                var name = false;
+                var type = false;
 
                 if (i.indexOf('get') === 0) {
                     name = i.substring(3, 4).toLowerCase() + i.substring(4);
@@ -125,19 +131,19 @@
                 }
 
                 if (type) {
-                    if (typeof obj.$self.definition.computed[name] === 'undefined') {
-                        obj.$self.definition.computed[name] = {};
+                    if (typeof obj.constructor.definition.computed[name] === 'undefined') {
+                        obj.constructor.definition.computed[name] = {};
                     }
 
-                    obj.$self.definition.computed[name][type] = v;
+                    obj.constructor.definition.computed[name][type] = v;
                 } else {
-                    obj.$self.definition.methods[i] = v;
+                    obj.constructor.definition.methods[i] = v;
                 }
 
                 continue;
             }
 
-            obj.$self.definition.properties[i] = v;
+            obj.constructor.definition.properties[i] = v;
         }
     }
 
@@ -162,36 +168,36 @@
     }
 
     function applyRelations(obj) {
-        for (var i in obj.$self.definition.relations) {
-            var instance = new obj.$self.definition.relations[i]();
+        for (var i in obj.constructor.definition.relations) {
+            var instance = new obj.constructor.definition.relations[i]();
             instance._parent = obj;
             obj[i] = instance._observer;
         }
     }
 
     function applyProperties(obj) {
-        for (var i in obj.$self.definition.properties) {
+        for (var i in obj.constructor.definition.properties) {
             obj[i] = Velcro.value({
                 bind: obj,
-                defaultValue: obj.$self.definition.properties[i]
+                defaultValue: obj.constructor.definition.properties[i]
             });
         }
     }
 
     function applyComputed(obj) {
-        for (var i in obj.$self.definition.computed) {
+        for (var i in obj.constructor.definition.computed) {
             obj[i] = Velcro.value({
                 bind: obj,
-                get: obj.$self.definition.computed[i].get ? obj.$self.definition.computed[i].get : generateGetterSetterThrower('getter', i),
-                set: obj.$self.definition.computed[i].set ? obj.$self.definition.computed[i].set : generateGetterSetterThrower('setter', i)
+                get: obj.constructor.definition.computed[i].get ? obj.constructor.definition.computed[i].get : generateGetterSetterThrower('getter', i),
+                set: obj.constructor.definition.computed[i].set ? obj.constructor.definition.computed[i].set : generateGetterSetterThrower('setter', i)
             });
         }
     }
 
     function applyMethods(obj) {
-        for (var i in obj.$self.definition.methods) {
+        for (var i in obj.constructor.definition.methods) {
             obj[i] = function() {
-                obj.$self.definition.methods[i].apply(obj, Array.prototype.slice.call(arguments, 1));
+                obj.constructor.definition.methods[i].apply(obj, Array.prototype.slice.call(arguments));
             };
         }
     }

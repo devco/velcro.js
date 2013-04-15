@@ -4,6 +4,8 @@
   "main": "src/velcro.js",
   "dependencies": {
     "bootstrap": "latest",
-    "qunit": "latest"
+    "moment": "latest",
+    "qunit": "latest",
+    "requirejs": "latest"
   }
 }
