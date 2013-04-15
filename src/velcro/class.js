@@ -1,11 +1,11 @@
 (function() {
-    Velcro.Class = function() {};
+    velcro.Class = function() {};
 
     var extending  = false;
     var classes    = [];
     var extensions = {};
 
-    Velcro.Class.extend = function(definition) {
+    velcro.Class.extend = function(definition) {
         var Child = createChild();
         register(this, Child);
         applyPrototype(this, Child);
@@ -32,7 +32,7 @@
 
         Child.isSubClassOf = function(Ancestor) {
             var Parent = extensions[classes.indexOf(Child)];
-            return Parent === Velcro.Class || Parent === Ancestor || Parent.isSubClassOf(Ancestor);
+            return Parent === velcro.Class || Parent === Ancestor || Parent.isSubClassOf(Ancestor);
         };
 
         for (var i in definition) {

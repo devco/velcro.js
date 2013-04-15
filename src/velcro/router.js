@@ -1,28 +1,28 @@
 var bound = [];
 
-Velcro.Router = function(options) {
-    this.options = Velcro.utils.merge({
+velcro.Router = function(options) {
+    this.options = velcro.utils.merge({
         app: {},
         state: {},
         view: {}
     }, options);
 
-    this.enter  = new Velcro.Event();
-    this.exit   = new Velcro.Event();
-    this.render = new Velcro.Event();
+    this.enter  = new velcro.Event();
+    this.exit   = new velcro.Event();
+    this.render = new velcro.Event();
 
     this.params = {};
     this.route  = false;
     this.routes = {};
 
-    this.app   = new Velcro.App(this.options.app);
-    this.state = new Velcro.State(this.options.state);
-    this.view  = new Velcro.View(this.options.view);
+    this.app   = new velcro.App(this.options.app);
+    this.state = new velcro.State(this.options.state);
+    this.view  = new velcro.View(this.options.view);
 
     return this;
 };
 
-Velcro.Router.prototype = {
+velcro.Router.prototype = {
     handler: function(execute) {
         execute();
     },
@@ -31,8 +31,8 @@ Velcro.Router.prototype = {
         var $this   = this;
         var context = route.options.controller.apply(route.options.controller, params);
 
-        if (!context instanceof Velcro.Model) {
-            context = new (Velcro.model(context))();
+        if (!context instanceof velcro.Model) {
+            context = new (velcro.model(context))();
         }
 
         this.view.render(route.options.view, function(view) {
@@ -75,7 +75,7 @@ Velcro.Router.prototype = {
             options.view = name;
         }
 
-        this.routes[name] = options instanceof Velcro.Route ? options : new Velcro.Route(options);
+        this.routes[name] = options instanceof velcro.Route ? options : new velcro.Route(options);
 
         return this;
     },
@@ -147,8 +147,8 @@ Velcro.Router.prototype = {
 
 
 
-Velcro.Route = function(options) {
-    this.options = Velcro.utils.merge({
+velcro.Route = function(options) {
+    this.options = velcro.utils.merge({
         controller: function(){},
         format: '',
         match: /.*/,
@@ -158,7 +158,7 @@ Velcro.Route = function(options) {
     return this;
 };
 
-Velcro.Route.prototype = {
+velcro.Route.prototype = {
     query: function(request) {
         var params = request.match(this.options.match);
 
@@ -188,23 +188,23 @@ var oldState = window.location.hash;
 var interval;
 var isStarted = false;
 
-Velcro.State = function(options) {
-    this.options = Velcro.utils.merge({
+velcro.State = function(options) {
+    this.options = velcro.utils.merge({
         scroll: false
     });
 
     this.states = {};
 
-    Velcro.State.start();
+    velcro.State.start();
 
     return this;
 };
 
-Velcro.State.interval = 500;
+velcro.State.interval = 500;
 
-Velcro.State.start = function() {
+velcro.State.start = function() {
     if (isStarted) {
-        return Velcro.State;
+        return velcro.State;
     }
 
     var isIeLyingAboutHashChange = 'onhashchange' in window && /MSIE\s(6|7)/.test(navigator.userAgent);
@@ -220,15 +220,15 @@ Velcro.State.start = function() {
                 oldState = window.location.hash;
                 trigger('hashchange');
             }
-        }, Velcro.State.interval);
+        }, velcro.State.interval);
     }
 
     isStarted = true;
 
-    return Velcro.State;
+    return velcro.State;
 };
 
-Velcro.State.stop = function() {
+velcro.State.stop = function() {
     if (interval) {
         clearInterval(interval);
     }
@@ -245,7 +245,7 @@ Velcro.State.stop = function() {
     return State;
 };
 
-Velcro.State.prototype = {
+velcro.State.prototype = {
     previous: false,
 
     enabled: false,

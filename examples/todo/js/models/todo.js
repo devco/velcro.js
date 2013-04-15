@@ -1,5 +1,5 @@
-define(['moment', 'velcro'], function(moment, Velcro) {
-    return Velcro.Model.extend({
+define(['moment', 'velcro'], function(moment, velcro) {
+    return velcro.Model.extend({
         _created: '',
         name: '',
         getCreated: function() {

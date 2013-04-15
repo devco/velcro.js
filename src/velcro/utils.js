@@ -1,5 +1,5 @@
 (function() {
-    Velcro.utils = {
+    velcro.utils = {
         addEvent: function(element, event, callback) {
             if (element.addEventListener) {
                 element.addEventListener(event, proxy, false);
@@ -109,7 +109,7 @@
         },
 
         isClass: function(obj) {
-            return typeof obj === 'function' && typeof obj.extend === 'function' && obj.extend === Velcro.Class.extend;
+            return typeof obj === 'function' && typeof obj.extend === 'function' && obj.extend === velcro.Class.extend;
         },
 
         isInstance: function(obj) {
@@ -121,7 +121,7 @@
         },
 
         isValue: function(value) {
-            return typeof value === 'function' && value.toString() === Velcro.value().toString();
+            return typeof value === 'function' && value.toString() === velcro.value().toString();
         },
 
         merge: function() {
@@ -130,18 +130,18 @@
             for (var i = 0; i < arguments.length; i++) {
                 var param = arguments[i];
 
-                if (!Velcro.utils.isObject(param)) {
+                if (!velcro.utils.isObject(param)) {
                     continue;
                 }
 
                 for (var ii in param) {
                     var value = param[ii];
 
-                    if (Velcro.utils.isObject(value)) {
-                        if (typeof merged[ii] === 'undefined' || Velcro.utils.isInstance(value)) {
+                    if (velcro.utils.isObject(value)) {
+                        if (typeof merged[ii] === 'undefined' || velcro.utils.isInstance(value)) {
                             merged[ii] = value;
                         } else {
-                            merged[ii] = Velcro.utils.merge(merged[ii], value);
+                            merged[ii] = velcro.utils.merge(merged[ii], value);
                         }
                     } else {
                         merged[ii] = value;
@@ -183,8 +183,8 @@
         extract: function(obj) {
             var options = {};
 
-            Velcro.utils.each(obj, function(name, value) {
-                if (Velcro.utils.isValue(value)) {
+            velcro.utils.each(obj, function(name, value) {
+                if (velcro.utils.isValue(value)) {
                     options[name] = value();
                 } else {
                     options[name] = value;
@@ -195,7 +195,7 @@
         },
 
         throwForElement: function(element, message) {
-            throw message + "\n" + Velcro.html(element);
+            throw message + "\n" + velcro.html(element);
         }
     };
 

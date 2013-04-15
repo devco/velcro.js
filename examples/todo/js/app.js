@@ -8,6 +8,6 @@ require.config({
 require([
     'velcro',
     'views/app'
-], function(Velcro, AppView) {
-    new Velcro.App().bind(new AppView);
+], function(velcro, AppView) {
+    new velcro.App().bind(new AppView);
 });

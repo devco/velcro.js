@@ -1,6 +1,6 @@
-define(['moment', 'velcro', 'views/todo'], function(moment, Velcro, TodoView) {
-    return Velcro.Model.extend({
-        todos: Velcro.Collection.make(TodoView),
+define(['moment', 'velcro', 'views/todo'], function(moment, velcro, TodoView) {
+    return velcro.Model.extend({
+        todos: velcro.Collection.make(TodoView),
         todoToAdd: '',
         addTodo: function() {
             this.todos().append({

@@ -1,13 +1,13 @@
-Velcro.value = function(options) {
+velcro.value = function(options) {
     var interval;
     var subs  = [];
     var value = null;
 
-    if (!Velcro.utils.isObject(options)) {
+    if (!velcro.utils.isObject(options)) {
         options = { defaultValue: options };
     }
 
-    options = Velcro.utils.merge({
+    options = velcro.utils.merge({
         defaultValue: null,
         bind: func,
         get: function() {

@@ -1,9 +1,9 @@
 (function() {
-    Velcro.Binding = Velcro.Class.extend({
+    velcro.Binding = velcro.Class.extend({
         options: {},
 
         init: function(app, element, options, bound) {
-            options = Velcro.utils.merge(this.options, options);
+            options = velcro.utils.merge(this.options, options);
 
             if (typeof this.setup === 'function') {
                 this.setup(app, element, options, bound);

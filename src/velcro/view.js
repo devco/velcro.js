@@ -1,8 +1,8 @@
-Velcro.View = function(options) {
+velcro.View = function(options) {
     this.cache = {};
 
-    this.options = Velcro.utils.merge({
-        idPrefix: 'Velcro-view-',
+    this.options = velcro.utils.merge({
+        idPrefix: 'velcro-view-',
         idSuffix: '',
         idSeparator: '-',
         target: false,
@@ -15,12 +15,12 @@ Velcro.View = function(options) {
         }
     }, options);
 
-    this.http = new Velcro.Http(this.options.http);
+    this.http = new velcro.Http(this.options.http);
 
     return this;
 };
 
-Velcro.View.prototype = {
+velcro.View.prototype = {
     render: function(name, callback) {
         var $this = this;
         var id    = this.options.idPrefix + name.replace(/\//g, this.options.idSeparator) + this.options.idSuffix;

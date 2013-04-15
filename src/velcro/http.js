@@ -1,12 +1,12 @@
-Velcro.Http = function(options) {
-    this.before  = new Velcro.Event();
-    this.after   = new Velcro.Event();
-    this.success = new Velcro.Event();
-    this.error   = new Velcro.Event();
-    this.options = Velcro.utils.merge({
+velcro.Http = function(options) {
+    this.before  = new velcro.Event();
+    this.after   = new velcro.Event();
+    this.success = new velcro.Event();
+    this.error   = new velcro.Event();
+    this.options = velcro.utils.merge({
         async: true,
         headers: {},
-        parsers: { 'application/json': Velcro.utils.parseJson },
+        parsers: { 'application/json': velcro.utils.parseJson },
         prefix: '',
         suffix: ''
     }, options);
@@ -14,45 +14,45 @@ Velcro.Http = function(options) {
     return this;
 };
 
-Velcro.Http.prototype = {
+velcro.Http.prototype = {
     'delete': function(options) {
-        return this.request(Velcro.utils.merge(options, {
+        return this.request(velcro.utils.merge(options, {
             type: 'delete'
         }));
     },
 
     get: function(options) {
-        return this.request(Velcro.utils.merge(options, {
+        return this.request(velcro.utils.merge(options, {
             type: 'get'
         }));
     },
 
     head: function(options) {
-        return this.request(Velcro.utils.merge(options, {
+        return this.request(velcro.utils.merge(options, {
             type: 'head'
         }));
     },
 
     options: function(options) {
-        return this.request(Velcro.utils.merge(options, {
+        return this.request(velcro.utils.merge(options, {
             type: 'options'
         }));
     },
 
     patch: function(options) {
-        return this.request(Velcro.utils.merge(options, {
+        return this.request(velcro.utils.merge(options, {
             type: 'patch'
         }));
     },
 
     post: function(options) {
-        return this.request(Velcro.utils.merge(options, {
+        return this.request(velcro.utils.merge(options, {
             type: 'post'
         }));
     },
 
     put: function(options) {
-        return this.request(Velcro.utils.merge(options, {
+        return this.request(velcro.utils.merge(options, {
             type: 'put'
         }));
     },
@@ -61,7 +61,7 @@ Velcro.Http.prototype = {
         var $this   = this;
         var request = createXmlHttpRequest();
 
-        options = Velcro.utils.merge({
+        options = velcro.utils.merge({
             type: 'GET',
             data: {},
             success: function(){},
@@ -72,11 +72,11 @@ Velcro.Http.prototype = {
 
         options.type = options.type.toUpperCase();
 
-        if (options.data instanceof Velcro.Model) {
+        if (options.data instanceof velcro.Model) {
             options.data = options.data.raw();
         }
 
-        if (Velcro.utils.isObject(options.data)) {
+        if (velcro.utils.isObject(options.data)) {
             options.data = this.serialize(options.data);
         }
 

@@ -1,13 +1,13 @@
-Velcro.App = function(options) {
-    this.options = Velcro.utils.merge({
+velcro.App = function(options) {
+    this.options = velcro.utils.merge({
         attributePrefix: 'data-vc-',
-        bindings: Velcro.defaultBindings
+        bindings: velcro.defaultBindings
     }, options);
 
     this.contexts = [];
 };
 
-Velcro.App.prototype = {
+velcro.App.prototype = {
     bind: function(element, context) {
         if (arguments.length === 1) {
             context = element;
@@ -29,7 +29,7 @@ Velcro.App.prototype = {
             context = this.context();
         }
 
-        Velcro.utils.each(parent.childNodes, function(index, element) {
+        velcro.utils.each(parent.childNodes, function(index, element) {
             $this.bind(element, context);
         });
 
@@ -39,7 +39,7 @@ Velcro.App.prototype = {
     bindOne: function(element) {
         var $this = this;
 
-        Velcro.utils.each(element.attributes, function(i, node) {
+        velcro.utils.each(element.attributes, function(i, node) {
             // an element may have been altered inside of a binding, therefore
             // we must check if the binding still exists
             if (typeof element.attributes[i] === 'undefined') {
@@ -78,16 +78,16 @@ Velcro.App.prototype = {
         return this;
 
         // Returns an object that conains raw, extracted values from the passed in bindings as well as bindable members.
-        // Bindable members included any Velcro.value, Velcro.Model and Velcro.Collection.
+        // Bindable members included any velcro.value, velcro.Model and velcro.Collection.
         function parse() {
-            var temp = Velcro.utils.parseBinding(value, context);
+            var temp = velcro.utils.parseBinding(value, context);
             var comp = { options: {}, bound: {} };
 
             for (var i in temp) {
-                if (Velcro.utils.isValue(temp[i])) {
+                if (velcro.utils.isValue(temp[i])) {
                     comp.options[i] = temp[i]();
                     comp.bound[i]   = temp[i];
-                } else if (temp[i] instanceof Velcro.Model || temp[i] instanceof Velcro.Collection) {
+                } else if (temp[i] instanceof velcro.Model || temp[i] instanceof velcro.Collection) {
                     comp.options[i] = temp[i]._observer();
                     comp.bound[i]   = temp[i]._observer;
                 } else {

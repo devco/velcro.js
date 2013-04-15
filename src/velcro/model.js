@@ -1,5 +1,5 @@
 (function() {
-    Velcro.Model = Velcro.Class.extend({
+    velcro.Model = velcro.Class.extend({
         _observer: null,
 
         _parent: null,
@@ -46,7 +46,7 @@
                 return this;
             }
 
-            if (obj instanceof Velcro.Model) {
+            if (obj instanceof velcro.Model) {
                 obj = obj.to();
             }
 
@@ -67,7 +67,7 @@
             this.each(function(name, value) {
                 out[name] = value();
 
-                if (out[name] instanceof Velcro.Model || out[name] instanceof Velcro.Collection) {
+                if (out[name] instanceof velcro.Model || out[name] instanceof velcro.Collection) {
                     out[name] = out[name].to();
                 }
             });
@@ -98,7 +98,7 @@
     }
 
     function defineCollection(obj) {
-        obj.constructor.Collection = Velcro.Collection.extend({
+        obj.constructor.Collection = velcro.Collection.extend({
             init: function(data) {
                 this.$super(obj.constructor, data);
             }
@@ -107,13 +107,13 @@
 
     function definePrototype(obj) {
         for (var i in obj) {
-            if (typeof Velcro.Model.prototype[i] !== 'undefined') {
+            if (typeof velcro.Model.prototype[i] !== 'undefined') {
                 continue;
             }
 
             var v = obj[i];
 
-            if (Velcro.utils.isClass(v) && (v.isSubClassOf(Velcro.Model) || v.isSubClassOf(Velcro.Collection))) {
+            if (velcro.utils.isClass(v) && (v.isSubClassOf(velcro.Model) || v.isSubClassOf(velcro.Collection))) {
                 obj.constructor.definition.relations[i] = v;
                 continue;
             }
@@ -156,7 +156,7 @@
     }
 
     function applyObserver(obj) {
-        obj._observer = Velcro.value({
+        obj._observer = velcro.value({
             bind: obj,
             get: function() {
                 return this;
@@ -177,7 +177,7 @@
 
     function applyProperties(obj) {
         for (var i in obj.constructor.definition.properties) {
-            obj[i] = Velcro.value({
+            obj[i] = velcro.value({
                 bind: obj,
                 defaultValue: obj.constructor.definition.properties[i]
             });
@@ -186,7 +186,7 @@
 
     function applyComputed(obj) {
         for (var i in obj.constructor.definition.computed) {
-            obj[i] = Velcro.value({
+            obj[i] = velcro.value({
                 bind: obj,
                 get: obj.constructor.definition.computed[i].get ? obj.constructor.definition.computed[i].get : generateGetterSetterThrower('getter', i),
                 set: obj.constructor.definition.computed[i].set ? obj.constructor.definition.computed[i].set : generateGetterSetterThrower('setter', i)

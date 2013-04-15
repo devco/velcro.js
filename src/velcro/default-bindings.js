@@ -1,12 +1,12 @@
-Velcro.defaultBindings = {
-    click: Velcro.Binding.extend({
+velcro.defaultBindings = {
+    click: velcro.Binding.extend({
         options: {
             block: true,
             propagate: false
         },
 
         setup: function(app, element, options) {
-            Velcro.utils.addEvent(element, 'click', function(e) {
+            velcro.utils.addEvent(element, 'click', function(e) {
                 if (options.block) {
                     e.preventDefault();
                 }
@@ -20,17 +20,17 @@ Velcro.defaultBindings = {
         }
     }),
 
-    context: Velcro.Binding.extend({
+    context: velcro.Binding.extend({
         update: function(app, element, options) {
             if (!options.context) {
-                Velcro.utils.throwForElement(element, 'A context option must be specified.');
+                velcro.utils.throwForElement(element, 'A context option must be specified.');
             }
 
             app.context(options.context);
         }
     }),
 
-    each: Velcro.Binding.extend({
+    each: velcro.Binding.extend({
         app: null,
 
         clones: null,
@@ -48,9 +48,9 @@ Velcro.defaultBindings = {
             this.app       = app;
             this.clones    = [];
             this.container = element.parentNode;
-            this.template  = Velcro.utils.html(this.clean(app, element));
+            this.template  = velcro.utils.html(this.clean(app, element));
 
-            Velcro.utils.destroyElement(element);
+            velcro.utils.destroyElement(element);
         },
 
         update: function(app, element, options) {
@@ -58,23 +58,23 @@ Velcro.defaultBindings = {
 
             this.reset(element);
 
-            if (options.items instanceof Velcro.Model) {
+            if (options.items instanceof velcro.Model) {
                 options.items.each(function(key, value) {
                     each(key, value());
                 });
-            } else if (options.items instanceof Velcro.Collection) {
+            } else if (options.items instanceof velcro.Collection) {
                 options.items.each(each);
             } else {
-                Velcro.utils.each(options.items, each);
+                velcro.utils.each(options.items, each);
             }
 
             function each(key, value) {
-                var context = Velcro.utils.isObject(value) ? value : {};
+                var context = velcro.utils.isObject(value) ? value : {};
 
                 context[$this.options.key]   = key;
                 context[$this.options.value] = value;
 
-                var clone = Velcro.utils.createElement($this.template);
+                var clone = velcro.utils.createElement($this.template);
                 app.bind(clone, context);
                 $this.clones.push(clone);
                 $this.container.appendChild(clone);
@@ -85,8 +85,8 @@ Velcro.defaultBindings = {
         },
 
         reset: function(element) {
-            Velcro.utils.each(this.clones, function(index, clone) {
-                Velcro.utils.destroyElement(clone);
+            velcro.utils.each(this.clones, function(index, clone) {
+                velcro.utils.destroyElement(clone);
             });
 
             this.clones = [];
@@ -103,7 +103,7 @@ Velcro.defaultBindings = {
         }
     }),
 
-    'if': Velcro.Binding.extend({
+    'if': velcro.Binding.extend({
         container: null,
 
         html: null,
@@ -113,7 +113,7 @@ Velcro.defaultBindings = {
         setup: function(app, element, options) {
             this.container = element.parentNode;
             this.element   = element;
-            this.index     = Velcro.utils.elementIndex(element);
+            this.index     = velcro.utils.elementIndex(element);
 
             if (!options.test) {
                 this.container.removeChild(this.element);
@@ -133,16 +133,16 @@ Velcro.defaultBindings = {
         }
     }),
 
-    include: Velcro.Binding.extend({
+    include: velcro.Binding.extend({
         update: function(app, element, options) {
-            options = Velcro.utils.merge({
+            options = velcro.utils.merge({
                 path: '',
                 context: false,
                 callback: function(){},
                 view: {}
             }, options);
 
-            var view = new Velcro.View(options.view);
+            var view = new velcro.View(options.view);
 
             view.options.target = element;
 
@@ -151,7 +151,7 @@ Velcro.defaultBindings = {
             }
 
             if (!options.path) {
-                Velcro.utils.throwForElement(element, 'A path option must be specified.');
+                velcro.utils.throwForElement(element, 'A path option must be specified.');
             }
 
             view.render(options.path, function() {
@@ -161,16 +161,16 @@ Velcro.defaultBindings = {
         }
     }),
 
-    routable: Velcro.Binding.extend({
+    routable: velcro.Binding.extend({
         update: function(app, element, options) {
             var router = options.router;
 
             if (!router) {
-                Velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" because it does not exist.');
+                velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" because it does not exist.');
             }
 
-            if (!router instanceof Velcro.Router) {
-                Velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" because it is not an instanceof "Velcro.Router".');
+            if (!router instanceof velcro.Router) {
+                velcro.utils.throwForElement(element, 'Cannot bind router "' + value + '" because it is not an instanceof "velcro.Router".');
             }
 
             router.view.options.target = element;
@@ -178,14 +178,14 @@ Velcro.defaultBindings = {
         }
     }),
 
-    submit: Velcro.Binding.extend({
+    submit: velcro.Binding.extend({
         options: {
             block: true,
             propagate: false
         },
 
         setup: function(app, element, options, bindings) {
-            Velcro.utils.addEvent(element, 'submit', function(e) {
+            velcro.utils.addEvent(element, 'submit', function(e) {
                 if (options.block) {
                     e.preventDefault();
                 }
@@ -199,19 +199,19 @@ Velcro.defaultBindings = {
         }
     }),
 
-    text: Velcro.Binding.extend({
+    text: velcro.Binding.extend({
         update: function(app, element, options) {
             element.innerText = options.text;
         }
     }),
 
-    value: Velcro.Binding.extend({
+    value: velcro.Binding.extend({
         options: {
             on: 'change'
         },
 
         setup: function(app, element, options, bindings) {
-            Velcro.utils.addEvent(element, options.on, function() {
+            velcro.utils.addEvent(element, options.on, function() {
                 bindings.value(element.value);
             });
         },
