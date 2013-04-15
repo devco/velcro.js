@@ -1,0 +1,27 @@
+<h2>Todos - Because We Want to Be Cool Too!</h2>
+
+<form data-vc-submit="callback: addTodo">
+    <div class="input-append">
+        <input type="text" data-vc-value="value: todoToAdd">
+        <button class="btn" type="button" data-vc-click="callback: addTodo">Add Todo</button>
+    </div>
+</form>
+
+<table class="table table-striped" data-vc-if="observe: todos, test: todos().length">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Created</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr data-vc-each="items: todos">
+            <td data-vc-text="text: name"></td>
+            <td data-vc-text="text: humanFriendlyCreated"></td>
+            <td class="span1"><button class="btn btn-danger btn-mini" type="button" data-vc-click="callback: remove"><i class="icon-trash icon-white"></i></button></td>
+        </tr>
+    </tbody>
+</table>
+
+<p class="alert alert-info" data-vc-if="observe: todos, test: !todos().length">Seems you've got nothing to do.</p>

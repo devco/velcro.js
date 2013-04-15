@@ -10,5 +10,5 @@ define(['models/todo', 'moment'], function(TodoModel, moment) {
         remove: function() {
             this.parent().todos().remove(this);
         }
-    })
+    });
 });

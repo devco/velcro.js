@@ -31,8 +31,10 @@ velcro.Router.prototype = {
         var $this   = this;
         var context = route.options.controller.apply(route.options.controller, params);
 
-        if (!context instanceof velcro.Model) {
-            context = new (velcro.model(context))();
+        if (context instanceof velcro.Model) {
+        } else {
+            context = velcro.Model.extend(context);
+            context = new context();
         }
 
         this.view.render(route.options.view, function(view) {
@@ -72,7 +74,7 @@ velcro.Router.prototype = {
         }
 
         if (!options.view) {
-            options.view = name;
+            options.view = name || 'index';
         }
 
         this.routes[name] = options instanceof velcro.Route ? options : new velcro.Route(options);
@@ -107,10 +109,6 @@ velcro.Router.prototype = {
             request = this.state.get();
         }
 
-        var executor = function() {
-            $this.renderer(route);
-        };
-
         for (var i in this.routes) {
             var route  = this.routes[i];
             var params = route.query(request);
@@ -129,10 +127,16 @@ velcro.Router.prototype = {
             this.route          = route;
             this.state.previous = request;
 
-            this.handler(executor);
+            this.handler(_makeHandler(route));
         }
 
         return this;
+
+        function _makeHandler(route) {
+            return function() {
+                $this.renderer(route);
+            };
+        }
     },
 
     go: function(name, params, data) {
