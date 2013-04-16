@@ -451,14 +451,14 @@ velcro.defaultBindings = {
     }),
 
     include: velcro.Binding.extend({
-        update: function(app, element, options) {
-            options = velcro.utils.merge({
-                path: '',
-                context: false,
-                callback: function(){},
-                view: {}
-            }, options);
+        options: {
+            path: '',
+            context: false,
+            callback: function(){},
+            view: {}
+        },
 
+        update: function(app, element, options) {
             var view = new velcro.View(options.view);
 
             view.options.target = element;
