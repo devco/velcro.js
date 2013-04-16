@@ -37,7 +37,7 @@ velcro.Event.prototype = {
     },
 
     trigger: function() {
-        return this.triggerArgs(Array.prototype.slice.call(arguments, 1));
+        return this.triggerArgs(Array.prototype.slice.call(arguments));
     },
 
     triggerArgs: function(args) {

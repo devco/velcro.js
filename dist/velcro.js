@@ -577,7 +577,7 @@ velcro.Event.prototype = {
     },
 
     trigger: function() {
-        return this.triggerArgs(Array.prototype.slice.call(arguments, 1));
+        return this.triggerArgs(Array.prototype.slice.call(arguments));
     },
 
     triggerArgs: function(args) {
@@ -1352,7 +1352,7 @@ velcro.value = function(options) {
     };
 
     func.publish = function() {
-        var newValue = options.get.call(options.bind);
+        var newValue = func();
 
         for (var i = 0; i < subs.length; i++) {
             subs[i](newValue);
@@ -1563,11 +1563,19 @@ velcro.value = function(options) {
 
     function applyComputed(obj) {
         for (var i in obj.constructor.definition.computed) {
-            obj[i] = velcro.value({
-                bind: obj,
-                get: obj.constructor.definition.computed[i].get ? obj.constructor.definition.computed[i].get : generateGetterSetterThrower('getter', i),
-                set: obj.constructor.definition.computed[i].set ? obj.constructor.definition.computed[i].set : generateGetterSetterThrower('setter', i)
-            });
+            var options = {
+                bind: obj
+            };
+
+            if (typeof obj.constructor.definition.computed[i].get === 'function') {
+                options.get = obj.constructor.definition.computed[i].get;
+            }
+
+            if (typeof obj.constructor.definition.computed[i].set === 'function') {
+                options.set = obj.constructor.definition.computed[i].set;
+            }
+
+            obj[i] = velcro.value(options);
         }
     }
 

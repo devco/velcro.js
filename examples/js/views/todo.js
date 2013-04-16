@@ -6,7 +6,6 @@ define(['models/todo', 'moment'], function(TodoModel, moment) {
         getHumanFriendlyCreated: function() {
             return moment(this.created()).fromNow();
         },
-        setHumanFriendlyCreated: function(created){},
         remove: function() {
             this.parent().todos().remove(this);
         }

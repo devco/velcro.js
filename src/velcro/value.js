@@ -47,7 +47,7 @@ velcro.value = function(options) {
     };
 
     func.publish = function() {
-        var newValue = options.get.call(options.bind);
+        var newValue = func();
 
         for (var i = 0; i < subs.length; i++) {
             subs[i](newValue);

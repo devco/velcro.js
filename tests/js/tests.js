@@ -170,24 +170,41 @@ test('Collection Manipulation', function() {
 });
 
 test('Observable Getters and Setters', function() {
-    var User = velcro.Model.extend({
-        forename: '',
-        surname: '',
-        getName: function() {
-            return this.forename() + ' ' + this.surname();
-        },
-        setName: function(name) {
-            name = name.split(' ');
-            this.forename(name[0]);
-            this.surname(name[1]);
-            return this;
+    var Getter = velcro.Model.extend({
+        _prop: true,
+        getProp: function() {
+            return this._prop();
         }
     });
 
-    var user     = new User().name('Barbara Barberson');
-    var exported = user.to();
+    var Setter = velcro.Model.extend({
+        _prop: false,
+        setProp: function(prop) {
+            this._prop(prop);
+        }
+    });
 
-    ok(exported.name === user.name(), 'The `name` reader should have been exported.');
+    var GetterAndSetter = velcro.Model.extend({
+        _prop: false,
+        getProp: function() {
+            return this._prop();
+        },
+        setProp: function(prop) {
+            this._prop(prop);
+        }
+    });
+
+    var model = new Getter();
+    ok(model.prop(), 'Getter without setter not working.');
+
+    var model = new Setter();
+    model.prop(true);
+return;
+    ok(model._prop(), 'Setter without getter not working.');
+
+    var model = new GetterAndSetter();
+    model.prop(true);
+    ok(model.prop(), 'Getter and setter not working.');
 });
 
 test('Parent / Child Relationships', function() {
