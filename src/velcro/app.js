@@ -14,20 +14,22 @@ velcro.App.prototype = {
             element = document;
         }
 
-        this.context(context);
+        if (context) {
+            this.setContext(context);
+        }
+
         this.bindOne(element);
         this.bindDescendants(element);
-        this.restoreContext();
+
+        if (context) {
+            this.restoreContext();
+        }
 
         return this;
     },
 
     bindDescendants: function(parent, context) {
-        var $this   = this;
-
-        if (arguments.length === 1) {
-            context = this.context();
-        }
+        var $this = this;
 
         velcro.utils.each(parent.childNodes, function(index, element) {
             $this.bind(element, context);
@@ -60,7 +62,7 @@ velcro.App.prototype = {
         var $this = this;
 
         // The context is saved so that if it changes it won't mess up a subscriber.
-        var context = this.context();
+        var context = this.getContext();
 
         // Contains parsed information for the initial updates.
         var parsed = parse();
@@ -104,19 +106,31 @@ velcro.App.prototype = {
         }
     },
 
-    context: function(context) {
-        if (typeof context === 'object') {
-            if (this.contexts.length) {
-                context.$parent = this.contexts[this.contexts.length - 1];
-                context.$root   = this.contexts[0];
-            }
+    setContext: function(context) {
+        // All contexts have a $bindings special property for bindings to apply their data to if necessary.
+        context.$bindings = {};
 
-            this.contexts.push(context);
-
-            return this;
+        // If bindings exist we must emulate a hierarchy.
+        if (this.contexts.length) {
+            context.$parent = this.contexts[this.contexts.length - 1];
+            context.$root   = this.contexts[0];
         } else {
-            return this.contexts.length ? this.contexts[this.contexts.length - 1] : false;
+            context.$parent = false;
+            context.$root   = false;
         }
+
+        // The youngest descendant in the context hierarchy is the last one in the list.
+        this.contexts.push(context);
+
+        return this;
+    },
+
+    getContext: function() {
+        if (!this.contexts.length) {
+            this.setContext({});
+        }
+
+        return this.contexts[this.contexts.length - 1];
     },
 
     restoreContext: function() {

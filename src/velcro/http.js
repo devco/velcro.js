@@ -5,6 +5,7 @@ velcro.Http = function(options) {
     this.error   = new velcro.Event();
     this.options = velcro.utils.merge({
         async: true,
+        cache: false,
         headers: {},
         parsers: { 'application/json': velcro.utils.parseJson },
         prefix: '',
@@ -62,6 +63,7 @@ velcro.Http.prototype = {
         var request = createXmlHttpRequest();
 
         options = velcro.utils.merge({
+            url: '',
             type: 'GET',
             data: {},
             success: function(){},
@@ -70,25 +72,37 @@ velcro.Http.prototype = {
             after: function(){}
         }, options);
 
-        options.type = options.type.toUpperCase();
+        var url  = this.options.prefix + options.url + this.options.suffix;
+        var type = options.type.toUpperCase();
+        var data = options.data;
 
-        if (options.data instanceof velcro.Model) {
-            options.data = options.data.raw();
+        if (data instanceof velcro.Model) {
+            data = data.raw();
         }
 
-        if (velcro.utils.isObject(options.data)) {
-            options.data = this.serialize(options.data);
+        if (velcro.utils.isObject(data)) {
+            data = this.serialize(data);
         }
 
-        if (options.data) {
+        if (data) {
             if (options.type === 'GET') {
-                options.url += '?' + options.data;
+                url += '?' + data;
             } else {
                 request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
             }
         }
 
-        request.open(options.type, this.options.prefix + options.url + this.options.suffix, this.options.async);
+        if (!this.options.cache) {
+            if (data && type === 'GET') {
+                url += '&';
+            } else {
+                url += '?';
+            }
+
+            url += new Date().getTime();
+        }
+
+        request.open(type, url, this.options.async);
 
         for (var header in this.options.headers) {
             request.setRequestHeader(header, this.options.headers[header]);
@@ -125,10 +139,10 @@ velcro.Http.prototype = {
         options.before.call(options.before, request);
         this.before.trigger(request);
 
-        if (options.type === 'GET') {
+        if (type === 'GET') {
             request.send();
         } else {
-            request.send(options.data);
+            request.send(data);
         }
 
         return this;

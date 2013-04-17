@@ -1,4 +1,12 @@
 velcro.defaultBindings = {
+    attr: velcro.Binding.extend({
+        update: function(app, element, options) {
+            for (var i in options) {
+                velcro.utils.setAttribute(element, i, options[i]);
+            }
+        }
+    }),
+
     click: velcro.Binding.extend({
         options: {
             block: true,
@@ -26,7 +34,29 @@ velcro.defaultBindings = {
                 velcro.utils.throwForElement(element, 'A context option must be specified.');
             }
 
-            app.context(options.context);
+            app.setContext(options.context);
+        }
+    }),
+
+    css: velcro.Binding.extend({
+        update: function(app, element, options) {
+            var css = velcro.utils.getAttribute(element, 'class').split(/\s+/);
+
+            for (var i in options) {
+                if (options[i]) {
+                    if (css.indexOf(i) === -1) {
+                        css.push(options[i]);
+                    }
+                } else {
+                    var index = css.indexOf(i);
+
+                    if (index > -1) {
+                        css.splice(index, 1);
+                    }
+                }
+            }
+
+            velcro.utils.setAttribute(element, 'class', css.join(' '));
         }
     }),
 
@@ -100,6 +130,38 @@ velcro.defaultBindings = {
         clean: function(app, element) {
             element.removeAttribute(app.options.attributePrefix + 'each');
             return element;
+        }
+    }),
+
+    extend: velcro.Binding.extend({
+        options: {
+            path: '',
+            view: {}
+        },
+
+        html: '',
+
+        setup: function(app, element, options) {
+            this.html = element.innerHTML;
+            this.update(app, element, options);
+        },
+
+        update: function(app, element, options) {
+            var view  = new velcro.View(options.view);
+            var $this = this;
+
+            view.options.target = element;
+            view.render(options.path, function() {
+                app.getContext().$bindings.extend = $this.html;
+                app.bindDescendants(element);
+                delete app.getContext().$bindings.extend;
+            });
+        }
+    }),
+
+    html: velcro.Binding.extend({
+        update: function(app, element, options) {
+            element.innerHTML = options.html;
         }
     }),
 

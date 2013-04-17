@@ -64,20 +64,17 @@ velcro.Router.prototype = {
         return this;
     },
 
-    set: function(name, options) {
-        if (typeof options === 'function') {
-            options = {
-                match: new RegExp('^' + name + "$"),
+    set: function(name, route) {
+        if (!(route instanceof velcro.Route)) {
+            route = new velcro.Route(velcro.utils.merge({
+                controller: typeof route === 'function' ? route : function(){},
                 format: name,
-                controller: options
-            };
+                match: new RegExp('^' + name + "$"),
+                view: name || 'index'
+            }, route));
         }
 
-        if (!options.view) {
-            options.view = name || 'index';
-        }
-
-        this.routes[name] = options instanceof velcro.Route ? options : new velcro.Route(options);
+        this.routes[name] = route;
 
         return this;
     },

@@ -1,5 +1,25 @@
 (function() {
     velcro.utils = {
+        setAttribute: function(element, name, value) {
+            if (element.setAttribute) {
+                element.setAttribute(name, value);
+            } else {
+                element[name] = value;
+            }
+        },
+
+        getAttribute: function(element, name) {
+            if (element.getAttribute) {
+                return element.getAttribute(name);
+            }
+
+            if (typeof element[name] === 'undefined') {
+                return false;
+            }
+
+            return element[name];
+        },
+
         addEvent: function(element, event, callback) {
             if (element.addEventListener) {
                 element.addEventListener(event, proxy, false);
@@ -48,6 +68,11 @@
             element.innerHTML = '';
             delete element.attributes;
             delete element.childNodes;
+        },
+
+        replaceElement: function(reference, replacement) {
+            reference.parentNode.insertBefore(replacement, reference);
+            reference.parentNode.removeChild(reference);
         },
 
         elementIndex: function(element) {
