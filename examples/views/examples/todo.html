@@ -1,9 +1,11 @@
-<h2>Todos - Because We Want to Be Cool Too!</h2>
+<div class="page-header">
+    <h1>Todos <small>Because We Want to Be Cool Too!</small></h1>
+</div>
 
-<form data-vc-submit="callback: addTodo">
+<form data-vc-submit="callback: create">
     <div class="input-append">
-        <input type="text" data-vc-value="value: todoToAdd">
-        <button class="btn" type="button" data-vc-click="callback: addTodo">Add Todo</button>
+        <input type="text" data-vc-value="value: adding">
+        <button class="btn" type="button" data-vc-click="callback: create">Create</button>
     </div>
 </form>
 

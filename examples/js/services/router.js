@@ -1,16 +1,17 @@
 define([
     'velcro',
-    'controllers/index',
-    'controllers/todo'
+    'controllers/examples/todo'
 ], function(
     velcro,
-    IndexController,
-    TodoController
+    ExamplesTodoController
 ) {
     var router = new velcro.Router;
 
-    router.set('', IndexController);
-    router.set('todo', TodoController);
+    router.set('');
+    router.set('documentation/overview');
+    router.set('documentation/guide');
+    router.set('documentation/api');
+    router.set('examples/todo', ExamplesTodoController);
 
     return router;
 });

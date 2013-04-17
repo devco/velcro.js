@@ -1,27 +1,43 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
     <head>
-        <link rel="stylesheet" href="../components/bootstrap/docs/assets/css/bootstrap.css">
-        <link rel="stylesheet" href="css/index.css">
-        <link rel="stylesheet" href="../components/bootstrap/docs/assets/css/bootstrap-responsive.css">
+        <title>velcro.js, from UltraServe</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="stylesheet/less" href="less/app.less">
+        <script>
+            less = {
+                env: 'development'
+            };
+        </script>
         <script data-main="js/app.js" src="../components/requirejs/require.js"></script>
     </head>
     <body>
-        <div class="navbar navbar-fixed-top">
+        <nav class="navbar navbar-fixed-top">
             <div class="navbar-inner">
                 <div class="container">
                     <a class="brand" href="#">velcro.js</a>
                     <ul class="nav">
                         <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Documentation <b class="caret"></b></a>
+                            <ul class="dropdown-menu">
+                                <li><a href="#documentation/overview">Overview</a></li>
+                                <li><a href="#documentation/guide">Guide</a></li>
+                                <li><a href="#documentation/api">Api</a></li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Examples <b class="caret"></b></a>
                             <ul class="dropdown-menu">
-                                <li><a href="#todo">Todo</a></li>
+                                <li><a href="#examples/todo">Todo</a></li>
                             </ul>
                         </li>
                     </ul>
                 </div>
             </div>
-        </div>
-        <div class="container" data-vc-routable="router: router"></div>
+        </nav>
+        <div data-vc-routable="router: router"></div>
     </body>
 </html>

@@ -10,6 +10,26 @@
 
 (function() {
     velcro.utils = {
+        setAttribute: function(element, name, value) {
+            if (element.setAttribute) {
+                element.setAttribute(name, value);
+            } else {
+                element[name] = value;
+            }
+        },
+
+        getAttribute: function(element, name) {
+            if (element.getAttribute) {
+                return element.getAttribute(name);
+            }
+
+            if (typeof element[name] === 'undefined') {
+                return false;
+            }
+
+            return element[name];
+        },
+
         addEvent: function(element, event, callback) {
             if (element.addEventListener) {
                 element.addEventListener(event, proxy, false);
@@ -58,6 +78,11 @@
             element.innerHTML = '';
             delete element.attributes;
             delete element.childNodes;
+        },
+
+        replaceElement: function(reference, replacement) {
+            reference.parentNode.insertBefore(replacement, reference);
+            reference.parentNode.removeChild(reference);
         },
 
         elementIndex: function(element) {
@@ -316,6 +341,14 @@
     });
 })();
 velcro.defaultBindings = {
+    attr: velcro.Binding.extend({
+        update: function(app, element, options) {
+            for (var i in options) {
+                velcro.utils.setAttribute(element, i, options[i]);
+            }
+        }
+    }),
+
     click: velcro.Binding.extend({
         options: {
             block: true,
@@ -343,7 +376,29 @@ velcro.defaultBindings = {
                 velcro.utils.throwForElement(element, 'A context option must be specified.');
             }
 
-            app.context(options.context);
+            app.setContext(options.context);
+        }
+    }),
+
+    css: velcro.Binding.extend({
+        update: function(app, element, options) {
+            var css = velcro.utils.getAttribute(element, 'class').split(/\s+/);
+
+            for (var i in options) {
+                if (options[i]) {
+                    if (css.indexOf(i) === -1) {
+                        css.push(options[i]);
+                    }
+                } else {
+                    var index = css.indexOf(i);
+
+                    if (index > -1) {
+                        css.splice(index, 1);
+                    }
+                }
+            }
+
+            velcro.utils.setAttribute(element, 'class', css.join(' '));
         }
     }),
 
@@ -417,6 +472,38 @@ velcro.defaultBindings = {
         clean: function(app, element) {
             element.removeAttribute(app.options.attributePrefix + 'each');
             return element;
+        }
+    }),
+
+    extend: velcro.Binding.extend({
+        options: {
+            path: '',
+            view: {}
+        },
+
+        html: '',
+
+        setup: function(app, element, options) {
+            this.html = element.innerHTML;
+            this.update(app, element, options);
+        },
+
+        update: function(app, element, options) {
+            var view  = new velcro.View(options.view);
+            var $this = this;
+
+            view.options.target = element;
+            view.render(options.path, function() {
+                app.getContext().$bindings.extend = $this.html;
+                app.bindDescendants(element);
+                delete app.getContext().$bindings.extend;
+            });
+        }
+    }),
+
+    html: velcro.Binding.extend({
+        update: function(app, element, options) {
+            element.innerHTML = options.html;
         }
     }),
 
@@ -597,6 +684,7 @@ velcro.Http = function(options) {
     this.error   = new velcro.Event();
     this.options = velcro.utils.merge({
         async: true,
+        cache: false,
         headers: {},
         parsers: { 'application/json': velcro.utils.parseJson },
         prefix: '',
@@ -654,6 +742,7 @@ velcro.Http.prototype = {
         var request = createXmlHttpRequest();
 
         options = velcro.utils.merge({
+            url: '',
             type: 'GET',
             data: {},
             success: function(){},
@@ -662,25 +751,37 @@ velcro.Http.prototype = {
             after: function(){}
         }, options);
 
-        options.type = options.type.toUpperCase();
+        var url  = this.options.prefix + options.url + this.options.suffix;
+        var type = options.type.toUpperCase();
+        var data = options.data;
 
-        if (options.data instanceof velcro.Model) {
-            options.data = options.data.raw();
+        if (data instanceof velcro.Model) {
+            data = data.raw();
         }
 
-        if (velcro.utils.isObject(options.data)) {
-            options.data = this.serialize(options.data);
+        if (velcro.utils.isObject(data)) {
+            data = this.serialize(data);
         }
 
-        if (options.data) {
+        if (data) {
             if (options.type === 'GET') {
-                options.url += '?' + options.data;
+                url += '?' + data;
             } else {
                 request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
             }
         }
 
-        request.open(options.type, this.options.prefix + options.url + this.options.suffix, this.options.async);
+        if (!this.options.cache) {
+            if (data && type === 'GET') {
+                url += '&';
+            } else {
+                url += '?';
+            }
+
+            url += new Date().getTime();
+        }
+
+        request.open(type, url, this.options.async);
 
         for (var header in this.options.headers) {
             request.setRequestHeader(header, this.options.headers[header]);
@@ -717,10 +818,10 @@ velcro.Http.prototype = {
         options.before.call(options.before, request);
         this.before.trigger(request);
 
-        if (options.type === 'GET') {
+        if (type === 'GET') {
             request.send();
         } else {
-            request.send(options.data);
+            request.send(data);
         }
 
         return this;
@@ -827,20 +928,17 @@ velcro.Router.prototype = {
         return this;
     },
 
-    set: function(name, options) {
-        if (typeof options === 'function') {
-            options = {
-                match: new RegExp('^' + name + "$"),
+    set: function(name, route) {
+        if (!(route instanceof velcro.Route)) {
+            route = new velcro.Route(velcro.utils.merge({
+                controller: typeof route === 'function' ? route : function(){},
                 format: name,
-                controller: options
-            };
+                match: new RegExp('^' + name + "$"),
+                view: name || 'index'
+            }, route));
         }
 
-        if (!options.view) {
-            options.view = name || 'index';
-        }
-
-        this.routes[name] = options instanceof velcro.Route ? options : new velcro.Route(options);
+        this.routes[name] = route;
 
         return this;
     },
@@ -1193,20 +1291,22 @@ velcro.App.prototype = {
             element = document;
         }
 
-        this.context(context);
+        if (context) {
+            this.setContext(context);
+        }
+
         this.bindOne(element);
         this.bindDescendants(element);
-        this.restoreContext();
+
+        if (context) {
+            this.restoreContext();
+        }
 
         return this;
     },
 
     bindDescendants: function(parent, context) {
-        var $this   = this;
-
-        if (arguments.length === 1) {
-            context = this.context();
-        }
+        var $this = this;
 
         velcro.utils.each(parent.childNodes, function(index, element) {
             $this.bind(element, context);
@@ -1239,7 +1339,7 @@ velcro.App.prototype = {
         var $this = this;
 
         // The context is saved so that if it changes it won't mess up a subscriber.
-        var context = this.context();
+        var context = this.getContext();
 
         // Contains parsed information for the initial updates.
         var parsed = parse();
@@ -1283,19 +1383,31 @@ velcro.App.prototype = {
         }
     },
 
-    context: function(context) {
-        if (typeof context === 'object') {
-            if (this.contexts.length) {
-                context.$parent = this.contexts[this.contexts.length - 1];
-                context.$root   = this.contexts[0];
-            }
+    setContext: function(context) {
+        // All contexts have a $bindings special property for bindings to apply their data to if necessary.
+        context.$bindings = {};
 
-            this.contexts.push(context);
-
-            return this;
+        // If bindings exist we must emulate a hierarchy.
+        if (this.contexts.length) {
+            context.$parent = this.contexts[this.contexts.length - 1];
+            context.$root   = this.contexts[0];
         } else {
-            return this.contexts.length ? this.contexts[this.contexts.length - 1] : false;
+            context.$parent = false;
+            context.$root   = false;
         }
+
+        // The youngest descendant in the context hierarchy is the last one in the list.
+        this.contexts.push(context);
+
+        return this;
+    },
+
+    getContext: function() {
+        if (!this.contexts.length) {
+            this.setContext({});
+        }
+
+        return this.contexts[this.contexts.length - 1];
     },
 
     restoreContext: function() {
