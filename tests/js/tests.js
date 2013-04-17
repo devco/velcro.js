@@ -354,13 +354,13 @@ test('Observing Changes', function() {
 test('Changing Context and Scoping', function() {
     var app = new velcro.App();
 
-    app.context({ trunk: true });
-    app.context({ branch: true });
-    app.context({ leaf: true });
+    app.setContext({ trunk: true });
+    app.setContext({ branch: true });
+    app.setContext({ leaf: true });
 
-    ok(app.context().leaf, 'Leaf should be current.');
-    ok(app.context().$parent.branch, 'Branch should be $parent.');
-    ok(app.context().$root.trunk, 'Trunk should be $root.');
+    ok(app.getContext().leaf, 'Leaf should be current.');
+    ok(app.getContext().$parent.branch, 'Branch should be $parent.');
+    ok(app.getContext().$root.trunk, 'Trunk should be $root.');
 });
 
 asyncTest('Router', function() {
