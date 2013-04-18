@@ -147,14 +147,14 @@ velcro.defaultBindings = {
         },
 
         update: function(app, element, options) {
-            var view  = new velcro.View(options.view);
-            var $this = this;
+            var view    = new velcro.View(options.view);
+            var $this   = this;
+            var context = app.getContext();
 
+            context.$content    = this.html;
             view.options.target = element;
             view.render(options.path, function() {
-                app.getContext().$bindings.extend = $this.html;
-                app.bindDescendants(element);
-                delete app.getContext().$bindings.extend;
+                app.bindDescendants(element, context);
             });
         }
     }),
@@ -166,31 +166,21 @@ velcro.defaultBindings = {
     }),
 
     'if': velcro.Binding.extend({
-        container: null,
-
-        html: null,
-
-        index: null,
+        display: 'none',
 
         setup: function(app, element, options) {
-            this.container = element.parentNode;
-            this.element   = element;
-            this.index     = velcro.utils.elementIndex(element);
+            this.display = element.style.display;
 
             if (!options.test) {
-                this.container.removeChild(this.element);
+                element.style.display = 'none';
             }
         },
 
         update: function(app, element, options) {
             if (options.test) {
-                if (this.container.childNodes[this.index]) {
-                    this.container.insertBefore(this.element, this.container.childNodes[this.index]);
-                } else {
-                    this.container.appendChild(this.element);
-                }
-            } else if (this.element.parentNode) {
-                this.container.removeChild(this.element);
+                element.style.display = this.display;
+            } else if (element.parentNode) {
+                element.style.display = 'none';
             }
         }
     }),

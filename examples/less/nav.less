@@ -8,7 +8,7 @@
 
     .navbar-inner {
         #gradient > .vertical(#c02c21, #9b251b);
-        border-bottom: 1px solid #ac291e;
+        border-bottom: none;
     }
 
     .nav {
@@ -21,7 +21,9 @@
             > .dropdown-toggle:hover,
             > .dropdown-toggle:focus,
             &.open > .dropdown-toggle {
+                .box-shadow(0 0 3px #444 inset);
                 color: #fff;
+                outline: none;
                 text-shadow: none;
                 background-color: #c02c21;
 
@@ -39,6 +41,13 @@
                     border-bottom-color: #fff;
                 }
             }
+        }
+
+        .dropdown-menu > li > a:hover,
+        .dropdown-menu > li > a:focus,
+        .dropdown-submenu:hover > a,
+        .dropdown-submenu:focus > a {
+            #gradient > .vertical(#c02c21, #9b251b);
         }
     }
 }
