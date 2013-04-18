@@ -1,5 +1,49 @@
 <div data-vc-extend="path: 'layouts/content'">
     <div class="page-header">
-        <h1>Overview</h1>
+        <h1>velcro.js <small>Your friendly Javascript framework nextdoor.</small></h1>
     </div>
+
+    <p>Velcro gives you a complete MVC solution for building RESTful JavaScript web applications. There are no dependencies but you really should use RequrieJS or the like if you care about your developers and users.</p>
+
+    <h3>Features include:</h3>
+
+    <ul>
+        <li>Full MVC separation.</li>
+        <li>Full AMD / CommonJS support while falling back to setting the global <code>velcro</code> object.</li>
+        <li>Classical inheritance support using a similar method to <a href="http://ejohn.org/blog/simple-javascript-inheritance/">John Resig's</a>.</li>
+        <li>Complete Model / Collection and relationship management.</li>
+        <li>View component allowing views ot be loaded from multiple sources including their own files and DOM elements.</li>
+        <li>Attribute bindings akin to AngularJs and KnockoutJS.</li>
+        <li>REST Client with built-in JSON support.</li>
+        <li>Simple and flexible routing with full support for both browser state and hashchange events.</li>
+        <li>Convention over configuration, yet still allowing you to configure what you want, when you want.</li>
+    </ul>
+
+    <h3>Bower Installation</h3>
+
+    <p>You can install directly from Bower:</p>
+
+    <pre><code>bower install velcro.js</code></pre>
+
+    <p>Or add it to your Bower <code>component.js</code> file:</p>
+
+    <pre><code>{</code>
+<code>  "dependencies": {</code>
+<code>    "velcro.js": "latest"</code>
+<code>  }</code>
+<code>}</code></pre>
+
+    <h3>Manual Installation</h3>
+
+    <p>Just download one of the files from the <code>dist/</code> folder, clone, or whatever and include that file somewhere in your main template file.</p>
+
+    <h3>Using with RequireJS</h3>
+
+    <p>Use with RequireJS just as you would any other AMD module:</p>
+
+    <pre><code>require(['path/to/velcro'], function(velcro) {</code>
+<code>  ...</code>
+<code>});</code></pre>
+
+    <p>The beauty of using RequireJS - or your choice of AMD library - really shines when you begin to separate out the different parts of your application, especially models. It also allows you to very easily optimise your whole application. See the <em>Optimisation</em> section in the <a href="#documentation/guide">guide</a> for more information.</p>
 </div>
