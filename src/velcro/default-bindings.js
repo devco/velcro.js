@@ -67,10 +67,14 @@ velcro.defaultBindings = {
 
         container: null,
 
+        guid: null,
+
         options: {
             key: '$key',
             value: '$value'
         },
+
+        reference: null,
 
         template: null,
 
@@ -78,15 +82,19 @@ velcro.defaultBindings = {
             this.app       = app;
             this.clones    = [];
             this.container = element.parentNode;
+            this.guid      = velcro.utils.guid();
             this.template  = velcro.utils.html(this.clean(app, element));
+            this.reference = document.createComment(this.guid);
 
+            element.parentNode.insertBefore(this.reference, element);
             velcro.utils.destroyElement(element);
+            this.update(app, element, options);
         },
 
         update: function(app, element, options) {
             var $this = this;
 
-            this.reset(element);
+            this.reset();
 
             if (options.items instanceof velcro.Model) {
                 options.items.each(function(key, value) {
@@ -107,22 +115,19 @@ velcro.defaultBindings = {
                 var clone = velcro.utils.createElement($this.template);
                 app.bind(clone, context);
                 $this.clones.push(clone);
-                $this.container.appendChild(clone);
+                $this.container.insertBefore(clone, $this.reference);
 
                 delete context[$this.options.key];
                 delete context[$this.options.value];
             }
         },
 
-        reset: function(element) {
+        reset: function() {
             velcro.utils.each(this.clones, function(index, clone) {
                 velcro.utils.destroyElement(clone);
             });
 
             this.clones = [];
-
-            // previous elements aren't completely destroyed unless this is done
-            this.container.innerHTML = '';
 
             return this;
         },

@@ -15,9 +15,9 @@ velcro.Router = function(options) {
     this.route  = false;
     this.routes = {};
 
-    this.app   = new velcro.App(this.options.app);
-    this.state = new velcro.State(this.options.state);
-    this.view  = new velcro.View(this.options.view);
+    this.app   = this.options.app   instanceof velcro.App   ? this.options.app   : new velcro.App(this.options.app);
+    this.state = this.options.state instanceof velcro.State ? this.options.state : new velcro.State(this.options.state);
+    this.view  = this.options.view  instanceof velcro.View  ? this.options.view  : new velcro.View(this.options.view);
 
     return this;
 };

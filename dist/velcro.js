@@ -231,6 +231,14 @@
 
         throwForElement: function(element, message) {
             throw message + "\n" + velcro.html(element);
+        },
+
+        guid: function() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16|0;
+                var v = c === 'x' ? r : (r&0x3|0x8);
+                return v.toString(16);
+            });
         }
     };
 
@@ -409,10 +417,14 @@ velcro.defaultBindings = {
 
         container: null,
 
+        guid: null,
+
         options: {
             key: '$key',
             value: '$value'
         },
+
+        reference: null,
 
         template: null,
 
@@ -420,15 +432,19 @@ velcro.defaultBindings = {
             this.app       = app;
             this.clones    = [];
             this.container = element.parentNode;
+            this.guid      = velcro.utils.guid();
             this.template  = velcro.utils.html(this.clean(app, element));
+            this.reference = document.createComment(this.guid);
 
+            element.parentNode.insertBefore(this.reference, element);
             velcro.utils.destroyElement(element);
+            this.update(app, element, options);
         },
 
         update: function(app, element, options) {
             var $this = this;
 
-            this.reset(element);
+            this.reset();
 
             if (options.items instanceof velcro.Model) {
                 options.items.each(function(key, value) {
@@ -449,22 +465,19 @@ velcro.defaultBindings = {
                 var clone = velcro.utils.createElement($this.template);
                 app.bind(clone, context);
                 $this.clones.push(clone);
-                $this.container.appendChild(clone);
+                $this.container.insertBefore(clone, $this.reference);
 
                 delete context[$this.options.key];
                 delete context[$this.options.value];
             }
         },
 
-        reset: function(element) {
+        reset: function() {
             velcro.utils.each(this.clones, function(index, clone) {
                 velcro.utils.destroyElement(clone);
             });
 
             this.clones = [];
-
-            // previous elements aren't completely destroyed unless this is done
-            this.container.innerHTML = '';
 
             return this;
         },
@@ -869,9 +882,9 @@ velcro.Router = function(options) {
     this.route  = false;
     this.routes = {};
 
-    this.app   = new velcro.App(this.options.app);
-    this.state = new velcro.State(this.options.state);
-    this.view  = new velcro.View(this.options.view);
+    this.app   = this.options.app   instanceof velcro.App   ? this.options.app   : new velcro.App(this.options.app);
+    this.state = this.options.state instanceof velcro.State ? this.options.state : new velcro.State(this.options.state);
+    this.view  = this.options.view  instanceof velcro.View  ? this.options.view  : new velcro.View(this.options.view);
 
     return this;
 };
@@ -1265,146 +1278,161 @@ velcro.View.prototype = {
         target.innerHTML = view;
     }
 };
-velcro.App = function(options) {
-    this.options = velcro.utils.merge({
-        attributePrefix: 'data-vc-',
-        bindings: velcro.defaultBindings
-    }, options);
+(function() {
+    velcro.App = velcro.Class.extend({
+        init: function(options) {
+            this.options = velcro.utils.merge({
+                attributePrefix: 'data-vc-',
+                bindings: velcro.defaultBindings
+            }, options);
 
-    this.contexts = [];
-};
+            this.contexts = [];
+        },
 
-velcro.App.prototype = {
-    bind: function(element, context) {
-        if (arguments.length === 1) {
-            context = element;
-            element = document;
-        }
-
-        if (context) {
-            this.setContext(context);
-        }
-
-        this.bindOne(element);
-        this.bindDescendants(element);
-
-        if (context) {
-            this.restoreContext();
-        }
-
-        return this;
-    },
-
-    bindDescendants: function(parent, context) {
-        var $this = this;
-
-        velcro.utils.each(parent.childNodes, function(index, element) {
-            $this.bind(element, context);
-        });
-
-        return this;
-    },
-
-    bindOne: function(element) {
-        var $this = this;
-
-        velcro.utils.each(element.attributes, function(i, node) {
-            // an element may have been altered inside of a binding, therefore
-            // we must check if the binding still exists
-            if (typeof element.attributes[i] === 'undefined') {
-                return;
+        bind: function(element, context) {
+            if (arguments.length === 1) {
+                context = element;
+                element = document;
             }
 
-            var name = node.nodeName.substring($this.options.attributePrefix.length);
-
-            if (typeof $this.options.bindings[name] === 'function') {
-                $this.bindAttribute(element, name, node.nodeValue);
+            if (context) {
+                this.setContext(context);
             }
-        });
 
-        return this;
-    },
+            this.bindOne(element);
+            this.bindDescendants(element);
 
-    bindAttribute: function (element, name, value) {
-        var $this = this;
-
-        // The context is saved so that if it changes it won't mess up a subscriber.
-        var context = this.getContext();
-
-        // Contains parsed information for the initial updates.
-        var parsed = parse();
-
-        // This will initialise the binding and do any initial changes to the bound elements.
-        // Subscribable values are also extracted and passed in so that accessing them is trivial.
-        var binding = new this.options.bindings[name](this, element, parsed.options, parsed.bound);
-
-        if (typeof binding.update === 'function') {
-            for (var i in parsed.bound) {
-                parsed.bound[i].subscribe(subscriber);
+            if (context) {
+                this.restoreContext();
             }
-        }
 
-        return this;
+            return this;
+        },
 
-        // Returns an object that conains raw, extracted values from the passed in bindings as well as bindable members.
-        // Bindable members included any velcro.value, velcro.Model and velcro.Collection.
-        function parse() {
-            var temp = velcro.utils.parseBinding(value, context);
-            var comp = { options: {}, bound: {} };
+        bindDescendants: function(parent, context) {
+            var $this = this;
 
-            for (var i in temp) {
-                if (velcro.utils.isValue(temp[i])) {
-                    comp.options[i] = temp[i]();
-                    comp.bound[i]   = temp[i];
-                } else if (temp[i] instanceof velcro.Model || temp[i] instanceof velcro.Collection) {
-                    comp.options[i] = temp[i]._observer();
-                    comp.bound[i]   = temp[i]._observer;
-                } else {
-                    comp.options[i] = temp[i];
+            velcro.utils.each(parent.childNodes, function(index, element) {
+                $this.bind(element, context);
+            });
+
+            return this;
+        },
+
+        bindOne: function(element) {
+            var $this = this;
+
+            velcro.utils.each(element.attributes, function(i, node) {
+                // an element may have been altered inside of a binding, therefore
+                // we must check if the binding still exists
+                if (typeof element.attributes[i] === 'undefined') {
+                    return;
+                }
+
+                var name = node.nodeName.substring($this.options.attributePrefix.length);
+
+                if (typeof $this.options.bindings[name] === 'function') {
+                    $this.bindAttribute(element, name, node.nodeValue);
+                }
+            });
+
+            return this;
+        },
+
+        bindAttribute: function (element, name, value) {
+            // We record which attributes have been bound on an element so if the same element
+            // is attempting to rebind itself we prevent it from doing so.
+            if (typeof element._bound === 'undefined') {
+                element._bound = [];
+            }
+
+            // Ensure the attribute is not bound twice to the same element instance.
+            if (element._bound.indexOf(name) === -1) {
+                element._bound.push(name);
+            } else {
+                return this;
+            }
+
+            var $this = this;
+
+            // The context is saved so that if it changes it won't mess up a subscriber.
+            var context = this.getContext();
+
+            // Contains parsed information for the initial updates.
+            var parsed = parse();
+
+            // This will initialise the binding and do any initial changes to the bound elements.
+            // Subscribable values are also extracted and passed in so that accessing them is trivial.
+            var binding = new this.options.bindings[name](this, element, parsed.options, parsed.bound);
+
+            if (typeof binding.update === 'function') {
+                for (var i in parsed.bound) {
+                    parsed.bound[i].subscribe(subscriber);
                 }
             }
 
-            return comp;
+            return this;
+
+            // Returns an object that conains raw, extracted values from the passed in bindings as well as bindable members.
+            // Bindable members included any velcro.value, velcro.Model and velcro.Collection.
+            function parse() {
+                var temp = velcro.utils.parseBinding(value, context);
+                var comp = { options: {}, bound: {} };
+
+                for (var i in temp) {
+                    if (velcro.utils.isValue(temp[i])) {
+                        comp.options[i] = temp[i]();
+                        comp.bound[i]   = temp[i];
+                    } else if (temp[i] instanceof velcro.Model || temp[i] instanceof velcro.Collection) {
+                        comp.options[i] = temp[i]._observer();
+                        comp.bound[i]   = temp[i]._observer;
+                    } else {
+                        comp.options[i] = temp[i];
+                    }
+                }
+
+                return comp;
+            }
+
+            function subscriber() {
+                var refreshed = parse();
+                binding.update($this, element, refreshed.options, refreshed.bound);
+            }
+        },
+
+        setContext: function(context) {
+            // All contexts have a $bindings special property for bindings to apply their data to if necessary.
+            context.$bindings = {};
+
+            // If bindings exist we must emulate a hierarchy.
+            if (this.contexts.length) {
+                context.$parent = this.contexts[this.contexts.length - 1];
+                context.$root   = this.contexts[0];
+            } else {
+                context.$parent = false;
+                context.$root   = false;
+            }
+
+            // The youngest descendant in the context hierarchy is the last one in the list.
+            this.contexts.push(context);
+
+            return this;
+        },
+
+        getContext: function() {
+            if (!this.contexts.length) {
+                this.setContext({});
+            }
+
+            return this.contexts[this.contexts.length - 1];
+        },
+
+        restoreContext: function() {
+            this.contexts.pop();
+            return this;
         }
-
-        function subscriber() {
-            var refreshed = parse();
-            binding.update($this, element, refreshed.options, refreshed.bound);
-        }
-    },
-
-    setContext: function(context) {
-        // All contexts have a $bindings special property for bindings to apply their data to if necessary.
-        context.$bindings = {};
-
-        // If bindings exist we must emulate a hierarchy.
-        if (this.contexts.length) {
-            context.$parent = this.contexts[this.contexts.length - 1];
-            context.$root   = this.contexts[0];
-        } else {
-            context.$parent = false;
-            context.$root   = false;
-        }
-
-        // The youngest descendant in the context hierarchy is the last one in the list.
-        this.contexts.push(context);
-
-        return this;
-    },
-
-    getContext: function() {
-        if (!this.contexts.length) {
-            this.setContext({});
-        }
-
-        return this.contexts[this.contexts.length - 1];
-    },
-
-    restoreContext: function() {
-        this.contexts.pop();
-        return this;
-    }
-};
+    });
+})();
 velcro.value = function(options) {
     var interval;
     var subs  = [];
