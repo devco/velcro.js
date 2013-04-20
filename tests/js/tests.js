@@ -466,11 +466,11 @@ test('each', function() {
         text: 'Item 1'
     });
 
-    ok(ul.childNodes.length === 1 && ul.childNodes[0].innerText === 'Item 1', 'One item should exist as "Item 1".');
+    ok(ul.childNodes[0].innerText === 'Item 1', 'One item should exist as "Item 1".');
 
     ctx.items.append({
         text: 'Item 2'
     });
 
-    ok(ul.childNodes.length === 2 && ul.childNodes[1].innerText === 'Item 2', 'Two items should exist as "Item 1, Item 2".');
+    ok(ul.childNodes[1].innerText === 'Item 2', 'Two items should exist as "Item 1, Item 2".');
 });

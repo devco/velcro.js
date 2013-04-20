@@ -1,0 +1,67 @@
+<div class="page-header">
+    <h2>Application</h2>
+</div>
+
+<p>The applicaiton component is responsible for binding your UI to your models. Generally, you will use an application instance as the entry point of your application, but it can be used to bind any view model to any element.</p>
+
+<h3>Setting Up</h3>
+
+<p>The instance used to run your app is simply an instance of <code>velcro.App</code>.</p>
+
+<pre><code>// default options
+var app = new velcro.App({
+    attributePrefix: 'data-vc-',
+    bindings: velcro.defaultBindings
+});</code></pre>
+
+<p>The following options can be passed to a <code>velcro.App</code> instance.</p>
+
+<div data-vc-include="path: 'widgets/tables/options', context: {
+    options: [{
+        name: 'attributePrefix',
+        value: '&quot;data-vc-&quot;',
+        description: 'The prefixed used to denote a Velcro binding when running in the current application context.'
+    }, {
+        name: 'bindings',
+        value: 'velcro.defaultBindings',
+        description: 'The bindings that this application instance should use.'
+    }]
+}"></div>
+
+<h3>Bindings</h3>
+
+<p>The idea of bindings allows you to completely separate your business logic from your display logic and easily abstract any code you may have to write to connect the two into bindings. Most of the bindings that you will be using are already written for you and are used by simply giving an element an attribute.</p>
+
+<p>There are two types of bindings: <em>static</em> and <em>dynamic</em>. Static bindings are simply only bound once. They are good for once-off bindings that you don't expect to change, and don't need to update in your UI. Dynamic bindings consist of values that you want to update in your UI and are what brings you application to life. They are what Velcro is all about and are covered in the following sections.
+
+<h4>Static Bindings</h4>
+
+<p>To get an idea of how everything works, we will first create a static binding where your UI is initialised but not updated. Assume that the following HTML is contained inside of your <code>&lt;body&gt;</code> tag.</p>
+
+<pre><code>&lt;h1 id="my-h1" data-vc-text="text: hello"&gt;&lt;/h1&gt;</code></pre>
+
+<p>You can then use the following code to insert <code>Hello, World.</code> into your <code>&lt;h1&gt;</code> tag.</p>
+
+<pre><code>app.bind({ hello: 'Hello, World.' });</code></pre>
+
+<h4>Dynamic Bindings</h4>
+
+<p>In the prevous example if you update the <code>hello</code> property, your UI will not be updated. Since most of the time you will want your UI updated when your view model changes, all we have to do is bind an instance of <code>vecro.Model</code> and things will just work.
+
+<pre><code>var Model = velcro.Model.extend({
+    hello: 'Hello World'
+});
+
+app.bind(new Model());</code></pre>
+
+<p>You can now update the <code>hello</code> model property and your UI will instantly be updated with the new value.</p>
+
+<pre><code>app.context().hello('Hello again, World!');</code></pre>
+
+<p>Your <code>&lt;h1&gt;</code> tag will now be updated to read "Hello again, World!"</p>
+
+<h4>Selecting Which Elements to Bind</h4>
+
+<p>If you don't want to bind the whole <code>document</code> to your view model, you can specify an element to bind to:</p>
+
+<pre><code>app.bind(document.getElementById('my-h1'), new Model());</code></pre>

@@ -1,0 +1,37 @@
+<div class="page-header">
+    <h2>Routing</h2>
+</div>
+
+<p>Routing is done using an instance of <code>velcro.Router</code>. It listens for changes to the current URL and updates a given element with content from the resulting route.</p>
+
+<p>A router uses 3 components in order to do your bidding. It uses a <code>velcro.State</code> instance to listen for changes in the URL. When it is initialised or changes and a match is found, it then uses a <code>velcro.App</code> instance to bind the model returned from the matched route's controller to the content returned from its <code>velcro.View</code> instance.
+
+<h3>Setting Up a Router</h3>
+
+<p>To set up a router we use an instance of <code>velcro.Router</code>.</p>
+
+<pre><code>var router = new velcro.Router({
+    app: new velcro.App,
+    state: new velcro.State,
+    view: new velcro.View
+});</code></pre>
+
+<p>You can pass the following options to a <code>velcro.Router</code> instance.</p>
+
+<div data-vc-include="path: 'widgets/tables/options', context: {
+    options: [{
+        name: 'app',
+        value: '{}',
+        description: 'A <code>velcro.App</code> instance or an options object to pass to an instance.'
+    }, {
+        name: 'state',
+        value: '{}',
+        description: 'A <code>velcro.State</code> instance or an options object to pass to an instance.'
+    }, {
+        name: 'view',
+        value: '{}',
+        description: 'A <code>velcro.View</code> instance or an options object to pass to an instance.'
+    }]
+}"></div>
+
+<h3>Binding the Router to an Element</h3>
