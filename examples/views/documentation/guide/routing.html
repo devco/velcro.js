@@ -4,7 +4,7 @@
 
 <p>Routing is done using an instance of <code>velcro.Router</code>. It listens for changes to the current URL and updates a given element with content from the resulting route.</p>
 
-<p>A router uses 3 components in order to do your bidding. It uses a <code>velcro.State</code> instance to listen for changes in the URL. When it is initialised or changes and a match is found, it then uses a <code>velcro.App</code> instance to bind the model returned from the matched route's controller to the content returned from its <code>velcro.View</code> instance.
+<p>A router uses <em>three</em> components from the time of request to the point the user sees the result. It uses a <code>velcro.State</code> instance to listen for changes in the URL. When it is initialised or changes and a match is found, it then uses a <code>velcro.App</code> instance to bind the model returned from the matched route's controller to the content returned from its <code>velcro.View</code> instance.
 
 <h3>Setting Up a Router</h3>
 
