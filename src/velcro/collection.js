@@ -208,4 +208,12 @@
             return this.find(query, 1).first();
         }
     });
+
+    velcro.Collection.make = function(Model) {
+        return velcro.Collection.extend({
+            init: function(data) {
+                this.$super(Model, data);
+            }
+        });
+    };
 })();

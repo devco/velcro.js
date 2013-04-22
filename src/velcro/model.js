@@ -76,20 +76,6 @@
         }
     });
 
-    var _oldExtend = velcro.Model.extend;
-
-    velcro.Model.extend = function(definition) {
-        var Model = _oldExtend.call(this, definition);
-
-        Model.Collection = velcro.Collection.extend({
-            init: function(data) {
-                this.$super(Model, data);
-            }
-        });
-
-        return Model;
-    };
-
     function defineIfNotDefined(obj) {
         if (!obj.constructor.definition) {
             define(obj);

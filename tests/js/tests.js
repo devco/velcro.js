@@ -120,7 +120,7 @@ test('Relationships', function() {
 
     var User = velcro.Model.extend({
         bestFriend: Friend,
-        friends: Friend.Collection
+        friends: velcro.Collection.make(Friend)
     });
 
     var user = new User();
@@ -147,7 +147,7 @@ test('Collection Manipulation', function() {
     });
 
     var Items = velcro.Model.extend({
-        items: Item.Collection
+        items: velcro.Collection.make(Item)
     });
 
     var model = new Items;
@@ -218,14 +218,14 @@ test('Parent / Child Relationships', function() {
 
     var BranchModel = velcro.Model.extend({
         leaf: LeafModel,
-        leafs: LeafModel.Collection
+        leafs: velcro.Collection.make(LeafModel)
     });
 
     var TrunkModel = velcro.Model.extend({
         leaf: LeafModel,
-        leafs: LeafModel.Collection,
+        leafs: velcro.Collection.make(LeafModel),
         branch: BranchModel,
-        branches: BranchModel.Collection
+        branches: velcro.Collection.make(BranchModel)
     });
 
     var trunk = new TrunkModel({
@@ -456,7 +456,7 @@ test('each', function() {
     li.setAttribute('data-vc-each', 'items: items');
     li.setAttribute('data-vc-text', 'text: text');
 
-    var ctx = { items: new Item.Collection() };
+    var ctx = { items: new velcro.Collection(Item) };
     var app = new velcro.App().bind(ul, ctx);
 
     ctx.items.append({

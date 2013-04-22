@@ -1170,20 +1170,6 @@ velcro.value = function(options) {
         }
     });
 
-    var _oldExtend = velcro.Model.extend;
-
-    velcro.Model.extend = function(definition) {
-        var Model = _oldExtend.call(this, definition);
-
-        Model.Collection = velcro.Collection.extend({
-            init: function(data) {
-                this.$super(Model, data);
-            }
-        });
-
-        return Model;
-    };
-
     function defineIfNotDefined(obj) {
         if (!obj.constructor.definition) {
             define(obj);
@@ -1525,6 +1511,14 @@ velcro.value = function(options) {
             return this.find(query, 1).first();
         }
     });
+
+    velcro.Collection.make = function(Model) {
+        return velcro.Collection.extend({
+            init: function(data) {
+                this.$super(Model, data);
+            }
+        });
+    };
 })();
 velcro.defaultBindings = {
     attr: velcro.Binding.extend({
@@ -1803,6 +1797,8 @@ velcro.defaultBindings = {
     })
 };
 (function() {
+    var _bound = [];
+
     velcro.App = velcro.Class.extend({
         init: function(options) {
             this.options = velcro.utils.merge({
@@ -1846,9 +1842,16 @@ velcro.defaultBindings = {
         bindOne: function(element) {
             var $this = this;
 
+            // Do not bind the same element more than once.
+            if (_bound.indexOf(element) === -1) {
+                _bound.push(element);
+            } else {
+                return this;
+            }
+
             velcro.utils.each(element.attributes, function(i, node) {
-                // an element may have been altered inside of a binding, therefore
-                // we must check if the binding still exists
+                // An element may have been altered inside of a binding, therefore
+                // we must check if the binding still exists.
                 if (typeof element.attributes[i] === 'undefined') {
                     return;
                 }
@@ -1864,19 +1867,6 @@ velcro.defaultBindings = {
         },
 
         bindAttribute: function (element, name, value) {
-            // We record which attributes have been bound on an element so if the same element
-            // is attempting to rebind itself we prevent it from doing so.
-            if (typeof element._bound === 'undefined') {
-                element._bound = [];
-            }
-
-            // Ensure the attribute is not bound twice to the same element instance.
-            if (element._bound.indexOf(name) === -1) {
-                element._bound.push(name);
-            } else {
-                return this;
-            }
-
             var $this = this;
 
             // The context is saved so that if it changes it won't mess up a subscriber.
@@ -1928,7 +1918,7 @@ velcro.defaultBindings = {
             // Getting.
             if (arguments.length === 0) {
                 if (!this.contexts.length) {
-                    this.setContext({});
+                    this.context({});
                 }
 
                 return this.contexts[this.contexts.length - 1];
