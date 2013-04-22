@@ -76,6 +76,20 @@
         }
     });
 
+    var _oldExtend = velcro.Model.extend;
+
+    velcro.Model.extend = function(definition) {
+        var Model = _oldExtend.call(this, definition);
+
+        Model.Collection = velcro.Collection.extend({
+            init: function(data) {
+                this.$super(Model, data);
+            }
+        });
+
+        return Model;
+    };
+
     function defineIfNotDefined(obj) {
         if (!obj.constructor.definition) {
             define(obj);
@@ -84,7 +98,6 @@
 
     function define(obj) {
         initDefinition(obj);
-        defineCollection(obj);
         definePrototype(obj);
     }
 
@@ -95,14 +108,6 @@
             computed: {},
             methods: {}
         };
-    }
-
-    function defineCollection(obj) {
-        obj.constructor.Collection = velcro.Collection.extend({
-            init: function(data) {
-                this.$super(obj.constructor, data);
-            }
-        });
     }
 
     function definePrototype(obj) {
