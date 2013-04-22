@@ -1170,6 +1170,20 @@ velcro.value = function(options) {
         }
     });
 
+    var _oldExtend = velcro.Model.extend;
+
+    velcro.Model.extend = function(definition) {
+        var Model = _oldExtend.call(this, definition);
+
+        Model.Collection = velcro.Collection.extend({
+            init: function(data) {
+                this.$super(Model, data);
+            }
+        });
+
+        return Model;
+    };
+
     function defineIfNotDefined(obj) {
         if (!obj.constructor.definition) {
             define(obj);
@@ -1178,7 +1192,6 @@ velcro.value = function(options) {
 
     function define(obj) {
         initDefinition(obj);
-        defineCollection(obj);
         definePrototype(obj);
     }
 
@@ -1189,14 +1202,6 @@ velcro.value = function(options) {
             computed: {},
             methods: {}
         };
-    }
-
-    function defineCollection(obj) {
-        obj.constructor.Collection = velcro.Collection.extend({
-            init: function(data) {
-                this.$super(obj.constructor, data);
-            }
-        });
     }
 
     function definePrototype(obj) {
@@ -1520,14 +1525,6 @@ velcro.value = function(options) {
             return this.find(query, 1).first();
         }
     });
-
-    velcro.Collection.make = function(Model) {
-        return this.extend({
-            init: function(data) {
-                this.$super(Model, data);
-            }
-        });
-    };
 })();
 velcro.defaultBindings = {
     attr: velcro.Binding.extend({
@@ -1627,7 +1624,11 @@ velcro.defaultBindings = {
         update: function(app, element, options) {
             var $this = this;
 
-            this.reset();
+            velcro.utils.each(this.clones, function(index, clone) {
+                velcro.dom(clone).destroy();
+            });
+
+            this.clones = [];
 
             if (options.items instanceof velcro.Model) {
                 options.items.each(function(key, value) {
@@ -1653,16 +1654,6 @@ velcro.defaultBindings = {
                 delete context[$this.options.key];
                 delete context[$this.options.value];
             }
-        },
-
-        reset: function() {
-            velcro.utils.each(this.clones, function(index, clone) {
-                velcro.dom(clone).destroy();
-            });
-
-            this.clones = [];
-
-            return this;
         },
 
         clean: function(app, element) {

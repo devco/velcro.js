@@ -1,5 +1,5 @@
 <div class="page-header">
-    <h2>Routing</h2>
+    <h2>Routing <small>Telling your application how to behave.</small></h2>
 </div>
 
 <p>Routing is done using an instance of <code>velcro.Router</code>. It listens for changes to the current URL and updates a given element with content from the resulting route.</p>
@@ -67,12 +67,7 @@
 <pre><code>router.set('blog');
 router.set('blog', function() {});
 router.set('blog', {
-    controller: function() {
-        return {
-            title: 'My First Blog Post',
-            content: 'This is my very first blog post! OMGOMGOMGOMG!!!'
-        };
-    },
+    controller: function() {},
     format: 'blog',
     match: /blog/,
     view: 'blog'
@@ -86,25 +81,28 @@ router.set('blog-posts', new velcro.Route({
 <p>In order for your route to render something, you must create a view. To do this, just create an <code>.html</code> file and put the HTML that you want to render inside of it. For example:</p>
 
 <pre><code>// views/blog.html
+
 &lt;h1 data-vc-text="text: title"&gt;&lt;/h1&gt;
 &lt;div data-vc-html="html: content"&gt;&lt;/div&gt;</code></pre>
 
 <h3>Binding the Router to an Element</h3>
 
-<p>Now that you have your router, routes and have created your view, you can bind your router to somewhere in your main layout. First create application and bind your router:</p>
+<p>Now that you have your router, routes and have created your view, you can bind your router to somewhere in your main layout. First create an application instance and then add your router instance to the model you are binding so that the bindings have access to it:</p>
 
 <pre><code>// js/app.js
 // assuming we've already set up our router like above
+
 var app = new velcro.App();
 app.bind({
     router: router
 });
 </code></pre>
 
-<p>Then bind your elements:</p>
+<p>Then add the <code>routable</code> binding to the container which you want your content rendered inside of   :</p>
 
 <pre><code>// index.html
 // assuming we are already in the body tag
+
 &lt;div data-vc-routable="router: router"&gt;&lt;/div&gt;
 &lt;script src="js/app.js"&gt;&lt;/script&gt;
 </code></pre>

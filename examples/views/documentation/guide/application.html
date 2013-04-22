@@ -1,5 +1,5 @@
 <div class="page-header">
-    <h2>Application</h2>
+    <h2>Application <small>Your application's container.</small></h2>
 </div>
 
 <p>The applicaiton component is responsible for binding your UI to your models. Generally, you will use an application instance as the entry point of your application, but it can be used to bind any view model to any element.</p>
@@ -9,12 +9,9 @@
 <p>The instance used to run your app is simply an instance of <code>velcro.App</code>.</p>
 
 <pre><code>// default options
-var app = new velcro.App({
-    attributePrefix: 'data-vc-',
-    bindings: velcro.defaultBindings
-});</code></pre>
+var app = new velcro.App(options);</code></pre>
 
-<p>The following options can be passed to a <code>velcro.App</code> instance.</p>
+<p>The following <code>options</code> can be passed to a <code>velcro.App</code> instance.</p>
 
 <div data-vc-include="path: 'widgets/tables/options', context: {
     options: [{

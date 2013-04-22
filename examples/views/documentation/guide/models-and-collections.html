@@ -1,3 +1,72 @@
 <div class="page-header">
-    <h2>Models &amp; Collections</h2>
+    <h2>Models <small>Describing your application.</small></h2>
 </div>
+
+<p>Models are the bread and butter of Velcro. They exist at the center of your application to describe its relationships and behavior, and seamlessly breathe life into your views. They extend from the base <code>velcro.Model</code> class to give you good, default conventions for you to follow so that you can write less code and maintain it very easily.</p>
+
+<h3>Properties</h3>
+
+<p>Model properties are described as ordinary values; basically anything that is not a function.</p>
+
+<pre><code>var User = velcro.Model.extend({
+    forename: 'John',
+    surname: 'Doe'
+});
+
+var bob = new User({
+    forename: 'Bob'
+});</code></pre>
+
+<p>You access properties like a method. Getting vs setting is based on if a value is passed in or not. Values passed to the constructor become available right away and values passed as part of the model definition become default values.</p>
+
+<pre><code>// "Bob"
+bob.forename();
+
+// "Doe"
+bob.surname();
+
+// "Bobberson"
+bob.surname('Bobberson').surname();</code></pre>
+
+<h3>Computed Properties - Getters and Setters</h3>
+
+<p>Computed properties tell your model how to get and / or set a given value with getter and setter methods without affecting how you would access that property as if it were an ordinary property.</p>
+
+<pre><code>var User = velcro.Model.extend({
+    ...
+    getName: function() {
+        return this.forename() + ' ' + this.surname();
+    },
+    setName: function(name) {
+        var names = name.split(' ');
+        this.forename(names[0]).surname(names[1]);
+    }
+});</code></pre>
+
+<p>Doing so allows us to use a <code>name</code> property just like every other property.</p>
+
+<pre><code>// "John Doe"
+bob.name('John Doe').name();</code></pre>
+
+<h3>Relationships</h3>
+
+<p>Relationships tell a model which properties relate to other models and collections of models. If you define a relationship, it means that you can rely on that property to always be an instance of something that you expect it to be. This makes importing and exporting data to and from models a breeze as well as simplifies your code and makes it more maintainable in the process.</p>
+
+<pre><code>var User = velcro.Model.extend({
+    ...
+    bestFriend: User,
+    friends: User.Collection
+});</code></pre>
+
+<p>Now we can use those relationships as properties.</p>
+
+<pre><code>bob.friends([{
+    name: 'Dick Richardson',
+}, {
+    name: 'Marge Margaretson'
+}]);
+
+// "Dick"
+bob.bestFriend(bob.friends().at(0)).bestFriend().forename();</code></pre>
+
+<p class="alert alert-notice">A very good - and quite common - use case for leaning heavily on relationships would be importing raw JSON from a service without having to loop over each sub-object and instantiate new sub-models. Instead, you can just have Velcro do it for you.</p>
