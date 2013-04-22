@@ -406,18 +406,15 @@ asyncTest('View', function() {
 test('Document Binding - Passing Shallow Contexts to Nested Elements', function() {
     document.body.innerHTML = '<ul data-vc-if="test: test"><li data-vc-each="items: items"></li></ul>';
 
-    try {
-        new velcro.App().bind({
-            test: true,
-            items: [
-                'Item 1',
-                'Item 2'
-            ]
-        });
-        ok(true);
-    } catch (e) {
-        ok(false, e.toString());
-    }
+    new velcro.App().bind({
+        test: true,
+        items: [
+            'Item 1',
+            'Item 2'
+        ]
+    });
+
+    ok(true);
 });
 
 

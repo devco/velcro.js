@@ -4,10 +4,11 @@ require.config({
         jquery: '../../components/jquery/jquery',
         less: '../../components/less.js/dist/less-1.3.3',
         moment: '../../components/moment/moment',
-        velcro: '../../dist/velcro.min'
+        velcro: '../../dist/velcro'
     },
     shim: {
-        bootstrap: ['jquery']
+        bootstrap: ['jquery'],
+        velcro: ['jquery']
     }
 });
 

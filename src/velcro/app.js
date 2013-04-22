@@ -121,10 +121,7 @@
         },
 
         setContext: function(context) {
-            // All contexts have a $bindings special property for bindings to apply their data to if necessary.
-            context.$bindings = {};
-
-            // If bindings exist we must emulate a hierarchy.
+            // We must emulate a context hierarchy.
             if (this.contexts.length) {
                 context.$parent = this.contexts[this.contexts.length - 1];
                 context.$root   = this.contexts[0];

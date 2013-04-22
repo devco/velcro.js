@@ -13,16 +13,17 @@ module.exports = function(grunt) {
                 src: [
                     'src/velcro/utils.js',
                     'src/velcro/class.js',
+                    'src/velcro/dom.js',
                     'src/velcro/binding.js',
-                    'src/velcro/default-bindings.js',
                     'src/velcro/event.js',
                     'src/velcro/http.js',
                     'src/velcro/router.js',
                     'src/velcro/view.js',
-                    'src/velcro/app.js',
                     'src/velcro/value.js',
                     'src/velcro/model.js',
                     'src/velcro/collection.js',
+                    'src/velcro/default-bindings.js',
+                    'src/velcro/app.js'
                 ],
                 dest: 'dist/velcro.js'
             }

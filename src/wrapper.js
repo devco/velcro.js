@@ -7,7 +7,5 @@
         factory(window.velcro = {});
     }
 }(function(velcro) {
-
-{content}
-
+    {content}
 });

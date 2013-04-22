@@ -1,8 +1,10 @@
 velcro.defaultBindings = {
     attr: velcro.Binding.extend({
         update: function(app, element, options) {
+            var el = velcro.dom(element);
+
             for (var i in options) {
-                velcro.utils.setAttribute(element, i, options[i]);
+                el.attr(i, options[i]);
             }
         }
     }),
@@ -14,7 +16,7 @@ velcro.defaultBindings = {
         },
 
         setup: function(app, element, options) {
-            velcro.utils.addEvent(element, 'click', function(e) {
+            velcro.dom(element).on('click', function(e) {
                 if (options.block) {
                     e.preventDefault();
                 }
@@ -40,7 +42,7 @@ velcro.defaultBindings = {
 
     css: velcro.Binding.extend({
         update: function(app, element, options) {
-            var css = velcro.utils.getAttribute(element, 'class').split(/\s+/);
+            var css = velcro.dom(element).attr('class').split(/\s+/);
 
             for (var i in options) {
                 if (options[i]) {
@@ -56,7 +58,7 @@ velcro.defaultBindings = {
                 }
             }
 
-            velcro.utils.setAttribute(element, 'class', css.join(' '));
+            velcro.dom(element).attr('class', css.join(' '));
         }
     }),
 
@@ -66,8 +68,6 @@ velcro.defaultBindings = {
         clones: null,
 
         container: null,
-
-        guid: null,
 
         options: {
             key: '$key',
@@ -79,22 +79,28 @@ velcro.defaultBindings = {
         template: null,
 
         setup: function(app, element, options) {
+            var dom = velcro.dom(element);
+            dom.attr(app.options.attributePrefix + 'each', '');
+
             this.app       = app;
             this.clones    = [];
             this.container = element.parentNode;
-            this.guid      = velcro.utils.guid();
-            this.template  = velcro.utils.html(this.clean(app, element));
-            this.reference = document.createComment(this.guid);
+            this.template  = dom.html();
+            this.reference = document.createComment('each placeholder');
 
             element.parentNode.insertBefore(this.reference, element);
-            velcro.utils.destroyElement(element);
+            dom.destroy();
             this.update(app, element, options);
         },
 
         update: function(app, element, options) {
             var $this = this;
 
-            this.reset();
+            velcro.utils.each(this.clones, function(index, clone) {
+                velcro.dom(clone).destroy();
+            });
+
+            this.clones = [];
 
             if (options.items instanceof velcro.Model) {
                 options.items.each(function(key, value) {
@@ -112,7 +118,7 @@ velcro.defaultBindings = {
                 context[$this.options.key]   = key;
                 context[$this.options.value] = value;
 
-                var clone = velcro.utils.createElement($this.template);
+                var clone = velcro.dom($this.template).raw();
                 app.bind(clone, context);
                 $this.clones.push(clone);
                 $this.container.insertBefore(clone, $this.reference);
@@ -120,16 +126,6 @@ velcro.defaultBindings = {
                 delete context[$this.options.key];
                 delete context[$this.options.value];
             }
-        },
-
-        reset: function() {
-            velcro.utils.each(this.clones, function(index, clone) {
-                velcro.utils.destroyElement(clone);
-            });
-
-            this.clones = [];
-
-            return this;
         },
 
         clean: function(app, element) {
@@ -242,7 +238,7 @@ velcro.defaultBindings = {
         },
 
         setup: function(app, element, options, bindings) {
-            velcro.utils.addEvent(element, 'submit', function(e) {
+            velcro.dom(element).on('submit', function(e) {
                 if (options.block) {
                     e.preventDefault();
                 }
@@ -268,7 +264,7 @@ velcro.defaultBindings = {
         },
 
         setup: function(app, element, options, bindings) {
-            velcro.utils.addEvent(element, options.on, function() {
+            velcro.dom(element).on(options.on, function() {
                 bindings.value(element.value);
             });
         },
