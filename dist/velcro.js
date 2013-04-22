@@ -1564,7 +1564,7 @@ velcro.defaultBindings = {
                 velcro.utils.throwForElement(element, 'A context option must be specified.');
             }
 
-            app.setContext(options.context);
+            app.context(options.context);
         }
     }),
 
@@ -1678,7 +1678,7 @@ velcro.defaultBindings = {
         update: function(app, element, options) {
             var view    = new velcro.View(options.view);
             var $this   = this;
-            var context = app.getContext();
+            var context = app.context();
 
             context.$content    = this.html;
             view.options.target = element;
@@ -1820,14 +1820,14 @@ velcro.defaultBindings = {
             }
 
             if (context) {
-                this.setContext(context);
+                this.context(context);
             }
 
             this.bindOne(element);
             this.bindDescendants(element);
 
             if (context) {
-                this.restoreContext();
+                this.contexts.pop();
             }
 
             return this;
@@ -1880,7 +1880,7 @@ velcro.defaultBindings = {
             var $this = this;
 
             // The context is saved so that if it changes it won't mess up a subscriber.
-            var context = this.getContext();
+            var context = this.context();
 
             // Contains parsed information for the initial updates.
             var parsed = parse();
@@ -1924,7 +1924,16 @@ velcro.defaultBindings = {
             }
         },
 
-        setContext: function(context) {
+        context: function(context) {
+            // Getting.
+            if (arguments.length === 0) {
+                if (!this.contexts.length) {
+                    this.setContext({});
+                }
+
+                return this.contexts[this.contexts.length - 1];
+            }
+
             // We must emulate a context hierarchy.
             if (this.contexts.length) {
                 context.$parent = this.contexts[this.contexts.length - 1];
@@ -1937,19 +1946,6 @@ velcro.defaultBindings = {
             // The youngest descendant in the context hierarchy is the last one in the list.
             this.contexts.push(context);
 
-            return this;
-        },
-
-        getContext: function() {
-            if (!this.contexts.length) {
-                this.setContext({});
-            }
-
-            return this.contexts[this.contexts.length - 1];
-        },
-
-        restoreContext: function() {
-            this.contexts.pop();
             return this;
         }
     });

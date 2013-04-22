@@ -36,7 +36,7 @@ velcro.defaultBindings = {
                 velcro.utils.throwForElement(element, 'A context option must be specified.');
             }
 
-            app.setContext(options.context);
+            app.context(options.context);
         }
     }),
 
@@ -150,7 +150,7 @@ velcro.defaultBindings = {
         update: function(app, element, options) {
             var view    = new velcro.View(options.view);
             var $this   = this;
-            var context = app.getContext();
+            var context = app.context();
 
             context.$content    = this.html;
             view.options.target = element;
