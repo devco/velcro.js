@@ -5,7 +5,7 @@
         init: function(options) {
             this.options = velcro.utils.merge({
                 attributePrefix: 'data-vc-',
-                bindings: velcro.defaultBindings
+                bindings: velcro.bindings
             }, options);
 
             this.contexts = [];

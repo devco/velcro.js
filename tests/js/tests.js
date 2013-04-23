@@ -333,7 +333,7 @@ test('Observing Changes', function() {
     var div  = document.createElement('div');
     var span = document.createElement('span');
 
-    span.setAttribute('data-vc-text', 'text: name');
+    span.setAttribute('data-vc-contents', 'text: name');
     div.appendChild(span);
 
     var Person = velcro.Model.extend({
@@ -461,7 +461,7 @@ test('context', function() {
     var span = document.createElement('span');
 
     div.setAttribute('data-vc-context', 'context: person');
-    span.setAttribute('data-vc-text', 'text: name');
+    span.setAttribute('data-vc-contents', 'text: name');
     div.appendChild(span);
 
     var App = velcro.Model.extend({
@@ -509,7 +509,7 @@ test('each', function() {
 
     ul.appendChild(li);
     li.setAttribute('data-vc-each', 'items: items');
-    li.setAttribute('data-vc-text', 'text: text');
+    li.setAttribute('data-vc-contents', 'text: text');
 
     var ctx = { items: new velcro.Collection(Item) };
     var app = new velcro.App().bind(ul, ctx);
@@ -528,7 +528,7 @@ test('each', function() {
 });
 
 test('extend', function() {
-    var html  = velcro.dom('<div><div data-vc-extend="path: path">test</div><script id="vc-view-layout1" type="text/html"><h1 data-vc-html="html: $content"></h1></script><script id="vc-view-layout2" type="text/html"><h2 data-vc-html="html: $content"></h2></script></div>');
+    var html  = velcro.dom('<div><div data-vc-extend="path: path">test</div><script id="vc-view-layout1" type="text/html"><h1 data-vc-contents="html: $content"></h1></script><script id="vc-view-layout2" type="text/html"><h2 data-vc-contents="html: $content"></h2></script></div>');
     var app   = new velcro.App();
     var model = new (velcro.Model.extend({
         path: 'layout1'
@@ -544,7 +544,7 @@ test('extend', function() {
 });
 
 test('html', function() {
-    var div   = velcro.dom('<div data-vc-html="html: html"></div>');
+    var div   = velcro.dom('<div data-vc-contents="html: html"></div>');
     var app   = new velcro.App();
     var model = new (velcro.Model.extend({
         html: '<ul></ul>'
@@ -588,7 +588,7 @@ test('include', function() {
 
 test('on', function() {
     var div   = velcro.dom('<div data-vc-on="event: event, callback: callback"></div>');
-    var app   = new velcro.App;
+    var app   = new velcro.App();
     var model = new (velcro.Model.extend({
         event: 'shown',
         triggered: [],
@@ -607,8 +607,44 @@ test('on', function() {
     ok(model.triggered().indexOf(model.event()) !== -1, 'Event ' + model.event() + ' not triggered.');
 });
 
+/*
+test('options', function() {
+    var select = velcro.dom('<select data-vc-options="options: options, caption: caption, text: text, value: value"></select>');
+    var app    = new velcro.App();
+    var model  = new (velcro.Model.extend({
+        caption: 'Choose...',
+        options: velcro.Model.extend({
+            text: '',
+            value: ''
+        }),
+        text: function(option) {
+            return option.text;
+        },
+        value: function(option) {
+            return option.value;
+        }
+    }));
+
+    app.bind(select.raw(), model);
+    ok(select.contents() === '', 'Select should be empty.');
+
+    model.options([{
+        text: 'Option 1',
+        value: 0
+    }, {
+        text: 'Option 2',
+        value: 1
+    }]);
+
+    ok(select.raw().childNodes[0].innerText === 'Option 1', 'Option text not updated.');
+    ok(select.raw().childNodes[0].value === '0', 'Option value not updated.');
+    ok(select.raw().childNodes[1].innerText === 'Option 1', 'Option text not updated.');
+    ok(select.raw().childNodes[1].value === '1', 'Option value not updated.');
+});
+*/
+
 test('routable', function() {
-    var div   = velcro.dom('<div><div data-vc-routable="router: router"></div><script id="vc-view-test" type="text/html"><span data-vc-text="text: text"></span></script></div>');
+    var div   = velcro.dom('<div><div data-vc-routable="router: router"></div><script id="vc-view-test" type="text/html"><span data-vc-contents="text: text"></span></script></div>');
     var app   = new velcro.App();
     var model = new (velcro.Model.extend({
         router: new velcro.Router
@@ -639,7 +675,7 @@ test('routable', function() {
     ok(div.raw().childNodes[0].childNodes[0].innerText === 'test1', 'Router not initialised.');
 
     model.router().dispatch('test2');
-    ok(div.raw().childNodes[0].childNodes[0].innerText === 'test2', 'Router not initialised.');
+    ok(div.raw().childNodes[0].childNodes[0].innerText === 'test2', 'Router not updated.');
 });
 
 test('submit', function() {
@@ -658,7 +694,7 @@ test('submit', function() {
 });
 
 test('text', function() {
-    var div   = velcro.dom('<div data-vc-text="text: text"></div>');
+    var div   = velcro.dom('<div data-vc-contents="text: text"></div>');
     var app   = new velcro.App();
     var model = new (velcro.Model.extend({
         text: 'test1'

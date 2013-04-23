@@ -133,6 +133,28 @@
             var div = document.createElement(detectParentTagName(this.element.tagName));
             div.appendChild(this.element.cloneNode(true));
             return div.innerHTML;
+        },
+
+        contents: function(contents) {
+            if (arguments.length) {
+                this.element.innerHTML = contents;
+                return this;
+            }
+
+            return this.element.innerHTML;
+        },
+
+        text: function(text) {
+            if (arguments.length) {
+                this.element.innerText = text;
+                return this;
+            }
+
+            return this.element.innerText;
+        },
+
+        tag: function() {
+            return this.element.tagName.toLowerCase();
         }
     });
 

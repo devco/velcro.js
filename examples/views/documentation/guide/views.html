@@ -59,8 +59,8 @@
 <p>Some may frown at incurring network overhead simply to get a view even if it is cached after its first load attempt. This is where step 2 comes in. It is fairly trivial to compile all of your views into a single file, however, if that is not your cup of tea, you can define your views inside of your main file using <code>script</code> tags.</p>
 
 <pre><code>&lt;script id="vc-view-path-to-my-view" type="text/html"&gt;
-    &lt;h1 data-vc-text="text: title"&gt;&lt;/h1&gt;
-    &lt;div data-vc-html="html: content"&gt;&lt;/div&gt;
+    &lt;h1 data-vc-contents="text: title"&gt;&lt;/h1&gt;
+    &lt;div data-vc-contents="html: content"&gt;&lt;/div&gt;
 &lt;/script&gt;</code></pre>
 
 <p>As you can see, all we had to do was give it an <code>id</code> that will match a formatted path and give it the type of <code>text/html</code>. You can either do this manually or compile all of your views into one. A Grunt task for this will be covered in the <a href="#documentation/optimisation">Optimisation</a> section.</p>
