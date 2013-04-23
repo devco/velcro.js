@@ -2,7 +2,7 @@ velcro.View = function(options) {
     this.cache = {};
 
     this.options = velcro.utils.merge({
-        idPrefix: 'velcro-view-',
+        idPrefix: 'vc-view-',
         idSuffix: '',
         idSeparator: '-',
         target: false,

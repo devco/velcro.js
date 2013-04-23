@@ -10,17 +10,31 @@
             return this.element;
         },
 
+        css: function(classes) {
+            var css = [];
+
+            for (var name in classes) {
+                if (classes[name]) {
+                    if (css.indexOf(name) === -1) {
+                        css.push(classes[name]);
+                    }
+                }
+            }
+
+            return this.attr('class', css.join(' ').replace(/^\s\s*/, '').replace(/\s\s*$/, ''));
+        },
+
         attr: function(name, value) {
             if (arguments.length === 1) {
                 if (this.element.getAttribute) {
-                    return this.element.getAttribute(name);
+                    return this.element.getAttribute(name) || '';
                 }
 
                 if (typeof this.element[name] === 'undefined') {
-                    return false;
+                    return '';
                 }
 
-                return this.element[name];
+                return this.element[name] || '';
             }
 
             if (!value) {
@@ -75,6 +89,33 @@
                 if (callback(e) === false) {
                     e.preventDefault();
                 }
+            }
+
+            return this;
+        },
+
+        off: function(event, callback) {
+            if (this.element.removeEventListener) {
+                this.element.removeEventListener(event, callback, false);
+            } else if (this.element.detachEvent) {
+                this.element.detachEvent(event, callback);
+            } else {
+                delete this.element['on' + event];
+            }
+
+            return this;
+        },
+
+        fire: function(event) {
+            var e = null;
+
+            if (document.createEventObject) {
+                e = document.createEventObject();
+                this.element.fireEvent('event', e);
+            } else {
+                e = document.createEvent('HTMLEvents');
+                e.initEvent(event, true, true);
+                this.element.dispatchEvent(e);
             }
 
             return this;

@@ -421,6 +421,41 @@ test('Document Binding - Passing Shallow Contexts to Nested Elements', function(
 
 module('Bindings');
 
+test('attr', function() {
+    var div   = velcro.dom('<div data-vc-attr="\'class\': className, title: title"></div>');
+    var app   = new velcro.App;
+    var model = new (velcro.Model.extend({
+        className: 'test-class1',
+        title: 'test title 1'
+    }));
+
+    app.bind(div.raw(), model);
+
+    ok(div.attr('class') === 'test-class1', 'Class attribute not initialised.');
+    ok(div.attr('title') === 'test title 1', 'Title attribute not initialised.');
+
+    model.className('test-class2');
+    model.title('test title 2');
+
+    ok(div.attr('class') === 'test-class2', 'Class attribute not changed.');
+    ok(div.attr('title') === 'test title 2', 'Title attribute not changed.');
+});
+
+test('click', function() {
+    var div = velcro.dom('<div data-vc-click="callback: test"></div>');
+    var app = new velcro.App;
+    var yes = false;
+
+    app.bind(div.raw(), {
+        test: function() {
+            yes = true;
+        }
+    });
+
+    div.fire('click');
+    ok(yes, 'Click not triggered.');
+});
+
 test('context', function() {
     var div  = document.createElement('div');
     var span = document.createElement('span');
@@ -443,6 +478,26 @@ test('context', function() {
     appsrawesome.person().name('Updated Value');
 
     ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be updated.');
+});
+
+test('css', function() {
+    var div   = velcro.dom('<div data-vc-css="class1: class1, class2: class2"></div>');
+    var app   = new velcro.App;
+    var model = new (velcro.Model.extend({
+        class1: 'test-class1',
+        class2: 'test-class2'
+    }));
+
+    app.bind(div.raw(), model);
+
+    ok(div.attr('class').split(' ')[0] === model.class1(), 'Class not initialised.');
+    ok(div.attr('class').split(' ')[1] === model.class2(), 'Class not initialised.');
+
+    model.class1('test-class1-updated');
+    model.class2('test-class2-updated');
+
+    ok(div.attr('class').split(' ')[0] === model.class1(), 'Class not updated.');
+    ok(div.attr('class').split(' ')[1] === model.class2(), 'Class not updated.');
 });
 
 test('each', function() {
@@ -470,4 +525,162 @@ test('each', function() {
     });
 
     ok(ul.childNodes[1].innerText === 'Item 2', 'Two items should exist as "Item 1, Item 2".');
+});
+
+test('extend', function() {
+    var html  = velcro.dom('<div><div data-vc-extend="path: path">test</div><script id="vc-view-layout1" type="text/html"><h1 data-vc-html="html: $content"></h1></script><script id="vc-view-layout2" type="text/html"><h2 data-vc-html="html: $content"></h2></script></div>');
+    var app   = new velcro.App();
+    var model = new (velcro.Model.extend({
+        path: 'layout1'
+    }));
+
+    document.body.appendChild(html.raw());
+    app.bind(html.raw(), model);
+
+    ok(html.raw().childNodes[0].childNodes[0].tagName === 'H1', 'The layout was not initialised.');
+
+    model.path('layout2');
+    ok(html.raw().childNodes[0].childNodes[0].tagName === 'H2', 'The layout was not updated.');
+});
+
+test('html', function() {
+    var div   = velcro.dom('<div data-vc-html="html: html"></div>');
+    var app   = new velcro.App();
+    var model = new (velcro.Model.extend({
+        html: '<ul></ul>'
+    }));
+
+    app.bind(div.raw(), model);
+    ok(div.raw().innerHTML === model.html(), 'HTML was not initialised.');
+
+    model.html('<ol></ol>');
+    ok(div.raw().innerHTML === model.html(), 'HTML was not updated.');
+});
+
+test('if', function() {
+    var div   = velcro.dom('<div><ul data-vc-if="test: show"></ul></div>');
+    var app   = new velcro.App();
+    var model = new (velcro.Model.extend({
+        show: false
+    }));
+
+    app.bind(div.raw(), model);
+    ok(div.raw().childNodes[0].style.display = 'none');
+
+    model.show(true);
+    ok(div.raw().childNodes[0].style.display = 'block');
+});
+
+test('include', function() {
+    var div   = velcro.dom('<div><div data-vc-include="path: path"></div><script id="vc-view-child1" type="text/html">child1</script><script id="vc-view-child2" type="text/html">child2</script></div>');
+    var app   = new velcro.App();
+    var model = new (velcro.Model.extend({
+        path: 'child1'
+    }));
+
+    document.body.appendChild(div.raw());
+    app.bind(div.raw(), model);
+    ok(div.raw().childNodes[0].innerHTML === 'child1', 'Include not initialised.');
+
+    model.path('child2');
+    ok(div.raw().childNodes[0].innerHTML === 'child2', 'Include not initialised.');
+});
+
+test('on', function() {
+    var div   = velcro.dom('<div data-vc-on="event: event, callback: callback"></div>');
+    var app   = new velcro.App;
+    var model = new (velcro.Model.extend({
+        event: 'shown',
+        triggered: [],
+        callback: function(e) {
+            this.triggered().push(this.event());
+        }
+    }));
+
+    app.bind(div.raw(), model);
+
+    div.fire('shown');
+    ok(model.triggered().indexOf(model.event()) !== -1, 'Event ' + model.event() + ' not triggered.');
+
+    model.event('hidden');
+    div.fire('hidden');
+    ok(model.triggered().indexOf(model.event()) !== -1, 'Event ' + model.event() + ' not triggered.');
+});
+
+test('routable', function() {
+    var div   = velcro.dom('<div><div data-vc-routable="router: router"></div><script id="vc-view-test" type="text/html"><span data-vc-text="text: text"></span></script></div>');
+    var app   = new velcro.App();
+    var model = new (velcro.Model.extend({
+        router: new velcro.Router
+    }));
+
+    model.router().set('test1', {
+        view: 'test',
+        controller: function() {
+            return {
+                text: 'test1'
+            }
+        }
+    });
+
+    model.router().set('test2', {
+        view: 'test',
+        controller: function() {
+            return {
+                text: 'test2'
+            }
+        }
+    });
+
+    document.body.appendChild(div.raw());
+    app.bind(div.raw(), model);
+
+    model.router().dispatch('test1');
+    ok(div.raw().childNodes[0].childNodes[0].innerText === 'test1', 'Router not initialised.');
+
+    model.router().dispatch('test2');
+    ok(div.raw().childNodes[0].childNodes[0].innerText === 'test2', 'Router not initialised.');
+});
+
+test('submit', function() {
+    var form = velcro.dom('<form data-vc-submit="callback: callback"></form>');
+    var app   = new velcro.App();
+    var model = new (velcro.Model.extend({
+        submitted: false,
+        callback: function() {
+            this.submitted(true);
+        }
+    }));
+
+    app.bind(form.raw(), model);
+    form.fire('submit');
+    ok(model.submitted(), 'Form not submitted.');
+});
+
+test('text', function() {
+    var div   = velcro.dom('<div data-vc-text="text: text"></div>');
+    var app   = new velcro.App();
+    var model = new (velcro.Model.extend({
+        text: 'test1'
+    }));
+
+    app.bind(div.raw(), model);
+    ok(div.raw().innerText === 'test1', 'Text not initialised.');
+
+    model.text('test2');
+    ok(div.raw().innerText === 'test2', 'Text not updated.');
+});
+
+test('value', function() {
+    var input = velcro.dom('<input type="text" data-vc-value="value: value">');
+    var app   = new velcro.App();
+    var model = new (velcro.Model.extend({
+        value: 'test1'
+    }));
+
+    app.bind(input.raw(), model);
+    ok(input.raw().value === 'test1', 'Value not initialised.');
+
+    model.value('test2');
+    ok(input.raw().value === 'test2', 'Value not updated.');
 });

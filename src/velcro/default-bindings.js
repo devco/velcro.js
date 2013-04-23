@@ -10,23 +10,8 @@ velcro.defaultBindings = {
     }),
 
     click: velcro.Binding.extend({
-        options: {
-            block: true,
-            propagate: false
-        },
-
-        setup: function(app, element, options) {
-            velcro.dom(element).on('click', function(e) {
-                if (options.block) {
-                    e.preventDefault();
-                }
-
-                if (!options.propagate) {
-                    e.stopPropagation();
-                }
-
-                options.callback(e);
-            });
+        update: function(app, element, options) {
+            velcro.dom(element).off('click', options.callback).on('click', options.callback);
         }
     }),
 
@@ -42,23 +27,7 @@ velcro.defaultBindings = {
 
     css: velcro.Binding.extend({
         update: function(app, element, options) {
-            var css = velcro.dom(element).attr('class').split(/\s+/);
-
-            for (var i in options) {
-                if (options[i]) {
-                    if (css.indexOf(i) === -1) {
-                        css.push(options[i]);
-                    }
-                } else {
-                    var index = css.indexOf(i);
-
-                    if (index > -1) {
-                        css.splice(index, 1);
-                    }
-                }
-            }
-
-            velcro.dom(element).attr('class', css.join(' '));
+            velcro.dom(element).css(options);
         }
     }),
 
@@ -148,12 +117,13 @@ velcro.defaultBindings = {
         },
 
         update: function(app, element, options) {
-            var view    = new velcro.View(options.view);
+            var view    = options.view instanceof velcro.View ? options.view : new velcro.View(options.view);
             var $this   = this;
             var context = app.context();
 
             context.$content    = this.html;
             view.options.target = element;
+
             view.render(options.path, function() {
                 app.bindDescendants(element, context);
             });
@@ -195,8 +165,9 @@ velcro.defaultBindings = {
         },
 
         update: function(app, element, options) {
-            var view = new velcro.View(options.view);
+            var view = options.view instanceof velcro.View ? options.view : new velcro.View(options.view);
 
+            // ensure the target is fixed to the element
             view.options.target = element;
 
             if (typeof options.context === 'function') {
@@ -209,8 +180,17 @@ velcro.defaultBindings = {
 
             view.render(options.path, function() {
                 app.bindDescendants(element, options.context);
-                options.callback();
+
+                if (typeof options.callback === 'function') {
+                    options.callback();
+                }
             });
+        }
+    }),
+
+    on: velcro.Binding.extend({
+        update: function(app, element, options) {
+            velcro.dom(element).off(options.event, options.callback).on(options.event, options.callback);
         }
     }),
 
@@ -232,22 +212,12 @@ velcro.defaultBindings = {
     }),
 
     submit: velcro.Binding.extend({
-        options: {
-            block: true,
-            propagate: false
-        },
-
         setup: function(app, element, options, bindings) {
             velcro.dom(element).on('submit', function(e) {
-                if (options.block) {
+                if (options.callback() !== true) {
                     e.preventDefault();
-                }
-
-                if (!options.propagate) {
                     e.stopPropagation();
                 }
-
-                options.callback(e);
             });
         }
     }),
@@ -263,14 +233,14 @@ velcro.defaultBindings = {
             on: 'change'
         },
 
-        setup: function(app, element, options, bindings) {
-            velcro.dom(element).on(options.on, function() {
-                bindings.value(element.value);
-            });
-        },
-
         update: function(app, element, options, bindings) {
+            velcro.dom(element).off(options.on, update).on(options.on, update);
+
             element.value = options.value;
+
+            function update() {
+                bindings.value(element.value);
+            }
         }
     })
 };
