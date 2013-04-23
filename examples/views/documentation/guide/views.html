@@ -1,0 +1,41 @@
+<div class="page-header">
+    <h2>Views <small>Functional UI separation.</small></h2>
+</div>
+
+<p>Views allow you to separate your application into smaller chunks of display logic. A single view instance is set up to render multiple views using the same conventions. The router uses a view instance to render views into its bound container. The <code>include</code> and <code>extend</code> bindings use view instances to transform the elements.</p>
+
+<p>To setup a view instance, simply create a new <code>velcro.View</code>:</p>
+
+<pre><code>var view = new velcro.View(options);</code></pre>
+
+<p>A view instance can be passed the following options:</p>
+
+<div data-vc-include="path: 'widgets/tables/options', context: {
+    options: [{
+        name: 'idPrefix',
+        value: '&quot;velcro-view-&quot;',
+        description: ''
+    }, {
+        name: 'idSuffix',
+        value: '&quot;&quot;',
+        description: ''
+    }, {
+        name: 'idSeparator',
+        value: '&quot;-&quot;',
+        description: ''
+    }, {
+        name: 'target',
+        value: false,
+        description: ''
+    }, {
+        name: 'http',
+        value: '{'
+        + '    prefix: \'views/\','
+        + '    suffix: \'.html\','
+        + '    headers: {'
+        + '        Accept: \'text/html\''
+        + '    }'
+        + '}',
+        description: ''
+    }]
+}"></div>

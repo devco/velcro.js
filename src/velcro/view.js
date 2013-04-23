@@ -15,7 +15,7 @@ velcro.View = function(options) {
         }
     }, options);
 
-    this.http = new velcro.Http(this.options.http);
+    this.http = this.options.http instanceof velcro.Http ? this.options.http : new velcro.Http(this.options.http);
 
     return this;
 };
