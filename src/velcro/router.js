@@ -119,20 +119,19 @@
                     this.exit.trigger(this, this.state.previous, this.route, this.params);
                 }
 
-                this.enter.trigger(this, request, route, params);
-
                 this.params         = params;
                 this.route          = route;
                 this.state.previous = request;
 
-                this.handler(_makeHandler(route));
+                this.enter.trigger(this, request, route, params);
+                this.handler(_makeHandler(route, params));
             }
 
             return this;
 
-            function _makeHandler(route) {
+            function _makeHandler(route, params) {
                 return function() {
-                    $this.renderer(route);
+                    $this.renderer(route, params);
                 };
             }
         },

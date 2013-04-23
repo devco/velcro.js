@@ -726,20 +726,19 @@ function createXmlHttpRequest() {
                     this.exit.trigger(this, this.state.previous, this.route, this.params);
                 }
 
-                this.enter.trigger(this, request, route, params);
-
                 this.params         = params;
                 this.route          = route;
                 this.state.previous = request;
 
-                this.handler(_makeHandler(route));
+                this.enter.trigger(this, request, route, params);
+                this.handler(_makeHandler(route, params));
             }
 
             return this;
 
-            function _makeHandler(route) {
+            function _makeHandler(route, params) {
                 return function() {
-                    $this.renderer(route);
+                    $this.renderer(route, params);
                 };
             }
         },
@@ -970,7 +969,7 @@ velcro.View = function(options) {
         }
     }, options);
 
-    this.http = new velcro.Http(this.options.http);
+    this.http = this.options.http instanceof velcro.Http ? this.options.http : new velcro.Http(this.options.http);
 
     return this;
 };
