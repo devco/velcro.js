@@ -1,22 +1,22 @@
 (function() {
-    velcro.Http = function(options) {
-        this.before  = new velcro.Event();
-        this.after   = new velcro.Event();
-        this.success = new velcro.Event();
-        this.error   = new velcro.Event();
-        this.options = velcro.utils.merge({
-            async: true,
-            cache: false,
-            headers: {},
-            parsers: { 'application/json': velcro.utils.parseJson },
-            prefix: '',
-            suffix: ''
-        }, options);
+    velcro.Http = velcro.Class.extend({
+        init: function(options) {
+            this.before  = new velcro.Event();
+            this.after   = new velcro.Event();
+            this.success = new velcro.Event();
+            this.error   = new velcro.Event();
+            this.options = velcro.utils.merge({
+                async: true,
+                cache: false,
+                headers: {},
+                parsers: { 'application/json': velcro.utils.parseJson },
+                prefix: '',
+                suffix: ''
+            }, options);
 
-        return this;
-    };
+            return this;
+        },
 
-    velcro.Http.prototype = {
         'delete': function(options) {
             return this.request(velcro.utils.merge(options, {
                 type: 'delete'
@@ -159,7 +159,7 @@
 
             return str.join('&');
         }
-    };
+    });
 
     function createXmlHttpRequest() {
         var request   = false;

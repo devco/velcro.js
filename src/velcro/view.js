@@ -1,27 +1,27 @@
 (function() {
-    velcro.View = function(options) {
-        this.cache = {};
+    velcro.View = velcro.Class.extend({
+        init: function(options) {
+            this.cache = {};
 
-        this.options = velcro.utils.merge({
-            idPrefix: 'vc-view-',
-            idSuffix: '',
-            idSeparator: '-',
-            target: false,
-            http: {
-                prefix: 'views/',
-                suffix: '.html',
-                headers: {
-                    Accept: 'text/html'
+            this.options = velcro.utils.merge({
+                idPrefix: 'vc-view-',
+                idSuffix: '',
+                idSeparator: '-',
+                target: false,
+                http: {
+                    prefix: 'views/',
+                    suffix: '.html',
+                    headers: {
+                        Accept: 'text/html'
+                    }
                 }
-            }
-        }, options);
+            }, options);
 
-        this.http = this.options.http instanceof velcro.Http ? this.options.http : new velcro.Http(this.options.http);
+            this.http = this.options.http instanceof velcro.Http ? this.options.http : new velcro.Http(this.options.http);
 
-        return this;
-    };
+            return this;
+        },
 
-    velcro.View.prototype = {
         render: function(name, callback) {
             var $this = this;
             var id    = this.options.idPrefix + name.replace(/\//g, this.options.idSeparator) + this.options.idSuffix;
@@ -65,5 +65,5 @@
 
             target.innerHTML = view;
         }
-    };
+    });
 })();

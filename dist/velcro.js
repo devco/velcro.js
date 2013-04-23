@@ -432,12 +432,12 @@
     });
 })();
 (function() {
-    velcro.Event = function() {
-        this.stack = [];
-        return this;
-    };
+    velcro.Event = velcro.Class.extend({
+        init: function() {
+            this.stack = [];
+            return this;
+        },
 
-    velcro.Event.prototype = {
         bind: function(cb) {
             this.stack.push(cb);
             return this;
@@ -483,27 +483,27 @@
 
             return this;
         }
-    };
+    });
 })();
 (function() {
-    velcro.Http = function(options) {
-        this.before  = new velcro.Event();
-        this.after   = new velcro.Event();
-        this.success = new velcro.Event();
-        this.error   = new velcro.Event();
-        this.options = velcro.utils.merge({
-            async: true,
-            cache: false,
-            headers: {},
-            parsers: { 'application/json': velcro.utils.parseJson },
-            prefix: '',
-            suffix: ''
-        }, options);
+    velcro.Http = velcro.Class.extend({
+        init: function(options) {
+            this.before  = new velcro.Event();
+            this.after   = new velcro.Event();
+            this.success = new velcro.Event();
+            this.error   = new velcro.Event();
+            this.options = velcro.utils.merge({
+                async: true,
+                cache: false,
+                headers: {},
+                parsers: { 'application/json': velcro.utils.parseJson },
+                prefix: '',
+                suffix: ''
+            }, options);
 
-        return this;
-    };
+            return this;
+        },
 
-    velcro.Http.prototype = {
         'delete': function(options) {
             return this.request(velcro.utils.merge(options, {
                 type: 'delete'
@@ -646,7 +646,7 @@
 
             return str.join('&');
         }
-    };
+    });
 
     function createXmlHttpRequest() {
         var request   = false;
@@ -1020,29 +1020,29 @@
     }
 })();
 (function() {
-    velcro.View = function(options) {
-        this.cache = {};
+    velcro.View = velcro.Class.extend({
+        init: function(options) {
+            this.cache = {};
 
-        this.options = velcro.utils.merge({
-            idPrefix: 'vc-view-',
-            idSuffix: '',
-            idSeparator: '-',
-            target: false,
-            http: {
-                prefix: 'views/',
-                suffix: '.html',
-                headers: {
-                    Accept: 'text/html'
+            this.options = velcro.utils.merge({
+                idPrefix: 'vc-view-',
+                idSuffix: '',
+                idSeparator: '-',
+                target: false,
+                http: {
+                    prefix: 'views/',
+                    suffix: '.html',
+                    headers: {
+                        Accept: 'text/html'
+                    }
                 }
-            }
-        }, options);
+            }, options);
 
-        this.http = this.options.http instanceof velcro.Http ? this.options.http : new velcro.Http(this.options.http);
+            this.http = this.options.http instanceof velcro.Http ? this.options.http : new velcro.Http(this.options.http);
 
-        return this;
-    };
+            return this;
+        },
 
-    velcro.View.prototype = {
         render: function(name, callback) {
             var $this = this;
             var id    = this.options.idPrefix + name.replace(/\//g, this.options.idSeparator) + this.options.idSuffix;
@@ -1086,7 +1086,7 @@
 
             target.innerHTML = view;
         }
-    };
+    });
 })();
 (function() {
     velcro.value = function(options) {

@@ -1,10 +1,10 @@
 (function() {
-    velcro.Event = function() {
-        this.stack = [];
-        return this;
-    };
+    velcro.Event = velcro.Class.extend({
+        init: function() {
+            this.stack = [];
+            return this;
+        },
 
-    velcro.Event.prototype = {
         bind: function(cb) {
             this.stack.push(cb);
             return this;
@@ -50,5 +50,5 @@
 
             return this;
         }
-    };
+    });
 })();
