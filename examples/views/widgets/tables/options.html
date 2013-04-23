@@ -9,7 +9,8 @@
     <tbody>
         <tr data-vc-each="items: options">
             <td data-vc-text="text: name"></td>
-            <td><code data-vc-text="text: value"></code></td>
+            <td data-vc-if="test: typeof value === 'string' && value.match('\n')"><pre><code data-vc-text="text: value"></code></pre></td>
+            <td data-vc-if="test: typeof value !== 'string' || !value.match('\n')"><code data-vc-text="text: value"></code></td>
             <td data-vc-html="html: description"></td>
         </tr>
     </tbody>
