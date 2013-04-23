@@ -103,8 +103,21 @@ app.bind({
 &lt;script src="js/app.js"&gt;&lt;/script&gt;
 </code></pre>
 
+<h3>Router Events</h3>
 
+<p>The router supports a set of events which are just properties on the instance which are instances of <code>velcro.Event</code>.</p>
 
-<pre></pre>
+<div data-vc-include="path: 'widgets/tables/events', context: {
+    events: [{
+        name: 'enter',
+        description: 'Triggered when a new route is being executed.'
+    }, {
+        name: 'exit',
+        description: 'Triggered when leaving the existing route, but only if there is one.'
+    }, {
+        name: 'render',
+        description: 'Triggered by the renderer just after the view has been rendered.'
+    }]
+}"></div>
 
 <p class="alert alert-notice">We used a static binding for the router because more than likely we will not need to dynamically rebind a router.</p>

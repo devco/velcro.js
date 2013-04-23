@@ -2,7 +2,7 @@
     <h2>Views <small>Functional UI separation.</small></h2>
 </div>
 
-<p>Views allow you to separate your application into smaller chunks of display logic. A single view instance is set up to render multiple views using the same conventions. The router uses a view instance to render views into its bound container. The <code>include</code> and <code>extend</code> bindings use view instances to transform the elements.</p>
+<p>Views allow you to separate your application into smaller chunks of display logic. A single view instance is set up to render multiple views using the same conventions. The router as well as some bindings use a view instance in order to render content in certain areas of your application.</p>
 
 <p>To setup a view instance, simply create a new <code>velcro.View</code>:</p>
 
@@ -40,12 +40,12 @@
     }]
 }"></div>
 
-<p>To render a view, you simply call <code>render()</code> and pass it a path to the view you want to render.</p>
+<p>To render a view, you simply call <code>render()</code> and pass it a path to the view you want to render and an optional callback to execute when its done.</p>
 <pre><code>view.render('path/to/my/view', callbackWhenDone);</code></pre>
 
 <p>The path you specify is formatted to a valid id for local searching. For example, the previous path would become <code>vc-view-path-to-my-view</code>. This is because it replaces all invalid id characters with the <code>idSeparator</code>, prepends the <code>idPrefix</code> and appends the <code>idSuffix</code>.</p>
 
-<p>The instance will then attempt locate the view in one of three ways one of <em>three</em> ways:</p>
+<p>The instance will then attempt locate the view in one of <em>three</em> ways:</p>
 <ol>
     <li>It first checks its cache for a view using the id formatted from the specified path.</li>
     <li>It will then check the DOM for a view using the id formatted from the specified path.</li>
@@ -63,4 +63,4 @@
     &lt;div data-vc-html="html: content"&gt;&lt;/div&gt;
 &lt;/script&gt;</code></pre>
 
-<p>As you can see, all we had to do was give it an id that will match a formatted path and give it the type of <code>text/html</code>. You can either do this manually or compile all of your views into one. A Grunt task for this will be covered further in the <a href="#documentation/optimisation">Optimisation</a> section.</p>
+<p>As you can see, all we had to do was give it an <code>id</code> that will match a formatted path and give it the type of <code>text/html</code>. You can either do this manually or compile all of your views into one. A Grunt task for this will be covered in the <a href="#documentation/optimisation">Optimisation</a> section.</p>
