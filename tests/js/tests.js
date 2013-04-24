@@ -792,6 +792,22 @@ test('show', function() {
     ok(!html.raw().style.display, 'Div should be visible.');
 });
 
+test('style', function() {
+    var html  = velcro.dom('<div data-vc-style="display: display, visibility: visibility"></div>');
+    var app   = new velcro.App();
+    var model = new (velcro.model({
+        display: 'inline',
+        visibility: function() {
+            return 'hidden';
+        }
+    }));
+
+    app.bind(html.raw(), model);
+
+    ok(html.raw().style.display === 'inline', 'Display should be inline.');
+    ok(html.raw().style.visibility === 'hidden', 'Display should be hidden.');
+});
+
 test('submit', function() {
     var form = velcro.dom('<form data-vc-submit="callback: callback"></form>');
     var app   = new velcro.App();
