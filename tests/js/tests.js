@@ -500,6 +500,22 @@ test('css', function() {
     ok(div.attr('class').split(' ')[1] === model.class2(), 'Class not updated.');
 });
 
+test('disable', function() {
+    var input = velcro.dom('<input type="text" disabled="disabled" data-vc-disable="test: disabled">');
+    var app   = new velcro.App;
+    var model = new (velcro.Model.extend({
+        disabled: false
+    }));
+
+    app.bind(input.raw(), model);
+
+    ok(!input.attr('disabled'), 'Input should be enabled.');
+
+    model.disabled(true);
+
+    ok(input.attr('disabled'), 'Input should be disabled.');
+});
+
 test('each', function() {
     var ul   = document.createElement('ul');
     var li   = document.createElement('li');
@@ -525,6 +541,22 @@ test('each', function() {
     });
 
     ok(ul.childNodes[1].innerText === 'Item 2', 'Two items should exist as "Item 1, Item 2".');
+});
+
+test('enable', function() {
+    var input = velcro.dom('<input type="text" data-vc-enable="test: enabled">');
+    var app   = new velcro.App;
+    var model = new (velcro.Model.extend({
+        enabled: false
+    }));
+
+    app.bind(input.raw(), model);
+
+    ok(input.attr('disabled'), 'Input should have been disabled.');
+
+    model.enabled(true);
+
+    ok(!input.attr('disabled'), 'Input should be enabled.');
 });
 
 test('extend', function() {

@@ -1656,6 +1656,17 @@
     });
 })();
 (function() {
+    velcro.bindings.disable = velcro.binding({
+        update: function(app, element, options) {
+            if (options.test) {
+                velcro.dom(element).attr('disabled', 'disabled');
+            } else {
+                velcro.dom(element).attr('disabled', '');
+            }
+        }
+    });
+})();
+(function() {
     velcro.bindings.each = velcro.binding({
         app: null,
 
@@ -1725,6 +1736,17 @@
         clean: function(app, element) {
             element.removeAttribute(app.options.attributePrefix + 'each');
             return element;
+        }
+    });
+})();
+(function() {
+    velcro.bindings.enable = velcro.binding({
+        update: function(app, element, options) {
+            if (options.test) {
+                velcro.dom(element).attr('disabled', '');
+            } else {
+                velcro.dom(element).attr('disabled', 'disabled');
+            }
         }
     });
 })();
