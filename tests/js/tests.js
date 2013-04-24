@@ -606,6 +606,22 @@ test('focus', function() {
     ok(!focus, 'Element not blurred when model changed.');
 });
 
+test('hidden', function() {
+    var html  = velcro.dom('<div data-vc-hidden="test: hidden"></div>');
+    var app   = new velcro.App();
+    var model = new (velcro.Model.extend({
+        hidden: false
+    }));
+
+    app.bind(html.raw(), model);
+
+    model.hidden(true);
+    ok(html.raw().style.display === 'none', 'Div should be hidden.');
+
+    model.hidden(false);
+    ok(!html.raw().style.display, 'Div should be visible.');
+});
+
 test('html', function() {
     var div   = velcro.dom('<div data-vc-contents="html: html"></div>');
     var app   = new velcro.App();
@@ -778,4 +794,20 @@ test('value', function() {
 
     model.value('test2');
     ok(input.raw().value === 'test2', 'Value not updated.');
+});
+
+test('visible', function() {
+    var html  = velcro.dom('<div data-vc-visible="test: visible"></div>');
+    var app   = new velcro.App();
+    var model = new (velcro.Model.extend({
+        visible: true
+    }));
+
+    app.bind(html.raw(), model);
+
+    model.visible(false);
+    ok(html.raw().style.display === 'none', 'Div should be hidden.');
+
+    model.visible(true);
+    ok(!html.raw().style.display, 'Div should be visible.');
 });
