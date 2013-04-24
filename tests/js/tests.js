@@ -460,7 +460,7 @@ test('context', function() {
     var div  = document.createElement('div');
     var span = document.createElement('span');
 
-    div.setAttribute('data-vc-context', 'context: person');
+    div.setAttribute('data-vc-with', 'context: person');
     span.setAttribute('data-vc-contents', 'text: name');
     div.appendChild(span);
 
