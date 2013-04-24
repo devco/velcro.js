@@ -66,7 +66,7 @@ test('Extension', function() {
 module('Models and Collections');
 
 test('Default Values', function() {
-    var Model = velcro.Model.extend({
+    var Model = velcro.model({
         value: 'default'
     });
 
@@ -76,7 +76,7 @@ test('Default Values', function() {
 });
 
 test('Defining', function() {
-    var User = velcro.Model.extend({
+    var User = velcro.model({
         forename: '',
         surname: '',
         getName: function() {
@@ -114,11 +114,11 @@ test('Defining', function() {
 });
 
 test('Relationships', function() {
-    var Friend = velcro.Model.extend({
+    var Friend = velcro.model({
         name: ''
     });
 
-    var User = velcro.Model.extend({
+    var User = velcro.model({
         bestFriend: Friend,
         friends: velcro.collection(Friend)
     });
@@ -142,11 +142,11 @@ test('Relationships', function() {
 });
 
 test('Collection Manipulation', function() {
-    var Item = velcro.Model.extend({
+    var Item = velcro.model({
         name: ''
     });
 
-    var Items = velcro.Model.extend({
+    var Items = velcro.model({
         items: velcro.collection(Item)
     });
 
@@ -170,21 +170,21 @@ test('Collection Manipulation', function() {
 });
 
 test('Observable Getters and Setters', function() {
-    var Getter = velcro.Model.extend({
+    var Getter = velcro.model({
         _prop: true,
         getProp: function() {
             return this._prop();
         }
     });
 
-    var Setter = velcro.Model.extend({
+    var Setter = velcro.model({
         _prop: false,
         setProp: function(prop) {
             this._prop(prop);
         }
     });
 
-    var GetterAndSetter = velcro.Model.extend({
+    var GetterAndSetter = velcro.model({
         _prop: false,
         getProp: function() {
             return this._prop();
@@ -208,7 +208,7 @@ return;
 });
 
 test('Parent / Child Relationships', function() {
-    var LeafModel = velcro.Model.extend({
+    var LeafModel = velcro.model({
         test: function() {
             ok(this instanceof LeafModel, 'Using `this` in a method should refer to current model.');
             ok(this.parent() instanceof BranchModel, 'Using `this.parent()` in a method should refer to the correct parent.');
@@ -216,12 +216,12 @@ test('Parent / Child Relationships', function() {
         }
     });
 
-    var BranchModel = velcro.Model.extend({
+    var BranchModel = velcro.model({
         leaf: LeafModel,
         leafs: velcro.collection(LeafModel)
     });
 
-    var TrunkModel = velcro.Model.extend({
+    var TrunkModel = velcro.model({
         leaf: LeafModel,
         leafs: velcro.collection(LeafModel),
         branch: BranchModel,
@@ -257,7 +257,7 @@ test('Parent / Child Relationships', function() {
 });
 
 test('Chaining Method Calls', function() {
-    var Model = velcro.Model.extend({
+    var Model = velcro.model({
         test1: '',
         test3: '',
         getTest2: function() {
@@ -275,7 +275,7 @@ test('Chaining Method Calls', function() {
 });
 
 test('Rebinding Methods to Model Instance', function() {
-    var Model = velcro.Model.extend({
+    var Model = velcro.model({
         test: function() {
             ok(this instanceof Model, 'Using `this` inside of a model method should refer to the model instance in which it is defined.');
         }
@@ -336,7 +336,7 @@ test('Observing Changes', function() {
     span.setAttribute('data-vc-contents', 'text: name');
     div.appendChild(span);
 
-    var Person = velcro.Model.extend({
+    var Person = velcro.model({
         name: 'Default Value'
     });
 
@@ -424,7 +424,7 @@ module('Bindings');
 test('attr', function() {
     var div   = velcro.dom('<div data-vc-attr="\'class\': className, title: title"></div>');
     var app   = new velcro.App;
-    var model = new (velcro.Model.extend({
+    var model = new (velcro.model({
         className: 'test-class1',
         title: 'test title 1'
     }));
@@ -486,8 +486,8 @@ test('context', function() {
     span.setAttribute('data-vc-contents', 'text: name');
     div.appendChild(span);
 
-    var App = velcro.Model.extend({
-        person: velcro.Model.extend({
+    var App = velcro.model({
+        person: velcro.model({
             name: 'Default Value'
         })
     });
@@ -505,7 +505,7 @@ test('context', function() {
 test('css', function() {
     var div   = velcro.dom('<div data-vc-css="class1: class1, class2: class2"></div>');
     var app   = new velcro.App;
-    var model = new (velcro.Model.extend({
+    var model = new (velcro.model({
         class1: 'test-class1',
         class2: 'test-class2'
     }));
@@ -525,7 +525,7 @@ test('css', function() {
 test('disable', function() {
     var input = velcro.dom('<input type="text" disabled="disabled" data-vc-disable="test: disabled">');
     var app   = new velcro.App;
-    var model = new (velcro.Model.extend({
+    var model = new (velcro.model({
         disabled: false
     }));
 
@@ -541,7 +541,7 @@ test('disable', function() {
 test('each', function() {
     var ul   = document.createElement('ul');
     var li   = document.createElement('li');
-    var Item = velcro.Model.extend({
+    var Item = velcro.model({
         text: ''
     });
 
@@ -568,7 +568,7 @@ test('each', function() {
 test('enable', function() {
     var input = velcro.dom('<input type="text" data-vc-enable="test: enabled">');
     var app   = new velcro.App;
-    var model = new (velcro.Model.extend({
+    var model = new (velcro.model({
         enabled: false
     }));
 
@@ -584,7 +584,7 @@ test('enable', function() {
 test('extend', function() {
     var html  = velcro.dom('<div><div data-vc-extend="path: path">test</div><script id="vc-view-layout1" type="text/html"><h1 data-vc-contents="html: $content"></h1></script><script id="vc-view-layout2" type="text/html"><h2 data-vc-contents="html: $content"></h2></script></div>');
     var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
+    var model = new (velcro.model({
         path: 'layout1'
     }));
 
@@ -601,7 +601,7 @@ test('focus', function() {
     var html  = velcro.dom('<input type="text" data-vc-focus="bind: focus">');
     var focus = false;
     var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
+    var model = new (velcro.model({
         focus: false
     }));
 
@@ -631,7 +631,7 @@ test('focus', function() {
 test('hide', function() {
     var html  = velcro.dom('<div data-vc-hide="test: hide"></div>');
     var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
+    var model = new (velcro.model({
         hide: false
     }));
 
@@ -647,7 +647,7 @@ test('hide', function() {
 test('html', function() {
     var div   = velcro.dom('<div data-vc-contents="html: html"></div>');
     var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
+    var model = new (velcro.model({
         html: '<ul></ul>'
     }));
 
@@ -661,7 +661,7 @@ test('html', function() {
 test('if', function() {
     var div   = velcro.dom('<div><ul data-vc-if="test: show"></ul></div>');
     var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
+    var model = new (velcro.model({
         show: false
     }));
 
@@ -675,7 +675,7 @@ test('if', function() {
 test('include', function() {
     var div   = velcro.dom('<div><div data-vc-include="path: path"></div><script id="vc-view-child1" type="text/html">child1</script><script id="vc-view-child2" type="text/html">child2</script></div>');
     var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
+    var model = new (velcro.model({
         path: 'child1'
     }));
 
@@ -712,7 +712,7 @@ test('on', function() {
 test('options', function() {
     var select = velcro.dom('<select data-vc-options="options: options, caption: caption, text: text, value: value"></select>');
     var app    = new velcro.App();
-    var model  = new (velcro.Model.extend({
+    var model  = new (velcro.model({
         caption: 'Choose...',
         options: velcro.collection(velcro.model({
             text: '',
@@ -744,7 +744,7 @@ test('options', function() {
 test('routable', function() {
     var div   = velcro.dom('<div><div data-vc-routable="router: router"></div><script id="vc-view-test" type="text/html"><span data-vc-contents="text: text"></span></script></div>');
     var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
+    var model = new (velcro.model({
         router: new velcro.Router
     }));
 
@@ -779,7 +779,7 @@ test('routable', function() {
 test('show', function() {
     var html  = velcro.dom('<div data-vc-show="test: show"></div>');
     var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
+    var model = new (velcro.model({
         show: true
     }));
 
@@ -811,7 +811,7 @@ test('style', function() {
 test('submit', function() {
     var form = velcro.dom('<form data-vc-submit="callback: callback"></form>');
     var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
+    var model = new (velcro.model({
         submitted: false,
         callback: function() {
             this.submitted(true);
@@ -826,7 +826,7 @@ test('submit', function() {
 test('text', function() {
     var div   = velcro.dom('<div data-vc-contents="text: text"></div>');
     var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
+    var model = new (velcro.model({
         text: 'test1'
     }));
 
@@ -840,7 +840,7 @@ test('text', function() {
 test('value', function() {
     var input = velcro.dom('<input type="text" data-vc-value="value: value">');
     var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
+    var model = new (velcro.model({
         value: 'test1'
     }));
 

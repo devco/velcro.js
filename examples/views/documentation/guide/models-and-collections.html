@@ -8,7 +8,7 @@
 
 <p>Model properties are described as ordinary values; basically anything that is not a function.</p>
 
-<pre><code>var User = velcro.Model.extend({
+<pre><code>var User = velcro.model({
     id: 0,
     forename: 'John',
     surname: 'Doe'
@@ -33,7 +33,7 @@ bob.surname('Bobberson').surname();</code></pre>
 
 <p>Computed properties tell your model how to get and / or set a given value with getter and setter methods without affecting how you would access that property as if it were an ordinary property.</p>
 
-<pre><code>var User = velcro.Model.extend({
+<pre><code>var User = velcro.model({
     ...
     getName: function() {
         return this.forename() + ' ' + this.surname();
@@ -53,11 +53,11 @@ bob.name('John Doe').name();</code></pre>
 
 <p>Relationships tell a model which properties relate to other models and collections of models. If you define a relationship, it means that you can rely on that property to always be an instance of something that you expect it to be. This makes importing and exporting data to and from models a breeze as well as simplifies your code and makes it more maintainable in the process.</p>
 
-<pre><code>var Friend = velcro.Model.extend({
+<pre><code>var Friend = velcro.model({
     userId: 0
 });
 
-var User = velcro.Model.extend({
+var User = velcro.model({
     ...
     bestFriend: Friend,
     friends: velcro.collection(Friend)
