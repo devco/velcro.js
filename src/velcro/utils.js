@@ -71,15 +71,22 @@
                 for (var ii in param) {
                     var value = param[ii];
 
-                    if (velcro.utils.isObject(value)) {
-                        if (typeof merged[ii] === 'undefined' || velcro.utils.isInstance(value)) {
-                            merged[ii] = value;
-                        } else {
-                            merged[ii] = velcro.utils.merge(merged[ii], value);
-                        }
-                    } else {
+                    if (typeof merged[ii] === 'undefined') {
                         merged[ii] = value;
+                        continue;
                     }
+
+                    if (velcro.utils.isInstance(value)) {
+                        merged[ii] = value;
+                        continue;
+                    }
+
+                    if (velcro.utils.isObject(merged[ii]) && velcro.utils.isObject(value)) {
+                        merged[ii] = velcro.utils.merge(merged[ii], value);
+                        continue;
+                    }
+
+                    merged[ii] = value;
                 }
             }
 

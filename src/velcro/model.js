@@ -199,9 +199,11 @@
 
     function applyMethods(obj) {
         for (var i in obj.constructor.definition.methods) {
-            obj[i] = function() {
-                return obj.constructor.definition.methods[i].apply(obj, Array.prototype.slice.call(arguments));
-            };
+            obj[i] = (function(method) {
+                return function() {
+                    return method.apply(obj, Array.prototype.slice.call(arguments));
+                };
+            })(obj.constructor.definition.methods[i]);
         }
     }
 

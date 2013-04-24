@@ -688,24 +688,25 @@ test('include', function() {
 });
 
 test('on', function() {
-    var div   = velcro.dom('<div data-vc-on="event: event, callback: callback"></div>');
+    var div   = velcro.dom('<div data-vc-on="hide: hide, show: show"></div>');
     var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
-        event: 'shown',
+    var model = new (velcro.model({
         triggered: [],
-        callback: function(e) {
-            this.triggered().push(this.event());
+        hide: function(e) {
+            this.triggered().push('hide');
+        },
+        show: function(e) {
+            this.triggered().push('show');
         }
     }));
 
     app.bind(div.raw(), model);
 
-    div.fire('shown');
-    ok(model.triggered().indexOf(model.event()) !== -1, 'Event ' + model.event() + ' not triggered.');
+    div.fire('hide');
+    ok(model.triggered().indexOf('hide') !== -1, 'Event "hide" not triggered.');
 
-    model.event('hidden');
-    div.fire('hidden');
-    ok(model.triggered().indexOf(model.event()) !== -1, 'Event ' + model.event() + ' not triggered.');
+    div.fire('show');
+    ok(model.triggered().indexOf('show') !== -1, 'Event "show" not triggered.');
 });
 
 test('options', function() {
