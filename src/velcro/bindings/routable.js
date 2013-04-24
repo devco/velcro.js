@@ -1,5 +1,5 @@
 (function() {
-    velcro.bindings.routable = velcro.Binding.extend({
+    velcro.bindings.routable = velcro.binding({
         update: function(app, element, options) {
             var router = options.router;
 

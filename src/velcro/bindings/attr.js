@@ -1,5 +1,5 @@
 (function() {
-    velcro.bindings.attr = velcro.Binding.extend({
+    velcro.bindings.attr = velcro.binding({
         update: function(app, element, options) {
             var el = velcro.dom(element);
 

@@ -273,17 +273,17 @@
             return this;
         },
 
-        on: function(event, callback) {
+        on: function(name, callback) {
             var $this = this;
 
             if (this.element.addEventListener) {
-                this.element.addEventListener(event, proxy, false);
+                this.element.addEventListener(name, proxy, false);
             } else if (element.attachEvent) {
-                this.element.attachEvent('on' + event, function(e) {
+                this.element.attachEvent('on' + name, function(e) {
                     proxy.call($this.element, e);
                 });
             } else {
-                this.element['on' + event] = proxy;
+                this.element['on' + name] = proxy;
             }
 
             // Proxies the call to the callback to modify the event object before it
@@ -311,27 +311,27 @@
             return this;
         },
 
-        off: function(event, callback) {
+        off: function(name, callback) {
             if (this.element.removeEventListener) {
-                this.element.removeEventListener(event, callback, false);
+                this.element.removeEventListener(name, callback, false);
             } else if (this.element.detachEvent) {
-                this.element.detachEvent(event, callback);
+                this.element.detachEvent(name, callback);
             } else {
-                delete this.element['on' + event];
+                delete this.element['on' + name];
             }
 
             return this;
         },
 
-        fire: function(event) {
-            var e = null;
+        fire: function(name) {
+            var e;
 
             if (document.createEventObject) {
                 e = document.createEventObject();
-                this.element.fireEvent('event', e);
+                this.element.fireEvent(name, e);
             } else {
-                e = document.createEvent('HTMLEvents');
-                e.initEvent(event, true, true);
+                e = document.createEvent('Events');
+                e.initEvent(name, true, true);
                 this.element.dispatchEvent(e);
             }
 
@@ -1607,7 +1607,7 @@
     velcro.bindings = {};
 })();
 (function() {
-    velcro.bindings.attr = velcro.Binding.extend({
+    velcro.bindings.attr = velcro.binding({
         update: function(app, element, options) {
             var el = velcro.dom(element);
 
@@ -1618,14 +1618,14 @@
     });
 })();
 (function() {
-    velcro.bindings.click = velcro.Binding.extend({
+    velcro.bindings.click = velcro.binding({
         update: function(app, element, options) {
             velcro.dom(element).off('click', options.callback).on('click', options.callback);
         }
     })
 })();
 (function() {
-    velcro.bindings.contents = velcro.Binding.extend({
+    velcro.bindings.contents = velcro.binding({
         update: function(app, element, options) {
             if (typeof options.text !== 'undefined') {
                 velcro.dom(element).text(options.text || '');
@@ -1638,7 +1638,7 @@
     });
 })();
 (function() {
-    velcro.bindings.context = velcro.Binding.extend({
+    velcro.bindings.context = velcro.binding({
         update: function(app, element, options) {
             if (!options.context) {
                 velcro.utils.throwForElement(element, 'A context option must be specified.');
@@ -1649,14 +1649,14 @@
     });
 })();
 (function() {
-    velcro.bindings.css = velcro.Binding.extend({
+    velcro.bindings.css = velcro.binding({
         update: function(app, element, options) {
             velcro.dom(element).css(options);
         }
     });
 })();
 (function() {
-    velcro.bindings.each = velcro.Binding.extend({
+    velcro.bindings.each = velcro.binding({
         app: null,
 
         clones: null,
@@ -1729,7 +1729,7 @@
     });
 })();
 (function() {
-    velcro.bindings.extend = velcro.Binding.extend({
+    velcro.bindings.extend = velcro.binding({
         options: {
             path: '',
             view: {}
@@ -1757,7 +1757,42 @@
     });
 })();
 (function() {
-    velcro.bindings['if'] = velcro.Binding.extend({
+    velcro.bindings.focus = velcro.binding({
+        changing: false,
+
+        setup: function(app, element, options, bindings) {
+            var $this = this;
+
+            velcro.dom(element)
+                .on('focus', function() {
+                    $this.changing = true;
+                    bindings.bind(true);
+                    $this.changing = false;
+                })
+                .on('blur', function() {
+                    $this.changing = true;
+                    bindings.bind(false);
+                    $this.changing = false;
+                });
+        },
+
+        update: function(app, element, options, bindings) {
+            if (this.changing) {
+                return;
+            }
+
+            if (options.bind) {
+                element.focus();
+                velcro.dom(element).fire('focus');
+            } else {
+                element.blur();
+                velcro.dom(element).fire('blur');
+            }
+        }
+    });
+})();
+(function() {
+    velcro.bindings['if'] = velcro.binding({
         display: 'none',
 
         setup: function(app, element, options) {
@@ -1778,7 +1813,7 @@
     });
 })();
 (function() {
-    velcro.bindings.include = velcro.Binding.extend({
+    velcro.bindings.include = velcro.binding({
         options: {
             path: '',
             context: false,
@@ -1811,14 +1846,14 @@
     });
 })();
 (function() {
-    velcro.bindings.on = velcro.Binding.extend({
+    velcro.bindings.on = velcro.binding({
         update: function(app, element, options) {
             velcro.dom(element).off(options.event, options.callback).on(options.event, options.callback);
         }
     });
 })();
 (function() {
-    velcro.bindings.options = velcro.Binding.extend({
+    velcro.bindings.options = velcro.binding({
         options: {
             options: [],
             caption: '',
@@ -1880,7 +1915,7 @@
     }
 })();
 (function() {
-    velcro.bindings.routable = velcro.Binding.extend({
+    velcro.bindings.routable = velcro.binding({
         update: function(app, element, options) {
             var router = options.router;
 
@@ -1898,7 +1933,7 @@
     });
 })();
 (function() {
-    velcro.bindings.submit = velcro.Binding.extend({
+    velcro.bindings.submit = velcro.binding({
         setup: function(app, element, options, bindings) {
             velcro.dom(element).on('submit', function(e) {
                 if (options.callback() !== true) {
@@ -1910,7 +1945,7 @@
     });
 })();
 (function() {
-    velcro.bindings.value = velcro.Binding.extend({
+    velcro.bindings.value = velcro.binding({
         options: {
             on: 'change'
         },

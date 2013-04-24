@@ -1,5 +1,5 @@
 (function() {
-    velcro.bindings.include = velcro.Binding.extend({
+    velcro.bindings.include = velcro.binding({
         options: {
             path: '',
             context: false,

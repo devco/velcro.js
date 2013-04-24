@@ -1,5 +1,5 @@
 (function() {
-    velcro.bindings.extend = velcro.Binding.extend({
+    velcro.bindings.extend = velcro.binding({
         options: {
             path: '',
             view: {}

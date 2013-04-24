@@ -1,5 +1,5 @@
 (function() {
-    velcro.bindings.contents = velcro.Binding.extend({
+    velcro.bindings.contents = velcro.binding({
         update: function(app, element, options) {
             if (typeof options.text !== 'undefined') {
                 velcro.dom(element).text(options.text || '');

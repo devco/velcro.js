@@ -1,5 +1,5 @@
 (function() {
-    velcro.bindings.each = velcro.Binding.extend({
+    velcro.bindings.each = velcro.binding({
         app: null,
 
         clones: null,

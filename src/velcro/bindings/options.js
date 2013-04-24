@@ -1,5 +1,5 @@
 (function() {
-    velcro.bindings.options = velcro.Binding.extend({
+    velcro.bindings.options = velcro.binding({
         options: {
             options: [],
             caption: '',

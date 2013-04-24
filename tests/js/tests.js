@@ -543,6 +543,37 @@ test('extend', function() {
     ok(html.raw().childNodes[0].childNodes[0].tagName === 'H2', 'The layout was not updated.');
 });
 
+test('focus', function() {
+    var html  = velcro.dom('<input type="text" data-vc-focus="bind: focus">');
+    var focus = false;
+    var app   = new velcro.App();
+    var model = new (velcro.Model.extend({
+        focus: false
+    }));
+
+    app.bind(html.raw(), model);
+
+    html.on('focus', function() {
+        focus = true;
+    }).on('blur', function() {
+        focus = false;
+    });
+
+    html.raw().focus();
+    html.fire('focus');
+    ok(model.focus(), 'Model not changed when element focused.');
+
+    html.raw().blur();
+    html.fire('blur');
+    ok(!model.focus(), 'Model not changed when element blurred.');
+
+    model.focus(true);
+    ok(focus, 'Element not focused when model changed.');
+
+    model.focus(false);
+    ok(!focus, 'Element not blurred when model changed.');
+});
+
 test('html', function() {
     var div   = velcro.dom('<div data-vc-contents="html: html"></div>');
     var app   = new velcro.App();

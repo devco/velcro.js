@@ -1,5 +1,5 @@
 (function() {
-    velcro.bindings.value = velcro.Binding.extend({
+    velcro.bindings.value = velcro.binding({
         options: {
             on: 'change'
         },

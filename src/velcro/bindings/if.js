@@ -1,5 +1,5 @@
 (function() {
-    velcro.bindings['if'] = velcro.Binding.extend({
+    velcro.bindings['if'] = velcro.binding({
         display: 'none',
 
         setup: function(app, element, options) {

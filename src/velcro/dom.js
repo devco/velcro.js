@@ -56,17 +56,17 @@
             return this;
         },
 
-        on: function(event, callback) {
+        on: function(name, callback) {
             var $this = this;
 
             if (this.element.addEventListener) {
-                this.element.addEventListener(event, proxy, false);
+                this.element.addEventListener(name, proxy, false);
             } else if (element.attachEvent) {
-                this.element.attachEvent('on' + event, function(e) {
+                this.element.attachEvent('on' + name, function(e) {
                     proxy.call($this.element, e);
                 });
             } else {
-                this.element['on' + event] = proxy;
+                this.element['on' + name] = proxy;
             }
 
             // Proxies the call to the callback to modify the event object before it
@@ -94,27 +94,27 @@
             return this;
         },
 
-        off: function(event, callback) {
+        off: function(name, callback) {
             if (this.element.removeEventListener) {
-                this.element.removeEventListener(event, callback, false);
+                this.element.removeEventListener(name, callback, false);
             } else if (this.element.detachEvent) {
-                this.element.detachEvent(event, callback);
+                this.element.detachEvent(name, callback);
             } else {
-                delete this.element['on' + event];
+                delete this.element['on' + name];
             }
 
             return this;
         },
 
-        fire: function(event) {
-            var e = null;
+        fire: function(name) {
+            var e;
 
             if (document.createEventObject) {
                 e = document.createEventObject();
-                this.element.fireEvent('event', e);
+                this.element.fireEvent(name, e);
             } else {
-                e = document.createEvent('HTMLEvents');
-                e.initEvent(event, true, true);
+                e = document.createEvent('Events');
+                e.initEvent(name, true, true);
                 this.element.dispatchEvent(e);
             }
 
