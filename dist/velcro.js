@@ -1638,17 +1638,6 @@
     });
 })();
 (function() {
-    velcro.bindings.context = velcro.binding({
-        update: function(app, element, options) {
-            if (!options.context) {
-                velcro.utils.throwForElement(element, 'A context option must be specified.');
-            }
-
-            app.context(options.context);
-        }
-    });
-})();
-(function() {
     velcro.bindings.css = velcro.binding({
         update: function(app, element, options) {
             velcro.dom(element).css(options);
@@ -1980,6 +1969,17 @@
             function update() {
                 bindings.value(element.value);
             }
+        }
+    });
+})();
+(function() {
+    velcro.bindings['with'] = velcro.binding({
+        update: function(app, element, options) {
+            if (!options.context) {
+                velcro.utils.throwForElement(element, 'A context option must be specified.');
+            }
+
+            app.context(options.context);
         }
     });
 })();
