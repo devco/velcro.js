@@ -606,19 +606,19 @@ test('focus', function() {
     ok(!focus, 'Element not blurred when model changed.');
 });
 
-test('hidden', function() {
-    var html  = velcro.dom('<div data-vc-hidden="test: hidden"></div>');
+test('hide', function() {
+    var html  = velcro.dom('<div data-vc-hide="test: hide"></div>');
     var app   = new velcro.App();
     var model = new (velcro.Model.extend({
-        hidden: false
+        hide: false
     }));
 
     app.bind(html.raw(), model);
 
-    model.hidden(true);
+    model.hide(true);
     ok(html.raw().style.display === 'none', 'Div should be hidden.');
 
-    model.hidden(false);
+    model.hide(false);
     ok(!html.raw().style.display, 'Div should be visible.');
 });
 
@@ -753,6 +753,22 @@ test('routable', function() {
     ok(div.raw().childNodes[0].childNodes[0].innerText === 'test2', 'Router not updated.');
 });
 
+test('show', function() {
+    var html  = velcro.dom('<div data-vc-show="test: show"></div>');
+    var app   = new velcro.App();
+    var model = new (velcro.Model.extend({
+        show: true
+    }));
+
+    app.bind(html.raw(), model);
+
+    model.show(false);
+    ok(html.raw().style.display === 'none', 'Div should be hidden.');
+
+    model.show(true);
+    ok(!html.raw().style.display, 'Div should be visible.');
+});
+
 test('submit', function() {
     var form = velcro.dom('<form data-vc-submit="callback: callback"></form>');
     var app   = new velcro.App();
@@ -794,20 +810,4 @@ test('value', function() {
 
     model.value('test2');
     ok(input.raw().value === 'test2', 'Value not updated.');
-});
-
-test('visible', function() {
-    var html  = velcro.dom('<div data-vc-visible="test: visible"></div>');
-    var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
-        visible: true
-    }));
-
-    app.bind(html.raw(), model);
-
-    model.visible(false);
-    ok(html.raw().style.display === 'none', 'Div should be hidden.');
-
-    model.visible(true);
-    ok(!html.raw().style.display, 'Div should be visible.');
 });

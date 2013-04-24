@@ -1,10 +1,10 @@
 (function() {
-    velcro.bindings.visible = velcro.binding({
+    velcro.bindings.hide = velcro.binding({
         update: function(app, element, options) {
             if (options.test) {
-                element.style.display = null;
-            } else {
                 element.style.display = 'none';
+            } else {
+                element.style.display = null;
             }
         }
     });

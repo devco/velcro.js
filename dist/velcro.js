@@ -1803,7 +1803,7 @@
     });
 })();
 (function() {
-    velcro.bindings.hidden = velcro.binding({
+    velcro.bindings.hide = velcro.binding({
         update: function(app, element, options) {
             if (options.test) {
                 element.style.display = 'none';
@@ -1955,6 +1955,17 @@
     });
 })();
 (function() {
+    velcro.bindings.show = velcro.binding({
+        update: function(app, element, options) {
+            if (options.test) {
+                element.style.display = null;
+            } else {
+                element.style.display = 'none';
+            }
+        }
+    });
+})();
+(function() {
     velcro.bindings.submit = velcro.binding({
         setup: function(app, element, options, bindings) {
             velcro.dom(element).on('submit', function(e) {
@@ -1979,17 +1990,6 @@
 
             function update() {
                 bindings.value(element.value);
-            }
-        }
-    });
-})();
-(function() {
-    velcro.bindings.visible = velcro.binding({
-        update: function(app, element, options) {
-            if (options.test) {
-                element.style.display = null;
-            } else {
-                element.style.display = 'none';
             }
         }
     });
