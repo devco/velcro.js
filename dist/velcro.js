@@ -1618,6 +1618,39 @@
     });
 })();
 (function() {
+    velcro.bindings.check = velcro.binding({
+        changing: false,
+
+        setup: function(app, element, options, bindings) {
+            var $this = this;
+
+            velcro.dom(element).on('change', function() {
+                $this.changing = true;
+
+                if (element.checked) {
+                    bindings.bind(true);
+                } else {
+                    bindings.bind(false);
+                }
+
+                $this.changing = false;
+            });
+        },
+
+        update: function(app, element, options) {
+            if (this.changing) {
+                return;
+            }
+
+            if (options.bind) {
+                element.checked = true;
+            } else {
+                element.checked = false;
+            }
+        }
+    });
+})();
+(function() {
     velcro.bindings.click = velcro.binding({
         update: function(app, element, options) {
             velcro.dom(element).off('click', options.callback).on('click', options.callback);
@@ -1648,9 +1681,9 @@
     velcro.bindings.disable = velcro.binding({
         update: function(app, element, options) {
             if (options.test) {
-                velcro.dom(element).attr('disabled', 'disabled');
+                element.disabled = true;
             } else {
-                velcro.dom(element).attr('disabled', '');
+                element.disabled = false;
             }
         }
     });
@@ -1732,9 +1765,9 @@
     velcro.bindings.enable = velcro.binding({
         update: function(app, element, options) {
             if (options.test) {
-                velcro.dom(element).attr('disabled', '');
+                element.disabled = false;
             } else {
-                velcro.dom(element).attr('disabled', 'disabled');
+                element.disabled = true;
             }
         }
     });

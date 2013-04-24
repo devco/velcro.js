@@ -2,9 +2,9 @@
     velcro.bindings.enable = velcro.binding({
         update: function(app, element, options) {
             if (options.test) {
-                velcro.dom(element).attr('disabled', '');
+                element.disabled = false;
             } else {
-                velcro.dom(element).attr('disabled', 'disabled');
+                element.disabled = true;
             }
         }
     });

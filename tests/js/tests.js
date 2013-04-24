@@ -441,6 +441,28 @@ test('attr', function() {
     ok(div.attr('title') === 'test title 2', 'Title attribute not changed.');
 });
 
+test('check', function() {
+    var html  = velcro.dom('<input type="checkbox" value="1" data-vc-check="bind: check">');
+    var app   = new velcro.App;
+    var model = new (velcro.model({
+        check: false
+    }));
+
+    app.bind(html.raw(), model);
+    ok(!html.raw().checked, 'Checkbox should not be checked.');
+
+    model.check(true);
+    ok(html.raw().checked, 'Checkbox should be checked.');
+
+    html.raw().checked = false;
+    html.fire('change');
+    ok(!model.check(), 'Model should not be checked.');
+
+    html.raw().checked = true;
+    html.fire('change');
+    ok(model.check(), 'Model should be checked.');
+});
+
 test('click', function() {
     var div = velcro.dom('<div data-vc-click="callback: test"></div>');
     var app = new velcro.App;
@@ -509,11 +531,11 @@ test('disable', function() {
 
     app.bind(input.raw(), model);
 
-    ok(!input.attr('disabled'), 'Input should be enabled.');
+    ok(!input.raw().disabled, 'Input should be enabled.');
 
     model.disabled(true);
 
-    ok(input.attr('disabled'), 'Input should be disabled.');
+    ok(input.raw().disabled, 'Input should be disabled.');
 });
 
 test('each', function() {
@@ -552,11 +574,11 @@ test('enable', function() {
 
     app.bind(input.raw(), model);
 
-    ok(input.attr('disabled'), 'Input should have been disabled.');
+    ok(input.raw().disabled, 'Input should have been disabled.');
 
     model.enabled(true);
 
-    ok(!input.attr('disabled'), 'Input should be enabled.');
+    ok(!input.raw().disabled, 'Input should be enabled.');
 });
 
 test('extend', function() {
