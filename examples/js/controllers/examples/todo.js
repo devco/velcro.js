@@ -1,7 +1,7 @@
 define(['velcro', 'views/examples/todo'], function(velcro, ExamplesTodoView) {
     return function() {
         return {
-            todos: velcro.Collection.make(ExamplesTodoView),
+            todos: velcro.collection(ExamplesTodoView),
             adding: '',
             create: function() {
                 this.todos().append({

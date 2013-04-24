@@ -120,7 +120,7 @@ test('Relationships', function() {
 
     var User = velcro.Model.extend({
         bestFriend: Friend,
-        friends: velcro.Collection.make(Friend)
+        friends: velcro.collection(Friend)
     });
 
     var user = new User();
@@ -147,7 +147,7 @@ test('Collection Manipulation', function() {
     });
 
     var Items = velcro.Model.extend({
-        items: velcro.Collection.make(Item)
+        items: velcro.collection(Item)
     });
 
     var model = new Items;
@@ -218,14 +218,14 @@ test('Parent / Child Relationships', function() {
 
     var BranchModel = velcro.Model.extend({
         leaf: LeafModel,
-        leafs: velcro.Collection.make(LeafModel)
+        leafs: velcro.collection(LeafModel)
     });
 
     var TrunkModel = velcro.Model.extend({
         leaf: LeafModel,
-        leafs: velcro.Collection.make(LeafModel),
+        leafs: velcro.collection(LeafModel),
         branch: BranchModel,
-        branches: velcro.Collection.make(BranchModel)
+        branches: velcro.collection(BranchModel)
     });
 
     var trunk = new TrunkModel({
@@ -607,26 +607,23 @@ test('on', function() {
     ok(model.triggered().indexOf(model.event()) !== -1, 'Event ' + model.event() + ' not triggered.');
 });
 
-/*
 test('options', function() {
     var select = velcro.dom('<select data-vc-options="options: options, caption: caption, text: text, value: value"></select>');
     var app    = new velcro.App();
     var model  = new (velcro.Model.extend({
         caption: 'Choose...',
-        options: velcro.Model.extend({
+        options: velcro.collection(velcro.model({
             text: '',
             value: ''
-        }),
+        })),
         text: function(option) {
-            return option.text;
+            return option.text();
         },
-        value: function(option) {
-            return option.value;
-        }
+        value: 'value'
     }));
 
     app.bind(select.raw(), model);
-    ok(select.contents() === '', 'Select should be empty.');
+    ok(select.raw().childNodes.length === 1, 'Only the caption should be visible.');
 
     model.options([{
         text: 'Option 1',
@@ -636,12 +633,11 @@ test('options', function() {
         value: 1
     }]);
 
-    ok(select.raw().childNodes[0].innerText === 'Option 1', 'Option text not updated.');
-    ok(select.raw().childNodes[0].value === '0', 'Option value not updated.');
-    ok(select.raw().childNodes[1].innerText === 'Option 1', 'Option text not updated.');
-    ok(select.raw().childNodes[1].value === '1', 'Option value not updated.');
+    ok(select.raw().childNodes[1].innerText === 'Option 1', 'Option 1 text not updated.');
+    ok(select.raw().childNodes[1].value === '0', 'Option 1 value not updated.');
+    ok(select.raw().childNodes[2].innerText === 'Option 2', 'Option 2 text not updated.');
+    ok(select.raw().childNodes[2].value === '1', 'Option 2 value not updated.');
 });
-*/
 
 test('routable', function() {
     var div   = velcro.dom('<div><div data-vc-routable="router: router"></div><script id="vc-view-test" type="text/html"><span data-vc-contents="text: text"></span></script></div>');

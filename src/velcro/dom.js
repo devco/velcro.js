@@ -144,6 +144,11 @@
             return this.element.innerHTML;
         },
 
+        append: function(child) {
+            this.element.appendChild(velcro.dom(child).raw());
+            return this;
+        },
+
         text: function(text) {
             if (arguments.length) {
                 this.element.innerText = text;

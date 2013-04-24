@@ -138,7 +138,7 @@
         },
 
         throwForElement: function(element, message) {
-            throw message + "\n" + velcro.html(element);
+            throw message + "\n" + velcro.dom(element).html();
         }
     };
 })();
@@ -361,6 +361,11 @@
             return this.element.innerHTML;
         },
 
+        append: function(child) {
+            this.element.appendChild(velcro.dom(child).raw());
+            return this;
+        },
+
         text: function(text) {
             if (arguments.length) {
                 this.element.innerText = text;
@@ -430,6 +435,10 @@
             }
         }
     });
+
+    velcro.binding = function(def) {
+        return velcro.Binding.extend(def);
+    };
 })();
 (function() {
     velcro.Event = velcro.Class.extend({
@@ -1240,6 +1249,10 @@
         }
     });
 
+    velcro.model = function(def) {
+        return velcro.Model.extend(def);
+    };
+
     function defineIfNotDefined(obj) {
         if (!obj.constructor.definition) {
             define(obj);
@@ -1360,7 +1373,7 @@
     function applyMethods(obj) {
         for (var i in obj.constructor.definition.methods) {
             obj[i] = function() {
-                obj.constructor.definition.methods[i].apply(obj, Array.prototype.slice.call(arguments));
+                return obj.constructor.definition.methods[i].apply(obj, Array.prototype.slice.call(arguments));
             };
         }
     }
@@ -1582,7 +1595,7 @@
         }
     });
 
-    velcro.Collection.make = function(Model) {
+    velcro.collection = function(Model) {
         return velcro.Collection.extend({
             init: function(data) {
                 this.$super(Model, data);
@@ -1613,16 +1626,11 @@
 })();
 (function() {
     velcro.bindings.contents = velcro.Binding.extend({
-        options: {
-            text: false,
-            html: false,
-        },
-
         update: function(app, element, options) {
-            if (typeof options.text === 'string') {
-                velcro.dom(element).text(options.text);
-            } else if (typeof options.html === 'string') {
-                velcro.dom(element).contents(options.html);
+            if (typeof options.text !== 'undefined') {
+                velcro.dom(element).text(options.text || '');
+            } else if (typeof options.html !== 'undefined') {
+                velcro.dom(element).contents(options.html || '');
             } else {
                 velcro.utils.throwForElement(element, 'The "content" binding must be given a "text" or "html" option.');
             }
@@ -1821,19 +1829,19 @@
         update: function(app, element, options) {
             this.check(element);
 
-            var items = options.options;
-
-            if (items.to) {
-                items = items.to();
+            if (typeof options.caption !== 'undefined') {
+                velcro.dom(element).contents('<option value="">' + extract(options.caption) + '</option>');
             }
 
-            velcro.utils.each(items, function(i, el) {
-                var value  = typeof options.value === 'function' ? options.value(el) : el[options.value];
-                var text   = typeof options.text  === 'function' ? options.text(el)  : el[options.text];
-                var option = velcro.dom('<option value="' + value + '">' + text + '</option>');
+            if (typeof options.options instanceof velcro.Collection) {
+                options.options.each(each);
+            } else {
+                velcro.utils.each(options.options, each);
+            }
 
-                element.appendChild(option.raw());
-            });
+            function each(index, item) {
+                velcro.dom(element).append('<option value="' + extractFrom(item, options.value) + '">' + extractFrom(item, options.text) + '</option>');
+            };
         },
 
         check: function(element) {
@@ -1842,6 +1850,34 @@
             }
         }
     });
+
+    function extract(item) {
+        if (!item) {
+            return '';
+        }
+
+        if (typeof item === 'function') {
+            return item();
+        }
+
+        return item;
+    }
+
+    function extractFrom(item, using) {
+        if (!using) {
+            return '';
+        }
+
+        if (typeof using === 'function') {
+            return using(item);
+        }
+
+        if (item instanceof velcro.Model) {
+            return item[using]();
+        }
+
+        return item;
+    }
 })();
 (function() {
     velcro.bindings.routable = velcro.Binding.extend({

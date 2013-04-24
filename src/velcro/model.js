@@ -76,6 +76,10 @@
         }
     });
 
+    velcro.model = function(def) {
+        return velcro.Model.extend(def);
+    };
+
     function defineIfNotDefined(obj) {
         if (!obj.constructor.definition) {
             define(obj);
@@ -196,7 +200,7 @@
     function applyMethods(obj) {
         for (var i in obj.constructor.definition.methods) {
             obj[i] = function() {
-                obj.constructor.definition.methods[i].apply(obj, Array.prototype.slice.call(arguments));
+                return obj.constructor.definition.methods[i].apply(obj, Array.prototype.slice.call(arguments));
             };
         }
     }

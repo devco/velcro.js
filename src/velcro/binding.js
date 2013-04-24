@@ -12,4 +12,8 @@
             }
         }
     });
+
+    velcro.binding = function(def) {
+        return velcro.Binding.extend(def);
+    };
 })();

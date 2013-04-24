@@ -60,7 +60,7 @@ bob.name('John Doe').name();</code></pre>
 var User = velcro.Model.extend({
     ...
     bestFriend: Friend,
-    friends: velcro.Collection.make(Friend)
+    friends: velcro.collection(Friend)
 });</code></pre>
 
 <p>Now we can use those relationships as properties.</p>
@@ -74,6 +74,6 @@ var User = velcro.Model.extend({
 // "Dick"
 bob.bestFriend(bob.friends().at(0)).bestFriend().forename();</code></pre>
 
-<p>As you can see, defining a one-to-one relationship consists of simply passing the definition a constructor for another model. A one-to-many relationship is done by calling the <code>velcro.Collection.make()</code> method and passing it a constructor for the model it should represent.</p>
+<p>As you can see, defining a one-to-one relationship consists of simply passing the definition a constructor for another model. A one-to-many relationship is done by calling the <code>velcro.collection()</code> method and passing it a constructor for the model it should represent.</p>
 
 <p class="alert alert-notice">A very good - and quite common - use case for leaning heavily on relationships would be importing raw JSON from a service without having to loop over each sub-object and instantiate new sub-models. Instead, you can just have Velcro do it for you.</p>

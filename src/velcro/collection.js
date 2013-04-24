@@ -209,7 +209,7 @@
         }
     });
 
-    velcro.Collection.make = function(Model) {
+    velcro.collection = function(Model) {
         return velcro.Collection.extend({
             init: function(data) {
                 this.$super(Model, data);

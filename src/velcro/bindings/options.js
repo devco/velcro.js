@@ -10,19 +10,19 @@
         update: function(app, element, options) {
             this.check(element);
 
-            var items = options.options;
-
-            if (items.to) {
-                items = items.to();
+            if (typeof options.caption !== 'undefined') {
+                velcro.dom(element).contents('<option value="">' + extract(options.caption) + '</option>');
             }
 
-            velcro.utils.each(items, function(i, el) {
-                var value  = typeof options.value === 'function' ? options.value(el) : el[options.value];
-                var text   = typeof options.text  === 'function' ? options.text(el)  : el[options.text];
-                var option = velcro.dom('<option value="' + value + '">' + text + '</option>');
+            if (typeof options.options instanceof velcro.Collection) {
+                options.options.each(each);
+            } else {
+                velcro.utils.each(options.options, each);
+            }
 
-                element.appendChild(option.raw());
-            });
+            function each(index, item) {
+                velcro.dom(element).append('<option value="' + extractFrom(item, options.value) + '">' + extractFrom(item, options.text) + '</option>');
+            };
         },
 
         check: function(element) {
@@ -31,4 +31,32 @@
             }
         }
     });
+
+    function extract(item) {
+        if (!item) {
+            return '';
+        }
+
+        if (typeof item === 'function') {
+            return item();
+        }
+
+        return item;
+    }
+
+    function extractFrom(item, using) {
+        if (!using) {
+            return '';
+        }
+
+        if (typeof using === 'function') {
+            return using(item);
+        }
+
+        if (item instanceof velcro.Model) {
+            return item[using]();
+        }
+
+        return item;
+    }
 })();

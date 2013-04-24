@@ -129,7 +129,7 @@
         },
 
         throwForElement: function(element, message) {
-            throw message + "\n" + velcro.html(element);
+            throw message + "\n" + velcro.dom(element).html();
         }
     };
 })();
