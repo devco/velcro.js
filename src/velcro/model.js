@@ -206,10 +206,4 @@
             })(obj.constructor.definition.methods[i]);
         }
     }
-
-    function generateGetterSetterThrower(type, name) {
-        return function() {
-            throw 'No ' + type + ' defined for computed property "' + name + '".';
-        };
-    }
 })();
