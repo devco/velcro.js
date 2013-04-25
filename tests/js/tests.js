@@ -194,17 +194,30 @@ test('Observable Getters and Setters', function() {
         }
     });
 
+    var User = velcro.model({
+        forename: 'Bob',
+        surname: 'Bobberson',
+        getName: function() {
+            return this.forename() + ' ' + this.surname();
+        }
+    });
+
     var model = new Getter();
     ok(model.prop(), 'Getter without setter not working.');
 
     var model = new Setter();
     model.prop(true);
-return;
+
     ok(model._prop(), 'Setter without getter not working.');
 
     var model = new GetterAndSetter();
     model.prop(true);
     ok(model.prop(), 'Getter and setter not working.');
+
+    var user = new User;
+    var html = velcro.dom('<div data-vc-contents="text: name"></div>');
+    var app  = velcro.app(html, user);
+    user.forename('Marge');
 });
 
 test('Parent / Child Relationships', function() {

@@ -1,9 +1,15 @@
 (function() {
-    var dom = velcro.Class.extend({
+    velcro.Dom = velcro.Class.extend({
         element: null,
 
         init: function(element) {
-            this.element = typeof element === 'string' ? fromHtml(element) : element;
+            if (element instanceof velcro.Dom) {
+                element = element.raw();
+            } else if (typeof element === 'string') {
+                element = fromHtml(element);
+            }
+
+            this.element = element;
         },
 
         raw: function() {
@@ -164,7 +170,7 @@
     });
 
     velcro.dom = function(element) {
-        return new dom(element);
+        return new velcro.Dom(element);
     };
 
     function fromHtml(html) {

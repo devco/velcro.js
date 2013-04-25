@@ -223,11 +223,17 @@
     }
 })();
 (function() {
-    var dom = velcro.Class.extend({
+    velcro.Dom = velcro.Class.extend({
         element: null,
 
         init: function(element) {
-            this.element = typeof element === 'string' ? fromHtml(element) : element;
+            if (element instanceof velcro.Dom) {
+                element = element.raw();
+            } else if (typeof element === 'string') {
+                element = fromHtml(element);
+            }
+
+            this.element = element;
         },
 
         raw: function() {
@@ -388,7 +394,7 @@
     });
 
     velcro.dom = function(element) {
-        return new dom(element);
+        return new velcro.Dom(element);
     };
 
     function fromHtml(html) {
@@ -1111,11 +1117,11 @@
         var value = null;
 
         if (!velcro.utils.isObject(options)) {
-            options = { defaultValue: options };
+            options = { value: options };
         }
 
         options = velcro.utils.merge({
-            defaultValue: null,
+            value: null,
             bind: func,
             get: function() {
                 return value;
@@ -1125,7 +1131,7 @@
             }
         }, options);
 
-        value = options.defaultValue;
+        value = options.value;
 
         function func(newValue) {
             if (arguments.length === 0) {
@@ -1354,7 +1360,7 @@
         for (var i in obj.constructor.definition.properties) {
             obj[i] = velcro.value({
                 bind: obj,
-                defaultValue: obj.constructor.definition.properties[i]
+                value: obj.constructor.definition.properties[i]
             });
         }
     }
@@ -2106,6 +2112,8 @@
         bindOne: function(element) {
             var $this = this;
 
+            element = velcro.dom(element).raw();
+
             // Do not bind the same element more than once.
             if (_bound.indexOf(element) === -1) {
                 _bound.push(element);
@@ -2203,5 +2211,9 @@
             return this;
         }
     });
+
+    velcro.app = function(element, model) {
+        return new velcro.App().bind(element, model);
+    };
 })();
 });

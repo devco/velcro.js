@@ -44,6 +44,8 @@
         bindOne: function(element) {
             var $this = this;
 
+            element = velcro.dom(element).raw();
+
             // Do not bind the same element more than once.
             if (_bound.indexOf(element) === -1) {
                 _bound.push(element);
@@ -141,4 +143,8 @@
             return this;
         }
     });
+
+    velcro.app = function(element, model) {
+        return new velcro.App().bind(element, model);
+    };
 })();

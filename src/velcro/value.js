@@ -5,11 +5,11 @@
         var value = null;
 
         if (!velcro.utils.isObject(options)) {
-            options = { defaultValue: options };
+            options = { value: options };
         }
 
         options = velcro.utils.merge({
-            defaultValue: null,
+            value: null,
             bind: func,
             get: function() {
                 return value;
@@ -19,7 +19,7 @@
             }
         }, options);
 
-        value = options.defaultValue;
+        value = options.value;
 
         function func(newValue) {
             if (arguments.length === 0) {

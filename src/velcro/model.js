@@ -174,7 +174,7 @@
         for (var i in obj.constructor.definition.properties) {
             obj[i] = velcro.value({
                 bind: obj,
-                defaultValue: obj.constructor.definition.properties[i]
+                value: obj.constructor.definition.properties[i]
             });
         }
     }
