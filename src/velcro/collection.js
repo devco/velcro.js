@@ -114,19 +114,24 @@
         },
 
         from: function(data) {
-            var that = this;
+            var $this = this;
 
             if (data instanceof velcro.Collection) {
-                data = data.to();
+                data.each(each);
+            } else {
+                velcro.utils.each(data, each);
             }
 
-            velcro.utils.each(data, function(i, model) {
-                if (that.has(i)) {
-                    that.replace(i, model);
-                } else {
-                    that.replace(i, model);
+            function each(i, m) {
+                if (!(m instanceof $this._model)) {
+                    m = new $this._model(m);
+                    m._parent = $this._parent;
                 }
-            });
+
+                Array.prototype.splice.call($this, i, 1, m);
+            }
+
+            this._observer.publish();
 
             return this;
         },
