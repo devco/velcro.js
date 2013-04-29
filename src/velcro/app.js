@@ -98,12 +98,11 @@
                 var comp = { options: {}, bound: {} };
 
                 for (var i in temp) {
-                    if (velcro.utils.isValue(temp[i])) {
+                    if (velcro.value.isUnwrapped(temp[i])) {
                         comp.options[i] = temp[i]();
                         comp.bound[i]   = temp[i];
-                    } else if (temp[i] instanceof velcro.Model || temp[i] instanceof velcro.Collection) {
-                        comp.options[i] = temp[i]._observer();
-                        comp.bound[i]   = temp[i]._observer;
+                    } else if (typeof temp[i] === 'function') {
+                        comp.options[i] = temp[i].bind(context);
                     } else {
                         comp.options[i] = temp[i];
                     }

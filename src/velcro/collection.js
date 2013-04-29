@@ -1,6 +1,6 @@
 (function() {
     velcro.Collection = velcro.Class.extend({
-        _observer: null,
+        _observer: velcro.value(),
 
         _parent: null,
 
@@ -9,17 +9,8 @@
         init: function(Model, data) {
             Array.prototype.push.apply(this, []);
 
-            this._observer = velcro.value({
-                bind: this,
-                get: function() {
-                    return this;
-                },
-                set: function(value) {
-                    this.from(value);
-                }
-            });
-
-            this._model = Model;
+            this._observer = this._observer(this);
+            this._model    = Model;
 
             this.from(data);
         },

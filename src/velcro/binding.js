@@ -1,4 +1,6 @@
 (function() {
+    velcro.bindings = {};
+
     velcro.Binding = velcro.Class.extend({
         options: {},
 

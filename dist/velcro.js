@@ -7,7 +7,47 @@
         factory(window.velcro = {});
     }
 }(function(velcro) {
-    (function() {
+(function() {
+    if (typeof Function.prototype.bind !== 'function') {
+        Function.prototype.bind = function(oThis) {
+            var aArgs   = Array.prototype.slice.call(arguments, 1);
+            var fToBind = this;
+            var fNOP    = function () {};
+            var fBound  = function () {
+                return fToBind.apply(
+                    this instanceof fNOP && oThis ? this : oThis,
+                    aArgs.concat(Array.prototype.slice.call(arguments))
+                );
+            };
+
+            fNOP.prototype   = this.prototype;
+            fBound.prototype = new fNOP();
+
+            return fBound;
+        };
+    }
+
+    if (typeof Object.create !== 'function') {
+        Object.create = function (o) {
+            function F() {}
+            F.prototype = o;
+            return new F();
+        };
+    }
+
+    if (typeof Object.getPrototypeOf !== 'function') {
+        if (typeof 'test'.__proto__ === 'object') {
+            Object.getPrototypeOf = function(object) {
+                return object.__proto__;
+            };
+        } else {
+            Object.getPrototypeOf = function(object) {
+                return object.constructor.prototype;
+            };
+        }
+    }
+})();
+(function() {
     velcro.utils = {
         each: function(items, fn) {
             items = items || [];
@@ -49,10 +89,6 @@
 
         isArray: function(obj) {
             return Object.prototype.toString.call(obj) === '[object Array]';
-        },
-
-        isClass: function(obj) {
-            return typeof obj === 'function' && typeof obj.extend === 'function' && obj.extend === velcro.Class.extend;
         },
 
         isInstance: function(obj) {
@@ -150,77 +186,31 @@
     };
 })();
 (function() {
-    var extending  = false;
-    var classes    = [];
-    var extensions = {};
+    var extending = false;
 
     velcro.Class = function() {};
+
     velcro.Class.extend = function(definition) {
-        var $this  = this;
-        var Child  = createConstructor();
         var extend = arguments.callee;
 
-        registerHierarchy();
-        applyPrototype();
-        applyDefinition(this, Child, arguments.callee, definition);
-
-        return Child;
-
-
-        function applyPrototype() {
-            extending = true;
-            Child.prototype = new $this();
-            extending = false;
-        }
-
-        function applyDefinition() {
-            Child.extend = extend;
-
-            Child.isSubClassOf = function(Ancestor) {
-                var Parent = extensions[classes.indexOf(Child)];
-                return Parent === velcro.Class || Parent === Ancestor || Parent.isSubClassOf(Ancestor);
-            };
-
-            for (var member in definition) {
-                if (typeof Child.prototype[member] === 'function') {
-                    Child.prototype[member] = createProxy(member);
-                } else {
-                    Child.prototype[member] = definition[member];
-                }
-            }
-
-            Child.prototype.constructor = Child;
-        }
-
-        function createProxy(method) {
-            return (function(method, fn) {
-                return function() {
-                    var tmp = this.$super;
-
-                    this.$super = $this.prototype[method];
-
-                    var ret = fn.apply(this, arguments);
-
-                    this.$super = tmp;
-
-                    return ret;
-                };
-            })(method, definition[method]);
-        }
-
-        function registerHierarchy() {
-            classes.push(Child);
-            extensions[classes.indexOf(Child)] = $this;
-        }
-    };
-
-    function createConstructor() {
-        return function() {
+        function Child() {
             if (!extending && typeof this.init === 'function') {
                 this.init.apply(this, arguments);
             }
-        };
-    }
+        }
+
+        extending = true;
+        Child.prototype = new this();
+        extending = false;
+
+        Child.extend = extend;
+
+        for (var member in definition) {
+            Child.prototype[member] = definition[member];
+        }
+
+        return Child.prototype.constructor = Child;
+    };
 })();
 (function() {
     velcro.Dom = velcro.Class.extend({
@@ -435,6 +425,8 @@
     }
 })();
 (function() {
+    velcro.bindings = {};
+
     velcro.Binding = velcro.Class.extend({
         options: {},
 
@@ -1111,89 +1103,217 @@
     });
 })();
 (function() {
-    velcro.value = function(options) {
-        var interval;
-        var subs  = [];
-        var value = null;
+    velcro.value = function(name, proto) {
+        var value;
 
-        if (!velcro.utils.isObject(options)) {
-            options = { value: options };
-        }
+        if (typeof name === 'string') {
+            name = name.charAt(0).toUpperCase() + name.substring(1);
 
-        options = velcro.utils.merge({
-            value: null,
-            bind: func,
-            get: function() {
-                return value;
-            },
-            set: function(newValue) {
-                value = newValue;
+            if (typeof velcro.Value[name] === 'undefined') {
+                throw 'The value "' + name + '" is not a registered value type. To register this value use `velcro.Value.' + name + ' = velcro.Value.extend(proto)`.';
             }
-        }, options);
 
-        value = options.value;
-
-        function func(newValue) {
-            if (arguments.length === 0) {
-                return options.get.call(options.bind);
+            if (proto) {
+                value = velcro.Value[name].extend(proto);
             } else {
-                options.set.call(options.bind, newValue);
-                func.publish();
-                return options.bind;
+                value = velcro.Value[name];
             }
+        } else if (typeof name === 'object') {
+            value = velcro.Value.extend(name);
+        } else {
+            value = velcro.Value;
         }
 
-        func.subscribe = function(callback) {
-            subs.push(callback);
-            return options.bind;
-        };
+        return function(owner) {
+            var inst = new value(owner);
+            var func = function(value) {
+                if (arguments.length) {
+                    this.set(value);
+                    this.publish();
+                    return owner;
+                }
 
-        func.unsubscribe = function(callback) {
-            for (var i = 0; i < subs.length; i++) {
+                return this.get();
+            }.bind(inst);
+
+            for (var i in inst) {
+                func[i] = inst[i];
+            }
+
+            return func;
+        };
+    };
+
+    velcro.value.isWrapped = function(comp) {
+        return typeof comp === 'function' && comp.toString() === velcro.value().toString();
+    };
+
+    velcro.value.isUnwrapped = function(comp) {
+        return typeof comp === 'function' && comp.constructor.prototype instanceof velcro.Value;
+    };
+
+    velcro.Value = velcro.Class.extend({
+        interval: false,
+
+        subs: [],
+
+        value: null,
+
+        get: function() {
+            return this.value;
+        },
+
+        set: function(value) {
+            this.value = value;
+        },
+
+        subscribe: function(callback) {
+            this.subs.push(callback);
+            return this;
+        },
+
+        unsubscribe: function(callback) {
+            for (var i = 0; i < this.subs.length; i++) {
                 if (callback === subscriber) {
-                    subs.splice(index, 1);
+                    this.subs.splice(index, 1);
                     return;
                 }
             }
 
-            return options.bind;
-        };
+            return this;
+        },
 
-        func.publish = function() {
-            var newValue = func();
-
-            for (var i = 0; i < subs.length; i++) {
-                subs[i](newValue);
+        publish: function() {
+            for (var i = 0; i < this.subs.length; i++) {
+                this.subs[i]();
             }
 
-            return options.bind;
-        };
+            return this;
+        },
 
-        func.updateEvery = function(ms) {
-            interval = setInterval(function() {
-                func.publish();
+        updateEvery: function(ms) {
+            var $this = this;
+
+            this.interval = setInterval(function() {
+                $this.publish();
             }, ms);
-        };
 
-        func.stopUpdating = function() {
-            if (interval) {
-                clearInterval(interval);
+            return this;
+        },
+
+        stopUpdating: function() {
+            if (this.interval) {
+                clearInterval(this.interval);
             }
-        };
 
-        return func;
-    };
+            return this;
+        }
+    });
+})();
+(function() {
+    velcro.Value.Array = velcro.Value.extend({
+        init: function() {
+            this.value = [];
+        },
+        set: function(value) {
+            if (velcro.utils.isArray(value)) {
+                this.value = value;
+            } else {
+                this.value = [value];
+            }
+        }
+    });
+})();
+(function() {
+    velcro.Value.Boolean = velcro.Value.extend({
+        value: false,
+        set: function(value) {
+            this.value = value ? true : false;
+        }
+    });
+})();
+(function() {
+    velcro.Value.Computed = velcro.Value.extend({
+        use: [],
+        model: null,
+        init: function(model) {
+            var $this = this;
+
+            this.model = model;
+
+            for (i = 0; i < this.use.length; i++) {
+                this.model[this.use[i]].subscribe(function() {
+                    //$this.publish();
+                });
+            }
+        },
+        get: function() {
+            if (!this.read) {
+                throw 'Cannot read value because no read function was defined.'
+            }
+
+            return this.read.call(this.model);
+        },
+        set: function(value) {
+            if (!this.write) {
+                throw 'Cannot write value "' + value + '" because no write function was defined.'
+            }
+
+            this.write.call(this.model, value);
+        }
+    });
+})();
+(function() {
+    velcro.Value.Many = velcro.Value.extend({
+        model: velcro.Model,
+        init: function(owner) {
+            this.value = new velcro.Collection(this.model);
+            this.value._parent = owner;
+        },
+        set: function(data) {
+            this.value.from(data);
+        }
+    });
+})();
+(function() {
+    velcro.Value.One = velcro.Value.extend({
+        model: velcro.Model,
+        init: function(owner) {
+            this.value = new this.model();
+            this.value._parent = owner;
+        },
+        set: function(data) {
+            this.value.from(data);
+        }
+    });
+})();
+(function() {
+    velcro.Value.String = velcro.Value.extend({
+        set: function(value) {
+            this.value = '' + value;
+        }
+    });
 })();
 (function() {
     velcro.Model = velcro.Class.extend({
-        _observer: null,
+        _observer: velcro.value(),
 
         _parent: null,
 
         init: function(data) {
-            defineIfNotDefined(this);
-            applyDefinition(this);
+            var $this = this;
 
+            // For observing overall changes to the model.
+            this._observer = this._observer(this);
+
+            // Unwrap all value instances
+            for (var i in this) {
+                if (velcro.value.isWrapped(this[i])) {
+                    this[i] = this[i](this);
+                }
+            }
+
+            // So the user doesn't have to worry about calling the parent method and order of operations.
             if (typeof this.setup === 'function') {
                 this.setup();
             }
@@ -1210,18 +1330,10 @@
         },
 
         each: function(fn) {
-            var def = this.constructor.definition;
-
-            for (var a in def.relations) {
-                fn(a, this[a]);
-            }
-
-            for (var b in def.properties) {
-                fn(b, this[b]);
-            }
-
-            for (var c in def.computed) {
-                fn(c, this[c]);
+            for (var i in this) {
+                if (velcro.value.isUnwrapped(this[i])) {
+                    fn(i, this[i]);
+                }
             }
 
             return this;
@@ -1261,147 +1373,10 @@
             return out;
         }
     });
-
-    velcro.model = function(def) {
-        return velcro.Model.extend(def);
-    };
-
-    function defineIfNotDefined(obj) {
-        if (!obj.constructor.definition) {
-            define(obj);
-        }
-    }
-
-    function define(obj) {
-        initDefinition(obj);
-        definePrototype(obj);
-    }
-
-    function initDefinition(obj) {
-        obj.constructor.definition = {
-            relations: {},
-            properties: {},
-            computed: {},
-            methods: {}
-        };
-    }
-
-    function definePrototype(obj) {
-        for (var i in obj) {
-            if (typeof velcro.Model.prototype[i] !== 'undefined') {
-                continue;
-            }
-
-            var v = obj[i];
-
-            if (velcro.utils.isClass(v) && (v.isSubClassOf(velcro.Model) || v.isSubClassOf(velcro.Collection))) {
-                obj.constructor.definition.relations[i] = v;
-                continue;
-            }
-
-            if (typeof v === 'function') {
-                var name = false;
-                var type = false;
-
-                if (i.indexOf('get') === 0) {
-                    name = i.substring(3, 4).toLowerCase() + i.substring(4);
-                    type = 'get';
-                } else if (i.indexOf('set') === 0) {
-                    name = i.substring(3, 4).toLowerCase() + i.substring(4);
-                    type = 'set';
-                }
-
-                if (type) {
-                    if (typeof obj.constructor.definition.computed[name] === 'undefined') {
-                        obj.constructor.definition.computed[name] = {};
-                    }
-
-                    obj.constructor.definition.computed[name][type] = v;
-                } else {
-                    obj.constructor.definition.methods[i] = v;
-                }
-
-                continue;
-            }
-
-            obj.constructor.definition.properties[i] = v;
-        }
-    }
-
-    function applyDefinition(obj) {
-        applyObserver(obj);
-        applyRelations(obj);
-        applyProperties(obj);
-        applyComputed(obj);
-        applyMethods(obj);
-    }
-
-    function applyObserver(obj) {
-        obj._observer = velcro.value({
-            bind: obj,
-            get: function() {
-                return this;
-            },
-            set: function(value) {
-                this.from(value);
-            }
-        });
-    }
-
-    function applyRelations(obj) {
-        for (var i in obj.constructor.definition.relations) {
-            var instance = new obj.constructor.definition.relations[i]();
-            instance._parent = obj;
-            obj[i] = instance._observer;
-        }
-    }
-
-    function applyProperties(obj) {
-        for (var i in obj.constructor.definition.properties) {
-            obj[i] = velcro.value({
-                bind: obj,
-                value: obj.constructor.definition.properties[i]
-            });
-        }
-    }
-
-    function applyComputed(obj) {
-        for (var i in obj.constructor.definition.computed) {
-            var options = {
-                bind: obj
-            };
-
-            if (typeof obj.constructor.definition.computed[i].get === 'function') {
-                options.get = obj.constructor.definition.computed[i].get;
-            }
-
-            if (typeof obj.constructor.definition.computed[i].set === 'function') {
-                options.set = obj.constructor.definition.computed[i].set;
-            }
-
-            obj[i] = velcro.value(options);
-        }
-    }
-
-    function applyMethods(obj) {
-        for (var i in obj.constructor.definition.methods) {
-            obj[i] = (function(method) {
-                return function() {
-                    return method.apply(obj, Array.prototype.slice.call(arguments));
-                };
-            })(obj.constructor.definition.methods[i]);
-        }
-    }
-
-    function generateGetterSetterThrower(type, name) {
-        return function() {
-            throw 'No ' + type + ' defined for computed property "' + name + '".';
-        };
-    }
 })();
 (function() {
     velcro.Collection = velcro.Class.extend({
-        _observer: null,
+        _observer: velcro.value(),
 
         _parent: null,
 
@@ -1410,17 +1385,8 @@
         init: function(Model, data) {
             Array.prototype.push.apply(this, []);
 
-            this._observer = velcro.value({
-                bind: this,
-                get: function() {
-                    return this;
-                },
-                set: function(value) {
-                    this.from(value);
-                }
-            });
-
-            this._model = Model;
+            this._observer = this._observer(this);
+            this._model    = Model;
 
             this.from(data);
         },
@@ -2166,12 +2132,11 @@
                 var comp = { options: {}, bound: {} };
 
                 for (var i in temp) {
-                    if (velcro.utils.isValue(temp[i])) {
+                    if (velcro.value.isUnwrapped(temp[i])) {
                         comp.options[i] = temp[i]();
                         comp.bound[i]   = temp[i];
-                    } else if (temp[i] instanceof velcro.Model || temp[i] instanceof velcro.Collection) {
-                        comp.options[i] = temp[i]._observer();
-                        comp.bound[i]   = temp[i]._observer;
+                    } else if (typeof temp[i] === 'function') {
+                        comp.options[i] = temp[i].bind(context);
                     } else {
                         comp.options[i] = temp[i];
                     }

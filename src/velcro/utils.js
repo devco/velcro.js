@@ -42,10 +42,6 @@
             return Object.prototype.toString.call(obj) === '[object Array]';
         },
 
-        isClass: function(obj) {
-            return typeof obj === 'function' && typeof obj.extend === 'function' && obj.extend === velcro.Class.extend;
-        },
-
         isInstance: function(obj) {
             return obj && typeof obj.constructor === 'function';
         },

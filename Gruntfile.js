@@ -11,6 +11,7 @@ module.exports = function(grunt) {
         concat: {
             dist: {
                 src: [
+                    'src/velcro/polyfills.js',
                     'src/velcro/utils.js',
                     'src/velcro/class.js',
                     'src/velcro/dom.js',
@@ -20,6 +21,7 @@ module.exports = function(grunt) {
                     'src/velcro/router.js',
                     'src/velcro/view.js',
                     'src/velcro/value.js',
+                    'src/velcro/values/*.js',
                     'src/velcro/model.js',
                     'src/velcro/collection.js',
                     'src/velcro/bindings.js',
@@ -40,7 +42,8 @@ module.exports = function(grunt) {
         jshint: {
             options: {
                 evil: true,
-                loopfunc: true
+                loopfunc: true,
+                proto: true
             },
             files: [
                 'src/velcro/*.js',
