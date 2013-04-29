@@ -1,8 +1,8 @@
 (function() {
-    velcro.bindings['with'] = velcro.binding({
+    vc.bindings['with'] = vc.binding({
         update: function(app, element, options) {
             if (!options.context) {
-                velcro.utils.throwForElement(element, 'A context option must be specified.');
+                vc.utils.throwForElement(element, 'A context option must be specified.');
             }
 
             app.context(options.context);

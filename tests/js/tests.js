@@ -5,7 +5,7 @@ var _undefined;
 module('Utils');
 
 test('Object Merging', function() {
-    var merged = velcro.utils.merge({
+    var merged = vc.utils.merge({
         prop1: 'old',
         prop3: { prop1: 'old', prop3: [ 1 ] },
     }, {
@@ -26,10 +26,10 @@ test('Object Merging', function() {
 module('Objects');
 
 test('Extension', function() {
-    var MyObj1 = velcro.Class.extend();
+    var MyObj1 = vc.Class.extend();
     var MyObj2 = MyObj1.extend();
     var MyObj3 = MyObj2.extend();
-    var ArbitraryObj = velcro.Class.extend();
+    var ArbitraryObj = vc.Class.extend();
 
     var obj3 = new MyObj3;
 
@@ -46,9 +46,9 @@ test('Extension', function() {
 module('Models and Collections');
 
 test('Simple Values', function() {
-    var Model = velcro.Model.extend({
-        value1: velcro.value('string'),
-        value2: velcro.value('string', { value: 'default' })
+    var Model = vc.Model.extend({
+        value1: vc.value('string'),
+        value2: vc.value('string', { value: 'default' })
     });
 
     var model1 = new Model;
@@ -64,10 +64,10 @@ test('Simple Values', function() {
 });
 
 test('Defining', function() {
-    var User = velcro.Model.extend({
-        forename: velcro.value('string'),
-        surname: velcro.value('string'),
-        name: velcro.value('computed', {
+    var User = vc.Model.extend({
+        forename: vc.value('string'),
+        surname: vc.value('string'),
+        name: vc.value('computed', {
             use: ['forename', 'surname'],
             read: function() {
                 return this.forename() + ' ' + this.surname();
@@ -101,13 +101,13 @@ test('Defining', function() {
 });
 
 test('Relationships', function() {
-    var Friend = velcro.Model.extend({
-        name: velcro.value('string')
+    var Friend = vc.Model.extend({
+        name: vc.value('string')
     });
 
-    var User = velcro.Model.extend({
-        bestFriend: velcro.value('one', { model: Friend }),
-        friends: velcro.value('many', { model: Friend })
+    var User = vc.Model.extend({
+        bestFriend: vc.value('one', { model: Friend }),
+        friends: vc.value('many', { model: Friend })
     });
 
     var user = new User();
@@ -129,12 +129,12 @@ test('Relationships', function() {
 });
 
 test('Collection Manipulation', function() {
-    var Item = velcro.Model.extend({
-        name: velcro.value('string')
+    var Item = vc.Model.extend({
+        name: vc.value('string')
     });
 
-    var Items = velcro.Model.extend({
-        items: velcro.value('many', { model: Item })
+    var Items = vc.Model.extend({
+        items: vc.value('many', { model: Item })
     });
 
     var model = new Items();
@@ -157,27 +157,27 @@ test('Collection Manipulation', function() {
 });
 
 test('Observable Getters and Setters', function() {
-    var Getter = velcro.Model.extend({
-        _prop: velcro.value('boolean', { value: true }),
-        prop: velcro.value('computed', {
+    var Getter = vc.Model.extend({
+        _prop: vc.value('boolean', { value: true }),
+        prop: vc.value('computed', {
             read: function() {
                 return this._prop();
             }
         })
     });
 
-    var Setter = velcro.Model.extend({
-        _prop: velcro.value('boolean'),
-        prop: velcro.value('computed', {
+    var Setter = vc.Model.extend({
+        _prop: vc.value('boolean'),
+        prop: vc.value('computed', {
             write: function(prop) {
                 this._prop(prop);
             }
         })
     });
 
-    var GetterAndSetter = velcro.Model.extend({
-        _prop: velcro.value('boolean'),
-        prop: velcro.value('computed', {
+    var GetterAndSetter = vc.Model.extend({
+        _prop: vc.value('boolean'),
+        prop: vc.value('computed', {
             read: function() {
                 return this._prop();
             },
@@ -187,10 +187,10 @@ test('Observable Getters and Setters', function() {
         })
     });
 
-    var User = velcro.Model.extend({
-        forename: velcro.value('string', 'Bob'),
-        surname: velcro.value('string', 'Bobberson'),
-        name: velcro.value('computed', {
+    var User = vc.Model.extend({
+        forename: vc.value('string', 'Bob'),
+        surname: vc.value('string', 'Bobberson'),
+        name: vc.value('computed', {
             read: function() {
                 return [this.forename(), this.surname()].join(' ').replace(/\s+$/, '');
             }
@@ -210,8 +210,8 @@ test('Observable Getters and Setters', function() {
     ok(model.prop(), 'Getter and setter not working.');
 
     var user = new User({ forename: 'Bob' });
-    var html = velcro.dom('<div data-vc-contents="text: name"></div>');
-    var app  = velcro.app(html, user);
+    var html = vc.dom('<div data-vc-contents="text: name"></div>');
+    var app  = vc.app(html, user);
 
     ok(html.contents() === 'Bob', 'Not initialised.');
 
@@ -220,7 +220,7 @@ test('Observable Getters and Setters', function() {
 });
 
 test('Parent / Child Relationships', function() {
-    var LeafModel = velcro.Model.extend({
+    var LeafModel = vc.Model.extend({
         test: function() {
             ok(this instanceof LeafModel, 'Using `this` in a method should refer to current model.');
             ok(this.parent() instanceof BranchModel, 'Using `this.parent()` in a method should refer to the correct parent.');
@@ -228,16 +228,16 @@ test('Parent / Child Relationships', function() {
         }
     });
 
-    var BranchModel = velcro.Model.extend({
-        leaf: velcro.value('one', { model: LeafModel }),
-        leafs: velcro.value('many', { model: LeafModel })
+    var BranchModel = vc.Model.extend({
+        leaf: vc.value('one', { model: LeafModel }),
+        leafs: vc.value('many', { model: LeafModel })
     });
 
-    var TrunkModel = velcro.Model.extend({
-        leaf: velcro.value('one', { model: LeafModel }),
-        leafs: velcro.value('many', { model: LeafModel }),
-        branch: velcro.value('one', { model: BranchModel }),
-        branches: velcro.value('many', { model: BranchModel })
+    var TrunkModel = vc.Model.extend({
+        leaf: vc.value('one', { model: LeafModel }),
+        leafs: vc.value('many', { model: LeafModel }),
+        branch: vc.value('one', { model: BranchModel }),
+        branches: vc.value('many', { model: BranchModel })
     });
 
     var trunk = new TrunkModel({
@@ -269,10 +269,10 @@ test('Parent / Child Relationships', function() {
 });
 
 test('Chaining Method Calls', function() {
-    var Model = velcro.Model.extend({
-        test1: velcro.value('string'),
-        test3: velcro.value('string'),
-        test2: velcro.value('computed', {
+    var Model = vc.Model.extend({
+        test1: vc.value('string'),
+        test3: vc.value('string'),
+        test2: vc.value('computed', {
             read: function() {
                 return this.test3();
             },
@@ -289,7 +289,7 @@ test('Chaining Method Calls', function() {
 });
 
 test('Rebinding Methods to Model Instance', function() {
-    var Model = velcro.Model.extend({
+    var Model = vc.Model.extend({
         test: function() {
             ok(this instanceof Model, 'Using `this` inside of a model method should refer to the model instance in which it is defined.');
             return this;
@@ -305,7 +305,7 @@ test('Rebinding Methods to Model Instance', function() {
 module('Views');
 
 test('No Model Binding', function() {
-    var view = new velcro.View();
+    var view = new vc.View();
 
     view.options.target = document.createElement('div');
     view.cache.test     = 'test';
@@ -320,7 +320,7 @@ test('No Model Binding', function() {
 module('Http');
 
 asyncTest('Parsing Based on Request Header', function() {
-    var http = new velcro.Http({
+    var http = new vc.Http({
         headers: {
             Accept: 'application/json'
         }
@@ -351,13 +351,13 @@ test('Observing Changes', function() {
     span.setAttribute('data-vc-contents', 'text: name');
     div.appendChild(span);
 
-    var Person = velcro.Model.extend({
-        name: velcro.value('string', { value: 'Default Value' })
+    var Person = vc.Model.extend({
+        name: vc.value('string', { value: 'Default Value' })
     });
 
     var dude = new Person;
 
-    new velcro.App().bind(div, dude);
+    new vc.App().bind(div, dude);
 
     ok(div.childNodes[0].innerText === dude.name(), 'Inner text on div child should be initialised.');
 
@@ -367,7 +367,7 @@ test('Observing Changes', function() {
 });
 
 test('Changing Context and Scoping', function() {
-    var app = new velcro.App();
+    var app = new vc.App();
 
     app.context({ trunk: true });
     app.context({ branch: true });
@@ -382,8 +382,8 @@ asyncTest('Router', function() {
     var div = document.createElement('div');
     div.setAttribute('data-vc-routable', 'router: router');
 
-    var app    = new velcro.App()
-    var router = new velcro.Router();
+    var app    = new vc.App()
+    var router = new vc.Router();
 
     router.set('index', function() {
         return {
@@ -407,7 +407,7 @@ asyncTest('View', function() {
     var div = document.createElement('div');
     div.setAttribute('data-vc-include', 'path: "index", context: context, callback: callback');
 
-    new velcro.App().bind(div, {
+    new vc.App().bind(div, {
         context: function() {
             return { name: 'test' };
         },
@@ -421,7 +421,7 @@ asyncTest('View', function() {
 test('Document Binding - Passing Shallow Contexts to Nested Elements', function() {
     document.body.innerHTML = '<ul data-vc-if="test: test"><li data-vc-each="items: items"></li></ul>';
 
-    new velcro.App().bind({
+    new vc.App().bind({
         test: true,
         items: [
             'Item 1',
@@ -437,11 +437,11 @@ test('Document Binding - Passing Shallow Contexts to Nested Elements', function(
 module('Bindings');
 
 test('attr', function() {
-    var div   = velcro.dom('<div data-vc-attr="\'class\': className, title: title"></div>');
-    var app   = new velcro.App;
-    var model = new (velcro.Model.extend({
-        className: velcro.value('string', { value: 'test-class1' }),
-        title: velcro.value('string', { value: 'test title 1' })
+    var div   = vc.dom('<div data-vc-attr="\'class\': className, title: title"></div>');
+    var app   = new vc.App;
+    var model = new (vc.Model.extend({
+        className: vc.value('string', { value: 'test-class1' }),
+        title: vc.value('string', { value: 'test title 1' })
     }));
 
     app.bind(div.raw(), model);
@@ -457,10 +457,10 @@ test('attr', function() {
 });
 
 test('check', function() {
-    var html  = velcro.dom('<input type="checkbox" value="1" data-vc-check="bind: check">');
-    var app   = new velcro.App;
-    var model = new (velcro.Model.extend({
-        check: velcro.value('boolean')
+    var html  = vc.dom('<input type="checkbox" value="1" data-vc-check="bind: check">');
+    var app   = new vc.App;
+    var model = new (vc.Model.extend({
+        check: vc.value('boolean')
     }));
 
     app.bind(html.raw(), model);
@@ -479,8 +479,8 @@ test('check', function() {
 });
 
 test('click', function() {
-    var div = velcro.dom('<div data-vc-click="callback: test"></div>');
-    var app = new velcro.App;
+    var div = vc.dom('<div data-vc-click="callback: test"></div>');
+    var app = new vc.App;
     var yes = false;
 
     app.bind(div.raw(), {
@@ -501,17 +501,17 @@ test('context', function() {
     span.setAttribute('data-vc-contents', 'text: name');
     div.appendChild(span);
 
-    var App = velcro.Model.extend({
-        person: velcro.value('one', {
-            model: velcro.Model.extend({
-                name: velcro.value('string', { value: 'Default Value' })
+    var App = vc.Model.extend({
+        person: vc.value('one', {
+            model: vc.Model.extend({
+                name: vc.value('string', { value: 'Default Value' })
             })
         })
     });
 
     var appsrawesome = new App;
 
-    new velcro.App().bind(div, appsrawesome)
+    new vc.App().bind(div, appsrawesome)
     ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be initialised.');
 
     appsrawesome.person().name('Updated Value');
@@ -520,11 +520,11 @@ test('context', function() {
 });
 
 test('css', function() {
-    var div   = velcro.dom('<div data-vc-css="class1: class1, class2: class2"></div>');
-    var app   = new velcro.App;
-    var model = new (velcro.Model.extend({
-        class1: velcro.value('string', { value: 'test-class1' }),
-        class2: velcro.value('string', { value: 'test-class2' })
+    var div   = vc.dom('<div data-vc-css="class1: class1, class2: class2"></div>');
+    var app   = new vc.App;
+    var model = new (vc.Model.extend({
+        class1: vc.value('string', { value: 'test-class1' }),
+        class2: vc.value('string', { value: 'test-class2' })
     }));
 
     app.bind(div.raw(), model);
@@ -540,10 +540,10 @@ test('css', function() {
 });
 
 test('disable', function() {
-    var input = velcro.dom('<input type="text" disabled="disabled" data-vc-disable="test: disabled">');
-    var app   = new velcro.App;
-    var model = new (velcro.Model.extend({
-        disabled: velcro.value('boolean')
+    var input = vc.dom('<input type="text" disabled="disabled" data-vc-disable="test: disabled">');
+    var app   = new vc.App;
+    var model = new (vc.Model.extend({
+        disabled: vc.value('boolean')
     }));
 
     app.bind(input.raw(), model);
@@ -558,19 +558,19 @@ test('disable', function() {
 test('each', function() {
     var ul   = document.createElement('ul');
     var li   = document.createElement('li');
-    var Item = velcro.Model.extend({
-        text: velcro.value('string')
+    var Item = vc.Model.extend({
+        text: vc.value('string')
     });
 
     ul.appendChild(li);
     li.setAttribute('data-vc-each', 'items: items');
     li.setAttribute('data-vc-contents', 'text: text');
 
-    var ctx = new (velcro.Model.extend({
-        items: velcro.value('many', { model: Item })
+    var ctx = new (vc.Model.extend({
+        items: vc.value('many', { model: Item })
     }));
 
-    var app = new velcro.App().bind(ul, ctx);
+    var app = new vc.App().bind(ul, ctx);
 
     ctx.items().append({
         text: 'Item 1'
@@ -586,10 +586,10 @@ test('each', function() {
 });
 
 test('enable', function() {
-    var input = velcro.dom('<input type="text" data-vc-enable="test: enabled">');
-    var app   = new velcro.App;
-    var model = new (velcro.Model.extend({
-        enabled: velcro.value('boolean')
+    var input = vc.dom('<input type="text" data-vc-enable="test: enabled">');
+    var app   = new vc.App;
+    var model = new (vc.Model.extend({
+        enabled: vc.value('boolean')
     }));
 
     app.bind(input.raw(), model);
@@ -602,10 +602,10 @@ test('enable', function() {
 });
 
 test('extend', function() {
-    var html  = velcro.dom('<div><div data-vc-extend="path: path">test</div><script id="vc-view-layout1" type="text/html"><h1 data-vc-contents="html: $content"></h1></script><script id="vc-view-layout2" type="text/html"><h2 data-vc-contents="html: $content"></h2></script></div>');
-    var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
-        path: velcro.value('string', { value: 'layout1' })
+    var html  = vc.dom('<div><div data-vc-extend="path: path">test</div><script id="vc-view-layout1" type="text/html"><h1 data-vc-contents="html: $content"></h1></script><script id="vc-view-layout2" type="text/html"><h2 data-vc-contents="html: $content"></h2></script></div>');
+    var app   = new vc.App();
+    var model = new (vc.Model.extend({
+        path: vc.value('string', { value: 'layout1' })
     }));
 
     document.body.appendChild(html.raw());
@@ -618,11 +618,11 @@ test('extend', function() {
 });
 
 test('focus', function() {
-    var html  = velcro.dom('<input type="text" data-vc-focus="bind: focus">');
+    var html  = vc.dom('<input type="text" data-vc-focus="bind: focus">');
     var focus = false;
-    var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
-        focus: velcro.value('boolean')
+    var app   = new vc.App();
+    var model = new (vc.Model.extend({
+        focus: vc.value('boolean')
     }));
 
     app.bind(html.raw(), model);
@@ -649,10 +649,10 @@ test('focus', function() {
 });
 
 test('hide', function() {
-    var html  = velcro.dom('<div data-vc-hide="test: hide"></div>');
-    var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
-        hide: velcro.value('boolean')
+    var html  = vc.dom('<div data-vc-hide="test: hide"></div>');
+    var app   = new vc.App();
+    var model = new (vc.Model.extend({
+        hide: vc.value('boolean')
     }));
 
     app.bind(html.raw(), model);
@@ -665,10 +665,10 @@ test('hide', function() {
 });
 
 test('html', function() {
-    var div   = velcro.dom('<div data-vc-contents="html: html"></div>');
-    var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
-        html: velcro.value('string', { value: '<ul></ul>' })
+    var div   = vc.dom('<div data-vc-contents="html: html"></div>');
+    var app   = new vc.App();
+    var model = new (vc.Model.extend({
+        html: vc.value('string', { value: '<ul></ul>' })
     }));
 
     app.bind(div.raw(), model);
@@ -679,10 +679,10 @@ test('html', function() {
 });
 
 test('if', function() {
-    var div   = velcro.dom('<div><ul data-vc-if="test: show"></ul></div>');
-    var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
-        show: velcro.value('boolean')
+    var div   = vc.dom('<div><ul data-vc-if="test: show"></ul></div>');
+    var app   = new vc.App();
+    var model = new (vc.Model.extend({
+        show: vc.value('boolean')
     }));
 
     app.bind(div.raw(), model);
@@ -693,10 +693,10 @@ test('if', function() {
 });
 
 test('include', function() {
-    var div   = velcro.dom('<div><div data-vc-include="path: path"></div><script id="vc-view-child1" type="text/html">child1</script><script id="vc-view-child2" type="text/html">child2</script></div>');
-    var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
-        path: velcro.value('string', { value: 'child1' })
+    var div   = vc.dom('<div><div data-vc-include="path: path"></div><script id="vc-view-child1" type="text/html">child1</script><script id="vc-view-child2" type="text/html">child2</script></div>');
+    var app   = new vc.App();
+    var model = new (vc.Model.extend({
+        path: vc.value('string', { value: 'child1' })
     }));
 
     document.body.appendChild(div.raw());
@@ -708,10 +708,10 @@ test('include', function() {
 });
 
 test('on', function() {
-    var div   = velcro.dom('<div data-vc-on="hide: hide, show: show"></div>');
-    var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
-        triggered: velcro.value('array'),
+    var div   = vc.dom('<div data-vc-on="hide: hide, show: show"></div>');
+    var app   = new vc.App();
+    var model = new (vc.Model.extend({
+        triggered: vc.value('array'),
         hide: function(e) {
             this.triggered().push('hide');
         },
@@ -730,20 +730,20 @@ test('on', function() {
 });
 
 test('options', function() {
-    var select = velcro.dom('<select data-vc-options="options: options, caption: caption, text: text, value: value"></select>');
-    var app    = new velcro.App();
-    var model  = new (velcro.Model.extend({
-        caption: velcro.value('string', { value: 'Choose...' }),
-        options: velcro.value('many', {
-            model: velcro.Model.extend({
-                text: velcro.value('string'),
-                value: velcro.value('string')
+    var select = vc.dom('<select data-vc-options="options: options, caption: caption, text: text, value: value"></select>');
+    var app    = new vc.App();
+    var model  = new (vc.Model.extend({
+        caption: vc.value('string', { value: 'Choose...' }),
+        options: vc.value('many', {
+            model: vc.Model.extend({
+                text: vc.value('string'),
+                value: vc.value('string')
             })
         }),
         text: function(option) {
             return option.text();
         },
-        value: velcro.value('string', { value: 'value' })
+        value: vc.value('string', { value: 'value' })
     }));
 
     app.bind(select.raw(), model);
@@ -764,10 +764,10 @@ test('options', function() {
 });
 
 test('routable', function() {
-    var div   = velcro.dom('<div><div data-vc-routable="router: router"></div><script id="vc-view-test" type="text/html"><span data-vc-contents="text: text"></span></script></div>');
-    var app   = new velcro.App();
+    var div   = vc.dom('<div><div data-vc-routable="router: router"></div><script id="vc-view-test" type="text/html"><span data-vc-contents="text: text"></span></script></div>');
+    var app   = new vc.App();
     var model = {
-        router: new velcro.Router()
+        router: new vc.Router()
     };
 
     model.router.set('test1', {
@@ -799,10 +799,10 @@ test('routable', function() {
 });
 
 test('show', function() {
-    var html  = velcro.dom('<div data-vc-show="test: show"></div>');
-    var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
-        show: velcro.value('boolean', { value: true })
+    var html  = vc.dom('<div data-vc-show="test: show"></div>');
+    var app   = new vc.App();
+    var model = new (vc.Model.extend({
+        show: vc.value('boolean', { value: true })
     }));
 
     app.bind(html.raw(), model);
@@ -815,10 +815,10 @@ test('show', function() {
 });
 
 test('style', function() {
-    var html  = velcro.dom('<div data-vc-style="display: display, visibility: visibility"></div>');
-    var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
-        display: velcro.value('string', { value: 'inline' }),
+    var html  = vc.dom('<div data-vc-style="display: display, visibility: visibility"></div>');
+    var app   = new vc.App();
+    var model = new (vc.Model.extend({
+        display: vc.value('string', { value: 'inline' }),
         visibility: function() {
             return 'hidden';
         }
@@ -831,10 +831,10 @@ test('style', function() {
 });
 
 test('submit', function() {
-    var form = velcro.dom('<form data-vc-submit="callback: callback"></form>');
-    var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
-        submitted: velcro.value('boolean'),
+    var form = vc.dom('<form data-vc-submit="callback: callback"></form>');
+    var app   = new vc.App();
+    var model = new (vc.Model.extend({
+        submitted: vc.value('boolean'),
         callback: function() {
             this.submitted(true);
         }
@@ -846,10 +846,10 @@ test('submit', function() {
 });
 
 test('text', function() {
-    var div   = velcro.dom('<div data-vc-contents="text: text"></div>');
-    var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
-        text: velcro.value('string', { value: 'test1' })
+    var div   = vc.dom('<div data-vc-contents="text: text"></div>');
+    var app   = new vc.App();
+    var model = new (vc.Model.extend({
+        text: vc.value('string', { value: 'test1' })
     }));
 
     app.bind(div.raw(), model);
@@ -860,10 +860,10 @@ test('text', function() {
 });
 
 test('value', function() {
-    var input = velcro.dom('<input type="text" data-vc-value="value: value">');
-    var app   = new velcro.App();
-    var model = new (velcro.Model.extend({
-        value: velcro.value('string', { value: 'test1' })
+    var input = vc.dom('<input type="text" data-vc-value="value: value">');
+    var app   = new vc.App();
+    var model = new (vc.Model.extend({
+        value: vc.value('string', { value: 'test1' })
     }));
 
     app.bind(input.raw(), model);

@@ -1,8 +1,8 @@
-define(['velcro', 'views/examples/todo'], function(velcro, ExamplesTodoView) {
+define(['velcro', 'views/examples/todo'], function(vc, ExamplesTodoView) {
     return function() {
         return {
-            todos: velcro.collection(ExamplesTodoView),
-            adding: '',
+            todos: vc.value('many', { model: ExamplesTodoView }),
+            adding: vc.value('string'),
             create: function() {
                 this.todos().append({
                     name: this.adding(),

@@ -1,5 +1,5 @@
 (function() {
-    velcro.Value.Computed = velcro.Value.extend({
+    vc.Value.Computed = vc.Value.extend({
         use: [],
         model: null,
         init: function(model) {
@@ -8,7 +8,7 @@
             this.model = model;
 
             for (i = 0; i < this.use.length; i++) {
-                this.model[this.use[i]].subscribe(function() {
+                model[this.use[i]].subscribe(function() {
                     //$this.publish();
                 });
             }

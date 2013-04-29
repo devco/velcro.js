@@ -1,9 +1,9 @@
 (function() {
-    velcro.View = velcro.Class.extend({
+    vc.View = vc.Class.extend({
         init: function(options) {
             this.cache = {};
 
-            this.options = velcro.utils.merge({
+            this.options = vc.utils.merge({
                 idPrefix: 'vc-view-',
                 idSuffix: '',
                 idSeparator: '-',
@@ -17,7 +17,7 @@
                 }
             }, options);
 
-            this.http = this.options.http instanceof velcro.Http ? this.options.http : new velcro.Http(this.options.http);
+            this.http = this.options.http instanceof vc.Http ? this.options.http : new vc.Http(this.options.http);
 
             return this;
         },

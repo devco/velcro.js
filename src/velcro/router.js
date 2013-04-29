@@ -1,25 +1,25 @@
 (function() {
     var bound = [];
 
-    velcro.Router = velcro.Class.extend({
+    vc.Router = vc.Class.extend({
         init: function(options) {
-            this.options = velcro.utils.merge({
+            this.options = vc.utils.merge({
                 app: {},
                 state: {},
                 view: {}
             }, options);
 
-            this.enter  = new velcro.Event();
-            this.exit   = new velcro.Event();
-            this.render = new velcro.Event();
+            this.enter  = new vc.Event();
+            this.exit   = new vc.Event();
+            this.render = new vc.Event();
 
             this.params = {};
             this.route  = false;
             this.routes = {};
 
-            this.app   = this.options.app   instanceof velcro.App   ? this.options.app   : new velcro.App(this.options.app);
-            this.state = this.options.state instanceof velcro.State ? this.options.state : new velcro.State(this.options.state);
-            this.view  = this.options.view  instanceof velcro.View  ? this.options.view  : new velcro.View(this.options.view);
+            this.app   = this.options.app   instanceof vc.App   ? this.options.app   : new vc.App(this.options.app);
+            this.state = this.options.state instanceof vc.State ? this.options.state : new vc.State(this.options.state);
+            this.view  = this.options.view  instanceof vc.View  ? this.options.view  : new vc.View(this.options.view);
 
             return this;
         },
@@ -32,9 +32,9 @@
             var $this   = this;
             var context = route.options.controller.apply(route.options.controller, params);
 
-            if (context instanceof velcro.Model) {
+            if (context instanceof vc.Model) {
             } else {
-                context = velcro.Model.extend(context);
+                context = vc.Model.extend(context);
                 context = new context();
             }
 
@@ -66,8 +66,8 @@
         },
 
         set: function(name, route) {
-            if (!(route instanceof velcro.Route)) {
-                route = new velcro.Route(velcro.utils.merge({
+            if (!(route instanceof vc.Route)) {
+                route = new vc.Route(vc.utils.merge({
                     controller: typeof route === 'function' ? route : function(){},
                     format: name,
                     match: new RegExp('^' + name + "$"),
@@ -148,9 +148,9 @@
 
 
 
-    velcro.Route = velcro.Class.extend({
+    vc.Route = vc.Class.extend({
         init: function(options) {
-            this.options = velcro.utils.merge({
+            this.options = vc.utils.merge({
                 controller: function(){},
                 format: '',
                 match: /.*/,
@@ -189,19 +189,19 @@
     var interval;
     var isStarted = false;
 
-    velcro.State = velcro.Class.extend({
+    vc.State = vc.Class.extend({
         previous: false,
 
         enabled: false,
 
         init: function(options) {
-            this.options = velcro.utils.merge({
+            this.options = vc.utils.merge({
                 scroll: false
             });
 
             this.states = {};
 
-            velcro.State.start();
+            vc.State.start();
 
             return this;
         },
@@ -237,11 +237,11 @@
         }
     });
 
-    velcro.State.interval = 500;
+    vc.State.interval = 500;
 
-    velcro.State.start = function() {
+    vc.State.start = function() {
         if (isStarted) {
-            return velcro.State;
+            return vc.State;
         }
 
         var isIeLyingAboutHashChange = 'onhashchange' in window && /MSIE\s(6|7)/.test(navigator.userAgent);
@@ -257,15 +257,15 @@
                     oldState = window.location.hash;
                     trigger('hashchange');
                 }
-            }, velcro.State.interval);
+            }, vc.State.interval);
         }
 
         isStarted = true;
 
-        return velcro.State;
+        return vc.State;
     };
 
-    velcro.State.stop = function() {
+    vc.State.stop = function() {
         if (interval) {
             clearInterval(interval);
         }

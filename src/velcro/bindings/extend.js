@@ -1,5 +1,5 @@
 (function() {
-    velcro.bindings.extend = velcro.binding({
+    vc.bindings.extend = vc.binding({
         options: {
             path: '',
             view: {}
@@ -8,12 +8,12 @@
         html: '',
 
         setup: function(app, element, options) {
-            this.html = velcro.dom(element).contents();
+            this.html = vc.dom(element).contents();
             this.update(app, element, options);
         },
 
         update: function(app, element, options) {
-            var view    = options.view instanceof velcro.View ? options.view : new velcro.View(options.view);
+            var view    = options.view instanceof vc.View ? options.view : new vc.View(options.view);
             var $this   = this;
             var context = app.context();
 

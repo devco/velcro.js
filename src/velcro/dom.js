@@ -1,9 +1,9 @@
 (function() {
-    velcro.Dom = velcro.Class.extend({
+    vc.Dom = vc.Class.extend({
         element: null,
 
         init: function(element) {
-            if (element instanceof velcro.Dom) {
+            if (element instanceof vc.Dom) {
                 element = element.raw();
             } else if (typeof element === 'string') {
                 element = fromHtml(element);
@@ -151,7 +151,7 @@
         },
 
         append: function(child) {
-            this.element.appendChild(velcro.dom(child).raw());
+            this.element.appendChild(vc.dom(child).raw());
             return this;
         },
 
@@ -169,8 +169,8 @@
         }
     });
 
-    velcro.dom = function(element) {
-        return new velcro.Dom(element);
+    vc.dom = function(element) {
+        return new vc.Dom(element);
     };
 
     function fromHtml(html) {

@@ -1,5 +1,5 @@
 (function() {
-    velcro.bindings.options = velcro.binding({
+    vc.bindings.options = vc.binding({
         options: {
             options: [],
             caption: '',
@@ -11,23 +11,23 @@
             this.check(element);
 
             if (typeof options.caption !== 'undefined') {
-                velcro.dom(element).contents('<option value="">' + extract(options.caption) + '</option>');
+                vc.dom(element).contents('<option value="">' + extract(options.caption) + '</option>');
             }
 
-            if (typeof options.options instanceof velcro.Collection) {
+            if (typeof options.options instanceof vc.Collection) {
                 options.options.each(each);
             } else {
-                velcro.utils.each(options.options, each);
+                vc.utils.each(options.options, each);
             }
 
             function each(index, item) {
-                velcro.dom(element).append('<option value="' + extractFrom(item, options.value) + '">' + extractFrom(item, options.text) + '</option>');
+                vc.dom(element).append('<option value="' + extractFrom(item, options.value) + '">' + extractFrom(item, options.text) + '</option>');
             };
         },
 
         check: function(element) {
-            if (velcro.dom(element).tag() !== 'select') {
-                velcro.utils.throwForElement(element, 'The options binding can only be bound to select list.');
+            if (vc.dom(element).tag() !== 'select') {
+                vc.utils.throwForElement(element, 'The options binding can only be bound to select list.');
             }
         }
     });
@@ -53,7 +53,7 @@
             return using(item);
         }
 
-        if (item instanceof velcro.Model) {
+        if (item instanceof vc.Model) {
             return item[using]();
         }
 

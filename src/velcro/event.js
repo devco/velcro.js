@@ -1,5 +1,5 @@
 (function() {
-    velcro.Event = velcro.Class.extend({
+    vc.Event = vc.Class.extend({
         init: function() {
             this.stack = [];
             return this;

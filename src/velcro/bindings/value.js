@@ -1,11 +1,11 @@
 (function() {
-    velcro.bindings.value = velcro.binding({
+    vc.bindings.value = vc.binding({
         options: {
             on: 'change'
         },
 
         update: function(app, element, options, bindings) {
-            velcro.dom(element).off(options.on, update).on(options.on, update);
+            vc.dom(element).off(options.on, update).on(options.on, update);
 
             element.value = options.value;
 

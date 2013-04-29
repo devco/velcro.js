@@ -1,9 +1,9 @@
 (function() {
-    velcro.bindings.on = velcro.binding({
+    vc.bindings.on = vc.binding({
         update: function(app, element, options) {
-            var dom = velcro.dom(element);
+            var dom = vc.dom(element);
 
-            velcro.utils.each(options, function(name, callback) {
+            vc.utils.each(options, function(name, callback) {
                 dom.off(name, callback).on(name, callback);
             });
         }

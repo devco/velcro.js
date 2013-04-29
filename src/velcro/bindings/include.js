@@ -1,5 +1,5 @@
 (function() {
-    velcro.bindings.include = velcro.binding({
+    vc.bindings.include = vc.binding({
         options: {
             path: '',
             context: false,
@@ -8,7 +8,7 @@
         },
 
         update: function(app, element, options) {
-            var view = options.view instanceof velcro.View ? options.view : new velcro.View(options.view);
+            var view = options.view instanceof vc.View ? options.view : new vc.View(options.view);
 
             // ensure the target is fixed to the element
             view.options.target = element;
@@ -18,7 +18,7 @@
             }
 
             if (!options.path) {
-                velcro.utils.throwForElement(element, 'A path option must be specified.');
+                vc.utils.throwForElement(element, 'A path option must be specified.');
             }
 
             view.render(options.path, function() {

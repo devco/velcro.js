@@ -1,5 +1,5 @@
 (function() {
-    velcro.bindings.each = velcro.binding({
+    vc.bindings.each = vc.binding({
         app: null,
 
         clones: null,
@@ -16,7 +16,7 @@
         template: null,
 
         setup: function(app, element, options) {
-            var dom = velcro.dom(element);
+            var dom = vc.dom(element);
             dom.attr(app.options.attributePrefix + 'each', '');
 
             this.app       = app;
@@ -33,29 +33,29 @@
         update: function(app, element, options) {
             var $this = this;
 
-            velcro.utils.each(this.clones, function(index, clone) {
-                velcro.dom(clone).destroy();
+            vc.utils.each(this.clones, function(index, clone) {
+                vc.dom(clone).destroy();
             });
 
             this.clones = [];
 
-            if (options.items instanceof velcro.Model) {
+            if (options.items instanceof vc.Model) {
                 options.items.each(function(key, value) {
                     each(key, value());
                 });
-            } else if (options.items instanceof velcro.Collection) {
+            } else if (options.items instanceof vc.Collection) {
                 options.items.each(each);
             } else {
-                velcro.utils.each(options.items, each);
+                vc.utils.each(options.items, each);
             }
 
             function each(key, value) {
-                var context = velcro.utils.isObject(value) ? value : {};
+                var context = vc.utils.isObject(value) ? value : {};
 
                 context[$this.options.key]   = key;
                 context[$this.options.value] = value;
 
-                var clone = velcro.dom($this.template).raw();
+                var clone = vc.dom($this.template).raw();
                 app.bind(clone, context);
                 $this.clones.push(clone);
                 $this.container.insertBefore(clone, $this.reference);

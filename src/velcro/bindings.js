@@ -1,3 +1,3 @@
 (function() {
-    velcro.bindings = {};
+    vc.bindings = {};
 })();

@@ -1,9 +1,9 @@
 (function() {
     var extending = false;
 
-    velcro.Class = function() {};
+    vc.Class = function() {};
 
-    velcro.Class.extend = function(definition) {
+    vc.Class.extend = function(definition) {
         var extend = arguments.callee;
 
         function Child() {

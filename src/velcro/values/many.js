@@ -1,8 +1,8 @@
 (function() {
-    velcro.Value.Many = velcro.Value.extend({
-        model: velcro.Model,
+    vc.Value.Many = vc.Value.extend({
+        model: vc.Model,
         init: function(owner) {
-            this.value = new velcro.Collection(this.model);
+            this.value = new vc.Collection(this.model);
             this.value._parent = owner;
         },
         set: function(data) {

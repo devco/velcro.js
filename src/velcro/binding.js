@@ -1,11 +1,11 @@
 (function() {
-    velcro.bindings = {};
+    vc.bindings = {};
 
-    velcro.Binding = velcro.Class.extend({
+    vc.Binding = vc.Class.extend({
         options: {},
 
         init: function(app, element, options, bound) {
-            options = velcro.utils.merge(this.options, options);
+            options = vc.utils.merge(this.options, options);
 
             if (typeof this.setup === 'function') {
                 this.setup(app, element, options, bound);
@@ -15,7 +15,7 @@
         }
     });
 
-    velcro.binding = function(def) {
-        return velcro.Binding.extend(def);
+    vc.binding = function(def) {
+        return vc.Binding.extend(def);
     };
 })();

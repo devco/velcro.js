@@ -1,5 +1,5 @@
 (function() {
-    velcro.utils = {
+    vc.utils = {
         each: function(items, fn) {
             items = items || [];
 
@@ -51,7 +51,7 @@
         },
 
         isValue: function(value) {
-            return typeof value === 'function' && value.toString() === velcro.value().toString();
+            return typeof value === 'function' && value.toString() === vc.value().toString();
         },
 
         merge: function() {
@@ -60,7 +60,7 @@
             for (var i = 0; i < arguments.length; i++) {
                 var param = arguments[i];
 
-                if (!velcro.utils.isObject(param)) {
+                if (!vc.utils.isObject(param)) {
                     continue;
                 }
 
@@ -72,13 +72,13 @@
                         continue;
                     }
 
-                    if (velcro.utils.isInstance(value)) {
+                    if (vc.utils.isInstance(value)) {
                         merged[ii] = value;
                         continue;
                     }
 
-                    if (velcro.utils.isObject(merged[ii]) && velcro.utils.isObject(value)) {
-                        merged[ii] = velcro.utils.merge(merged[ii], value);
+                    if (vc.utils.isObject(merged[ii]) && vc.utils.isObject(value)) {
+                        merged[ii] = vc.utils.merge(merged[ii], value);
                         continue;
                     }
 
@@ -120,8 +120,8 @@
         extract: function(obj) {
             var options = {};
 
-            velcro.utils.each(obj, function(name, value) {
-                if (velcro.utils.isValue(value)) {
+            vc.utils.each(obj, function(name, value) {
+                if (vc.utils.isValue(value)) {
                     options[name] = value();
                 } else {
                     options[name] = value;
@@ -132,7 +132,7 @@
         },
 
         throwForElement: function(element, message) {
-            throw message + "\n" + velcro.dom(element).html();
+            throw message + "\n" + vc.dom(element).html();
         }
     };
 })();

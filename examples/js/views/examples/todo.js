@@ -1,10 +1,13 @@
-define(['models/todo', 'moment'], function(TodoModel, moment) {
+define(['models/todo', 'moment', 'velcro'], function(TodoModel, moment, vc) {
     return TodoModel.extend({
+        humanFriendlyCreated: vc.value('computed', {
+            use: ['created'],
+            read: function() {
+                return moment(this.created()).fromNow();
+            }
+        }),
         setup: function() {
             this.humanFriendlyCreated.updateEvery(5000);
-        },
-        getHumanFriendlyCreated: function() {
-            return moment(this.created()).fromNow();
         },
         remove: function() {
             this.parent().todos().remove(this);

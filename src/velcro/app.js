@@ -1,11 +1,11 @@
 (function() {
     var _bound = [];
 
-    velcro.App = velcro.Class.extend({
+    vc.App = vc.Class.extend({
         init: function(options) {
-            this.options = velcro.utils.merge({
+            this.options = vc.utils.merge({
                 attributePrefix: 'data-vc-',
-                bindings: velcro.bindings
+                bindings: vc.bindings
             }, options);
 
             this.contexts = [];
@@ -34,7 +34,7 @@
         bindDescendants: function(parent, context) {
             var $this = this;
 
-            velcro.utils.each(parent.childNodes, function(index, element) {
+            vc.utils.each(parent.childNodes, function(index, element) {
                 $this.bind(element, context);
             });
 
@@ -44,7 +44,7 @@
         bindOne: function(element) {
             var $this = this;
 
-            element = velcro.dom(element).raw();
+            element = vc.dom(element).raw();
 
             // Do not bind the same element more than once.
             if (_bound.indexOf(element) === -1) {
@@ -53,7 +53,7 @@
                 return this;
             }
 
-            velcro.utils.each(element.attributes, function(i, node) {
+            vc.utils.each(element.attributes, function(i, node) {
                 // An element may have been altered inside of a binding, therefore
                 // we must check if the binding still exists.
                 if (typeof element.attributes[i] === 'undefined') {
@@ -92,13 +92,13 @@
             return this;
 
             // Returns an object that conains raw, extracted values from the passed in bindings as well as bindable members.
-            // Bindable members included any velcro.value, velcro.Model and velcro.Collection.
+            // Bindable members included any vc.value, vc.Model and vc.Collection.
             function parse() {
-                var temp = velcro.utils.parseBinding(value, context);
+                var temp = vc.utils.parseBinding(value, context);
                 var comp = { options: {}, bound: {} };
 
                 for (var i in temp) {
-                    if (velcro.value.isUnwrapped(temp[i])) {
+                    if (vc.value.isUnwrapped(temp[i])) {
                         comp.options[i] = temp[i]();
                         comp.bound[i]   = temp[i];
                     } else if (typeof temp[i] === 'function') {
@@ -143,7 +143,7 @@
         }
     });
 
-    velcro.app = function(element, model) {
-        return new velcro.App().bind(element, model);
+    vc.app = function(element, model) {
+        return new vc.App().bind(element, model);
     };
 })();

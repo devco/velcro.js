@@ -1,7 +1,7 @@
 (function() {
-    velcro.bindings.css = velcro.binding({
+    vc.bindings.css = vc.binding({
         update: function(app, element, options) {
-            velcro.dom(element).css(options);
+            vc.dom(element).css(options);
         }
     });
 })();

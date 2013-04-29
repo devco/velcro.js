@@ -1,5 +1,5 @@
 (function() {
-    velcro.bindings.show = velcro.binding({
+    vc.bindings.show = vc.binding({
         update: function(app, element, options) {
             if (options.test) {
                 element.style.display = null;

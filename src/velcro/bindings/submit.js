@@ -1,7 +1,7 @@
 (function() {
-    velcro.bindings.submit = velcro.binding({
+    vc.bindings.submit = vc.binding({
         setup: function(app, element, options, bindings) {
-            velcro.dom(element).on('submit', function(e) {
+            vc.dom(element).on('submit', function(e) {
                 if (options.callback() !== true) {
                     e.preventDefault();
                     e.stopPropagation();

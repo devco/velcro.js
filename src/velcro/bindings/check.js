@@ -1,11 +1,11 @@
 (function() {
-    velcro.bindings.check = velcro.binding({
+    vc.bindings.check = vc.binding({
         changing: false,
 
         setup: function(app, element, options, bindings) {
             var $this = this;
 
-            velcro.dom(element).on('change', function() {
+            vc.dom(element).on('change', function() {
                 $this.changing = true;
 
                 if (element.checked) {

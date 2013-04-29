@@ -1,5 +1,5 @@
 (function() {
-    velcro.bindings['if'] = velcro.binding({
+    vc.bindings['if'] = vc.binding({
         display: 'none',
 
         setup: function(app, element, options) {

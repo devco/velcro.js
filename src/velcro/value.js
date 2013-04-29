@@ -1,30 +1,30 @@
 (function() {
-    velcro.value = function(name, proto) {
+    vc.value = function(name, proto) {
         var value;
 
         if (typeof name === 'string') {
             name = name.charAt(0).toUpperCase() + name.substring(1);
 
-            if (typeof velcro.Value[name] === 'undefined') {
-                throw 'The value "' + name + '" is not a registered value type. To register this value use `velcro.Value.' + name + ' = velcro.Value.extend(proto)`.';
+            if (typeof vc.Value[name] === 'undefined') {
+                throw 'The value "' + name + '" is not a registered value type. To register this value use `vc.Value.' + name + ' = vc.Value.extend(proto)`.';
             }
 
             if (proto) {
-                value = velcro.Value[name].extend(proto);
+                value = vc.Value[name].extend(proto);
             } else {
-                value = velcro.Value[name];
+                value = vc.Value[name];
             }
         } else if (typeof name === 'object') {
-            value = velcro.Value.extend(name);
+            value = vc.Value.extend(name);
         } else {
-            value = velcro.Value;
+            value = vc.Value;
         }
 
         return function(owner) {
             var inst = new value(owner);
-            var func = function(value) {
+            var func = function(newValue) {
                 if (arguments.length) {
-                    this.set(value);
+                    this.set(newValue);
                     this.publish();
                     return owner;
                 }
@@ -40,15 +40,15 @@
         };
     };
 
-    velcro.value.isWrapped = function(comp) {
-        return typeof comp === 'function' && comp.toString() === velcro.value().toString();
+    vc.value.isWrapped = function(comp) {
+        return typeof comp === 'function' && comp.toString() === vc.value().toString();
     };
 
-    velcro.value.isUnwrapped = function(comp) {
-        return typeof comp === 'function' && comp.constructor.prototype instanceof velcro.Value;
+    vc.value.isUnwrapped = function(comp) {
+        return typeof comp === 'function' && comp.constructor.prototype instanceof vc.Value;
     };
 
-    velcro.Value = velcro.Class.extend({
+    vc.Value = vc.Class.extend({
         interval: false,
 
         subs: [],

@@ -1,11 +1,11 @@
 (function() {
-    velcro.bindings.focus = velcro.binding({
+    vc.bindings.focus = vc.binding({
         changing: false,
 
         setup: function(app, element, options, bindings) {
             var $this = this;
 
-            velcro.dom(element)
+            vc.dom(element)
                 .on('focus', function() {
                     $this.changing = true;
                     bindings.bind(true);
@@ -25,10 +25,10 @@
 
             if (options.bind) {
                 element.focus();
-                velcro.dom(element).fire('focus');
+                vc.dom(element).fire('focus');
             } else {
                 element.blur();
-                velcro.dom(element).fire('blur');
+                vc.dom(element).fire('blur');
             }
         }
     });

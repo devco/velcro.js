@@ -2,10 +2,10 @@ define([
     'velcro',
     'controllers/examples/todo'
 ], function(
-    velcro,
+    vc,
     ExamplesTodoController
 ) {
-    var router = new velcro.Router;
+    var router = new vc.Router;
 
     router.set('');
     router.set('documentation/overview');

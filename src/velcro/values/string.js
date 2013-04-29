@@ -1,5 +1,5 @@
 (function() {
-    velcro.Value.String = velcro.Value.extend({
+    vc.Value.String = vc.Value.extend({
         set: function(value) {
             this.value = '' + value;
         }

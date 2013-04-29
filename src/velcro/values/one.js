@@ -1,6 +1,6 @@
 (function() {
-    velcro.Value.One = velcro.Value.extend({
-        model: velcro.Model,
+    vc.Value.One = vc.Value.extend({
+        model: vc.Model,
         init: function(owner) {
             this.value = new this.model();
             this.value._parent = owner;

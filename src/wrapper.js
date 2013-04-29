@@ -4,8 +4,8 @@
     } else if (typeof define === 'function' && define.amd) {
         define(['exports'], factory);
     } else {
-        factory(window.velcro = {});
+        factory(window.vc = {});
     }
-}(function(velcro) {
+}(function(vc) {
 {content}
 });

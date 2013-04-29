@@ -1,5 +1,5 @@
 (function() {
-    velcro.bindings.hide = velcro.binding({
+    vc.bindings.hide = vc.binding({
         update: function(app, element, options) {
             if (options.test) {
                 element.style.display = 'none';

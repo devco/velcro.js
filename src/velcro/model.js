@@ -1,6 +1,6 @@
 (function() {
-    velcro.Model = velcro.Class.extend({
-        _observer: velcro.value(),
+    vc.Model = vc.Class.extend({
+        _observer: vc.value(),
 
         _parent: null,
 
@@ -12,7 +12,7 @@
 
             // Unwrap all value instances
             for (var i in this) {
-                if (velcro.value.isWrapped(this[i])) {
+                if (vc.value.isWrapped(this[i])) {
                     this[i] = this[i](this);
                 }
             }
@@ -35,7 +35,7 @@
 
         each: function(fn) {
             for (var i in this) {
-                if (velcro.value.isUnwrapped(this[i])) {
+                if (vc.value.isUnwrapped(this[i])) {
                     fn(i, this[i]);
                 }
             }
@@ -48,7 +48,7 @@
                 return this;
             }
 
-            if (obj instanceof velcro.Model) {
+            if (obj instanceof vc.Model) {
                 obj = obj.to();
             }
 
@@ -69,7 +69,7 @@
             this.each(function(name, value) {
                 out[name] = value();
 
-                if (out[name] instanceof velcro.Model || out[name] instanceof velcro.Collection) {
+                if (out[name] instanceof vc.Model || out[name] instanceof vc.Collection) {
                     out[name] = out[name].to();
                 }
             });

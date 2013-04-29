@@ -13,8 +13,8 @@ require.config({
 });
 
 require(['bootstrap', 'less']);
-require(['velcro', 'services/router'], function(velcro, router) {
-    var app = new velcro.App;
+require(['velcro', 'services/router'], function(vc, router) {
+    var app = new vc.App;
     app.bind({
         router: router
     });

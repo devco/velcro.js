@@ -1,5 +1,5 @@
 (function() {
-    velcro.bindings.enable = velcro.binding({
+    vc.bindings.enable = vc.binding({
         update: function(app, element, options) {
             if (options.test) {
                 element.disabled = false;

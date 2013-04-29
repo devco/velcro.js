@@ -1,7 +1,7 @@
 (function() {
-    velcro.bindings.click = velcro.binding({
+    vc.bindings.click = vc.binding({
         update: function(app, element, options) {
-            velcro.dom(element).off('click', options.callback).on('click', options.callback);
+            vc.dom(element).off('click', options.callback).on('click', options.callback);
         }
     })
 })();

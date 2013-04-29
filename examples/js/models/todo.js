@@ -1,12 +1,13 @@
-define(['moment', 'velcro'], function(moment, velcro) {
-    return velcro.model({
-        _created: '',
-        name: '',
-        getCreated: function() {
-            return this._created();
-        },
-        setCreated: function(created) {
-            this._created(moment(created).format());
-        }
+define(['moment', 'velcro'], function(moment, vc) {
+    return vc.Model.extend({
+        name: vc.value('string'),
+        created: vc.value({
+            get: function() {
+                return this.value;
+            },
+            set: function(created) {
+                this.value = moment(created).format();
+            }
+        })
     });
 });
