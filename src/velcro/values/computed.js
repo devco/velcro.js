@@ -1,31 +1,32 @@
 (function() {
-    vc.Value.Computed = vc.Value.extend({
-        use: [],
-        model: null,
-        init: function(model) {
+    vc.values.computed = {
+        options: {
+            use: [],
+            read: false,
+            write: false
+        },
+        init: function() {
             var $this = this;
 
-            this.model = model;
-
-            for (i = 0; i < this.use.length; i++) {
-                model[this.use[i]].subscribe(function() {
-                    //$this.publish();
+            for (a = 0; a < this.options.use.length; a++) {
+                this.owner[this.options.use[a]].subscribe(function() {
+                    $this.publish();
                 });
             }
         },
         get: function() {
-            if (!this.read) {
+            if (!this.options.read) {
                 throw 'Cannot read value because no read function was defined.'
             }
 
-            return this.read.call(this.model);
+            return this.options.read.call(this.owner);
         },
         set: function(value) {
-            if (!this.write) {
+            if (!this.options.write) {
                 throw 'Cannot write value "' + value + '" because no write function was defined.'
             }
 
-            this.write.call(this.model, value);
+            this.options.write.call(this.owner, value);
         }
-    });
+    };
 })();

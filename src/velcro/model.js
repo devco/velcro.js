@@ -5,16 +5,21 @@
         _parent: null,
 
         init: function(data) {
-            var $this = this;
+            var $this  = this;
+            var values = [];
 
             // For observing overall changes to the model.
             this._observer = this._observer(this);
 
             // Unwrap all value instances
-            for (var i in this) {
-                if (vc.value.isWrapped(this[i])) {
-                    this[i] = this[i](this);
+            for (var a in this) {
+                if (vc.value.isWrapped(this[a])) {
+                    values.push(this[a] = this[a](this));
                 }
+            }
+
+            for (var b = 0; b < values.length; b++) {
+                values[b].init();
             }
 
             // So the user doesn't have to worry about calling the parent method and order of operations.

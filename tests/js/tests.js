@@ -158,7 +158,7 @@ test('Collection Manipulation', function() {
 
 test('Observable Getters and Setters', function() {
     var Getter = vc.Model.extend({
-        _prop: vc.value('boolean', { value: true }),
+        _prop: vc.value('bool', { value: true }),
         prop: vc.value('computed', {
             read: function() {
                 return this._prop();
@@ -167,7 +167,7 @@ test('Observable Getters and Setters', function() {
     });
 
     var Setter = vc.Model.extend({
-        _prop: vc.value('boolean'),
+        _prop: vc.value('bool'),
         prop: vc.value('computed', {
             write: function(prop) {
                 this._prop(prop);
@@ -176,7 +176,7 @@ test('Observable Getters and Setters', function() {
     });
 
     var GetterAndSetter = vc.Model.extend({
-        _prop: vc.value('boolean'),
+        _prop: vc.value('bool'),
         prop: vc.value('computed', {
             read: function() {
                 return this._prop();
@@ -191,6 +191,7 @@ test('Observable Getters and Setters', function() {
         forename: vc.value('string', 'Bob'),
         surname: vc.value('string', 'Bobberson'),
         name: vc.value('computed', {
+            use: ['forename', 'surname'],
             read: function() {
                 return [this.forename(), this.surname()].join(' ').replace(/\s+$/, '');
             }
@@ -460,7 +461,7 @@ test('check', function() {
     var html  = vc.dom('<input type="checkbox" value="1" data-vc-check="bind: check">');
     var app   = new vc.App;
     var model = new (vc.Model.extend({
-        check: vc.value('boolean')
+        check: vc.value('bool')
     }));
 
     app.bind(html.raw(), model);
@@ -543,7 +544,7 @@ test('disable', function() {
     var input = vc.dom('<input type="text" disabled="disabled" data-vc-disable="test: disabled">');
     var app   = new vc.App;
     var model = new (vc.Model.extend({
-        disabled: vc.value('boolean')
+        disabled: vc.value('bool')
     }));
 
     app.bind(input.raw(), model);
@@ -589,7 +590,7 @@ test('enable', function() {
     var input = vc.dom('<input type="text" data-vc-enable="test: enabled">');
     var app   = new vc.App;
     var model = new (vc.Model.extend({
-        enabled: vc.value('boolean')
+        enabled: vc.value('bool')
     }));
 
     app.bind(input.raw(), model);
@@ -622,7 +623,7 @@ test('focus', function() {
     var focus = false;
     var app   = new vc.App();
     var model = new (vc.Model.extend({
-        focus: vc.value('boolean')
+        focus: vc.value('bool')
     }));
 
     app.bind(html.raw(), model);
@@ -652,7 +653,7 @@ test('hide', function() {
     var html  = vc.dom('<div data-vc-hide="test: hide"></div>');
     var app   = new vc.App();
     var model = new (vc.Model.extend({
-        hide: vc.value('boolean')
+        hide: vc.value('bool')
     }));
 
     app.bind(html.raw(), model);
@@ -682,7 +683,7 @@ test('if', function() {
     var div   = vc.dom('<div><ul data-vc-if="test: show"></ul></div>');
     var app   = new vc.App();
     var model = new (vc.Model.extend({
-        show: vc.value('boolean')
+        show: vc.value('bool')
     }));
 
     app.bind(div.raw(), model);
@@ -802,7 +803,7 @@ test('show', function() {
     var html  = vc.dom('<div data-vc-show="test: show"></div>');
     var app   = new vc.App();
     var model = new (vc.Model.extend({
-        show: vc.value('boolean', { value: true })
+        show: vc.value('bool', { value: true })
     }));
 
     app.bind(html.raw(), model);
@@ -834,7 +835,7 @@ test('submit', function() {
     var form = vc.dom('<form data-vc-submit="callback: callback"></form>');
     var app   = new vc.App();
     var model = new (vc.Model.extend({
-        submitted: vc.value('boolean'),
+        submitted: vc.value('bool'),
         callback: function() {
             this.submitted(true);
         }

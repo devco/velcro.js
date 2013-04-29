@@ -100,7 +100,12 @@
                 for (var i in temp) {
                     if (vc.value.isUnwrapped(temp[i])) {
                         comp.options[i] = temp[i]();
-                        comp.bound[i]   = temp[i];
+
+                        if (comp.options[i] instanceof vc.Model || comp.options[i] instanceof vc.Collection) {
+                            comp.bound[i] = comp.options[i]._observer;
+                        } else {
+                            comp.bound[i] = temp[i];
+                        }
                     } else if (typeof temp[i] === 'function') {
                         comp.options[i] = temp[i].bind(context);
                     } else {

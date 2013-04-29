@@ -1103,42 +1103,105 @@
     });
 })();
 (function() {
-    vc.value = function(name, proto) {
-        var value;
+    // For registering values to.
+    vc.values = {};
 
-        if (typeof name === 'string') {
-            name = name.charAt(0).toUpperCase() + name.substring(1);
-
-            if (typeof vc.Value[name] === 'undefined') {
-                throw 'The value "' + name + '" is not a registered value type. To register this value use `vc.Value.' + name + ' = vc.Value.extend(proto)`.';
-            }
-
-            if (proto) {
-                value = vc.Value[name].extend(proto);
-            } else {
-                value = vc.Value[name];
-            }
-        } else if (typeof name === 'object') {
-            value = vc.Value.extend(name);
-        } else {
-            value = vc.Value;
+    // Returns a function that creates a new value accessor for the specified owner.
+    vc.value = function(name, options) {
+        if (typeof name === 'object') {
+            options = name;
+            name    = 'default';
+        } else if (!name) {
+            name = 'default';
         }
 
+        if (typeof vc.values[name] === 'undefined') {
+            throw 'The value "' + name + '" is not registered as a Velcro Value.';
+        }
+
+        options = vc.utils.merge(vc.values[name].options, options);
+
         return function(owner) {
-            var inst = new value(owner);
+            var interval = false;
+            var subs     = [];
+
             var func = function(newValue) {
                 if (arguments.length) {
-                    this.set(newValue);
-                    this.publish();
-                    return owner;
+                    func.set(newValue);
+                    func.publish();
+                    return func.owner;
                 }
 
-                return this.get();
-            }.bind(inst);
+                return func.get();
+            };
 
-            for (var i in inst) {
-                func[i] = inst[i];
-            }
+            func.options = options;
+            func.owner   = owner;
+            func.value   = null;
+
+            func.init = function() {
+                if (typeof vc.values[name].init === 'function') {
+                    vc.values[name].init.call(this);
+                }
+
+                if (typeof this.options.value !== 'undefined') {
+                    this.set(this.options.value);
+                }
+            };
+
+            func.get = function() {
+                if (typeof vc.values[name].get === 'function') {
+                    return vc.values[name].get.call(this);
+                }
+            };
+
+            func.set = function(newValue) {
+                if (typeof vc.values[name].set === 'function') {
+                    vc.values[name].set.call(this, newValue);
+                }
+            };
+
+            func.subscribe = function(callback) {
+                subs.push(callback);
+                return this;
+            };
+
+            func.unsubscribe = function(callback) {
+                for (var i = 0; i < subs.length; i++) {
+                    if (callback === subscriber) {
+                        subs.splice(index, 1);
+                        return;
+                    }
+                }
+
+                return this;
+            };
+
+            func.publish = function() {
+                for (var i = 0; i < subs.length; i++) {
+                    subs[i]();
+                }
+
+                return this;
+            };
+
+            func.updateEvery = function(ms) {
+                var $this = this;
+
+                interval = setInterval(function() {
+                    $this.publish();
+                }, ms);
+
+                return this;
+            };
+
+            func.stopUpdating = function() {
+                if (interval) {
+                    clearInterval(interval);
+                }
+
+                return this;
+            };
 
             return func;
         };
@@ -1149,71 +1212,16 @@
     };
 
     vc.value.isUnwrapped = function(comp) {
-        return typeof comp === 'function' && comp.constructor.prototype instanceof vc.Value;
+        return typeof comp === 'function' && comp.toString() === vc.value()().toString();
     };
-
-    vc.Value = vc.Class.extend({
-        interval: false,
-
-        subs: [],
-
-        value: null,
-
-        get: function() {
-            return this.value;
-        },
-
-        set: function(value) {
-            this.value = value;
-        },
-
-        subscribe: function(callback) {
-            this.subs.push(callback);
-            return this;
-        },
-
-        unsubscribe: function(callback) {
-            for (var i = 0; i < this.subs.length; i++) {
-                if (callback === subscriber) {
-                    this.subs.splice(index, 1);
-                    return;
-                }
-            }
-
-            return this;
-        },
-
-        publish: function() {
-            for (var i = 0; i < this.subs.length; i++) {
-                this.subs[i]();
-            }
-
-            return this;
-        },
-
-        updateEvery: function(ms) {
-            var $this = this;
-
-            this.interval = setInterval(function() {
-                $this.publish();
-            }, ms);
-
-            return this;
-        },
-
-        stopUpdating: function() {
-            if (this.interval) {
-                clearInterval(this.interval);
-            }
-
-            return this;
-        }
-    });
 })();
 (function() {
-    vc.Value.Array = vc.Value.extend({
+    vc.values.array = {
         init: function() {
             this.value = [];
+        },
+        get: function() {
+            return this.value;
         },
         set: function(value) {
             if (vc.utils.isArray(value)) {
@@ -1222,77 +1230,106 @@
                 this.value = [value];
             }
         }
-    });
+    };
 })();
 (function() {
-    vc.Value.Boolean = vc.Value.extend({
-        value: false,
+    vc.values.bool = {
+        init: function() {
+            this.value = false;
+        },
+        get: function() {
+            return this.value;
+        },
         set: function(value) {
             this.value = value ? true : false;
         }
-    });
+    };
 })();
 (function() {
-    vc.Value.Computed = vc.Value.extend({
-        use: [],
-        model: null,
-        init: function(model) {
+    vc.values.computed = {
+        options: {
+            use: [],
+            read: false,
+            write: false
+        },
+        init: function() {
             var $this = this;
 
-            this.model = model;
-
-            for (i = 0; i < this.use.length; i++) {
-                model[this.use[i]].subscribe(function() {
-                    //$this.publish();
+            for (a = 0; a < this.options.use.length; a++) {
+                this.owner[this.options.use[a]].subscribe(function() {
+                    $this.publish();
                 });
             }
         },
         get: function() {
-            if (!this.read) {
+            if (!this.options.read) {
                 throw 'Cannot read value because no read function was defined.'
             }
 
-            return this.read.call(this.model);
+            return this.options.read.call(this.owner);
         },
         set: function(value) {
-            if (!this.write) {
+            if (!this.options.write) {
                 throw 'Cannot write value "' + value + '" because no write function was defined.'
             }
 
-            this.write.call(this.model, value);
+            this.options.write.call(this.owner, value);
         }
-    });
+    };
 })();
 (function() {
-    vc.Value.Many = vc.Value.extend({
-        model: vc.Model,
-        init: function(owner) {
-            this.value = new vc.Collection(this.model);
-            this.value._parent = owner;
+    vc.values['default'] = {
+        get: function() {
+            return this.value;
         },
-        set: function(data) {
-            this.value.from(data);
+        set: function(value) {
+            this.value = value;
         }
-    });
+    };
 })();
 (function() {
-    vc.Value.One = vc.Value.extend({
-        model: vc.Model,
-        init: function(owner) {
-            this.value = new this.model();
-            this.value._parent = owner;
+    vc.values.many = {
+        options: {
+            model: vc.Model
         },
-        set: function(data) {
-            this.value.from(data);
+        init: function() {
+            this.value = new vc.Collection(this.options.model);
+            this.value._parent = this.owner;
+        },
+        get: function() {
+            return this.value;
+        },
+        set: function(value) {
+            this.value.from(value);
         }
-    });
+    };
 })();
 (function() {
-    vc.Value.String = vc.Value.extend({
+    vc.values.one = {
+        options: {
+            model: vc.Model
+        },
+        init: function(owner) {
+            this.value = new this.options.model();
+            this.value._parent = this.owner;
+        },
+        get: function() {
+            return this.value;
+        },
+        set: function(value) {
+            this.value.from(value);
+        }
+    };
+})();
+(function() {
+    vc.values.string = {
+        get: function() {
+            return this.value;
+        },
         set: function(value) {
             this.value = '' + value;
         }
-    });
+    };
 })();
 (function() {
     vc.Model = vc.Class.extend({
@@ -1301,16 +1338,21 @@
         _parent: null,
 
         init: function(data) {
-            var $this = this;
+            var $this  = this;
+            var values = [];
 
             // For observing overall changes to the model.
             this._observer = this._observer(this);
 
             // Unwrap all value instances
-            for (var i in this) {
-                if (vc.value.isWrapped(this[i])) {
-                    this[i] = this[i](this);
+            for (var a in this) {
+                if (vc.value.isWrapped(this[a])) {
+                    values.push(this[a] = this[a](this));
                 }
+            }
+
+            for (var b = 0; b < values.length; b++) {
+                values[b].init();
             }
 
             // So the user doesn't have to worry about calling the parent method and order of operations.
@@ -1526,6 +1568,7 @@
             for (var i = 0; i < this.length; i++) {
                 fn(i, this[i]);
             }
+
             return this;
         },
 
@@ -2139,7 +2182,12 @@
                 for (var i in temp) {
                     if (vc.value.isUnwrapped(temp[i])) {
                         comp.options[i] = temp[i]();
-                        comp.bound[i]   = temp[i];
+
+                        if (comp.options[i] instanceof vc.Model || comp.options[i] instanceof vc.Collection) {
+                            comp.bound[i] = comp.options[i]._observer;
+                        } else {
+                            comp.bound[i] = temp[i];
+                        }
                     } else if (typeof temp[i] === 'function') {
                         comp.options[i] = temp[i].bind(context);
                     } else {
