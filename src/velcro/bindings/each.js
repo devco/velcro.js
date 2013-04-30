@@ -1,43 +1,24 @@
 (function() {
-    vc.bindings.each = vc.binding({
-        app: null,
+    vc.bindings.vc.each = function(app, element) {
+        var container = element.parentNode;
+        var clones = [];
+        var dom = vc.dom(element).attr('data-vc-each', '');
+        var reference = document.createComment('each placeholder');
+        var template = dom.html();
 
-        clones: null,
+        element.parentNode.insertBefore(reference, element);
+        dom.destroy();
 
-        container: null,
+        this.options = {
+            as: false
+        };
 
-        options: {
-            key: '$key',
-            value: '$value'
-        },
-
-        reference: null,
-
-        template: null,
-
-        setup: function(app, element, options) {
-            var dom = vc.dom(element);
-            dom.attr(app.options.attributePrefix + 'each', '');
-
-            this.app       = app;
-            this.clones    = [];
-            this.container = element.parentNode;
-            this.template  = dom.html();
-            this.reference = document.createComment('each placeholder');
-
-            element.parentNode.insertBefore(this.reference, element);
-            dom.destroy();
-            this.update(app, element, options);
-        },
-
-        update: function(app, element, options) {
-            var $this = this;
-
-            vc.utils.each(this.clones, function(index, clone) {
+        this.update = function(options) {
+            vc.utils.each(clones, function(index, clone) {
                 vc.dom(clone).destroy();
             });
 
-            this.clones = [];
+            clones = [];
 
             if (options.items instanceof vc.Model) {
                 options.items.each(function(key, value) {
@@ -52,22 +33,25 @@
             function each(key, value) {
                 var context = vc.utils.isObject(value) ? value : {};
 
-                context[$this.options.key]   = key;
-                context[$this.options.value] = value;
+                context['$index'] = key;
+                context['$data']  = value;
 
-                var clone = vc.dom($this.template).raw();
+                if (options.as) {
+                    context[options.as] = value;
+                }
+
+                var clone = vc.dom(template).raw();
                 app.bind(clone, context);
-                $this.clones.push(clone);
-                $this.container.insertBefore(clone, $this.reference);
+                clones.push(clone);
+                container.insertBefore(clone, reference);
 
-                delete context[$this.options.key];
-                delete context[$this.options.value];
+                delete context['$index'];
+                delete context['$data'];
+
+                if (options.as) {
+                    delete context[options.as];
+                }
             }
-        },
-
-        clean: function(app, element) {
-            element.removeAttribute(app.options.attributePrefix + 'each');
-            return element;
-        }
-    });
+        };
+    };
 })();

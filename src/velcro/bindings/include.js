@@ -1,13 +1,13 @@
 (function() {
-    vc.bindings.include = vc.binding({
-        options: {
+    vc.bindings.vc.include = function(app, element) {
+        this.options = {
             path: '',
             context: false,
             callback: function(){},
             view: {}
-        },
+        };
 
-        update: function(app, element, options) {
+        this.update = function(options) {
             var view = options.view instanceof vc.View ? options.view : new vc.View(options.view);
 
             // ensure the target is fixed to the element
@@ -28,6 +28,6 @@
                     options.callback();
                 }
             });
-        }
-    });
+        };
+    };
 })();

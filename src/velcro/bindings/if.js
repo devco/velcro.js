@@ -1,21 +1,21 @@
 (function() {
-    vc.bindings['if'] = vc.binding({
-        display: 'none',
+    vc.bindings.vc['if'] = function(app, element) {
+        var display = 'none';
 
-        setup: function(app, element, options) {
+        this.init = function(options) {
             this.display = element.style.display;
 
             if (!options.test) {
                 element.style.display = 'none';
             }
-        },
+        };
 
-        update: function(app, element, options) {
+        this.update = function(options) {
             if (options.test) {
                 element.style.display = this.display;
             } else if (element.parentNode) {
                 element.style.display = 'none';
             }
-        }
-    });
+        };
+    };
 })();

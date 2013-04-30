@@ -1,16 +1,11 @@
 (function() {
     var _bound = [];
 
-    vc.App = vc.Class.extend({
-        init: function(options) {
-            this.options = vc.utils.merge({
-                attributePrefix: 'data-vc-',
-                bindings: vc.bindings
-            }, options);
+    vc.App = function() {
+        this.contexts = [];
+    };
 
-            this.contexts = [];
-        },
-
+    vc.App.prototype = {
         bind: function(element, context) {
             if (arguments.length === 1) {
                 context = element;
@@ -60,19 +55,31 @@
                     return;
                 }
 
-                var name = node.nodeName.substring($this.options.attributePrefix.length);
-
-                if (typeof $this.options.bindings[name] === 'function') {
-                    $this.bindAttribute(element, name, node.nodeValue);
+                // Bindings must be data- attributes.
+                if (node.nodeName.indexOf('data-') === -1) {
+                    return;
                 }
+
+                // A namespace is in the format of "data-[namespace]-[bindingName]".
+                var binding = node.nodeName.match(/^data-([^\-]+)-(.+)/);
+
+                // If there isn't a namespaced binding continue.
+                if (!binding) {
+                    return;
+                }
+
+                // Binding namespace and binding must be registered.
+                if (typeof vc.bindings[binding[1]] === 'undefined' || typeof vc.bindings[binding[1]][binding[2]] === 'undefined') {
+                    return;
+                }
+
+                $this.bindAttribute(element, binding[1], binding[2], node.nodeValue);
             });
 
             return this;
         },
 
-        bindAttribute: function (element, name, value) {
-            var $this = this;
-
+        bindAttribute: function (element, namespace, binding, value) {
             // The context is saved so that if it changes it won't mess up a subscriber.
             var context = this.context();
 
@@ -81,9 +88,24 @@
 
             // This will initialise the binding and do any initial changes to the bound elements.
             // Subscribable values are also extracted and passed in so that accessing them is trivial.
-            var binding = new this.options.bindings[name](this, element, parsed.options, parsed.bound);
+            var inst = vc.bindings[namespace][binding];
 
-            if (typeof binding.update === 'function') {
+            // Binding must be newable.
+            if (typeof inst === 'function') {
+                inst = new inst(this, element);
+            } else {
+                throw 'The binding "' + binding + '" must be a function.';
+            }
+
+            // Initialisation.
+            if (typeof inst.init === 'function') {
+                inst.init(vc.utils.merge(inst.options, parsed.options), parsed.bound);
+            } else if (typeof inst.update === 'function') {
+                inst.update(vc.utils.merge(inst.options, parsed.options), parsed.bound);
+            }
+
+            // If an update method is provided, subscribe to updates with it.
+            if (typeof inst.update === 'function') {
                 for (var i in parsed.bound) {
                     parsed.bound[i].subscribe(subscriber);
                 }
@@ -116,9 +138,10 @@
                 return comp;
             }
 
+            // Triggers updates within the binding when a observer changes.
             function subscriber() {
                 var refreshed = parse();
-                binding.update($this, element, refreshed.options, refreshed.bound);
+                inst.update(vc.utils.merge(inst.options, refreshed.options), refreshed.bound);
             }
         },
 
@@ -146,7 +169,7 @@
 
             return this;
         }
-    });
+    };
 
     vc.app = function(element, model) {
         return new vc.App().bind(element, model);

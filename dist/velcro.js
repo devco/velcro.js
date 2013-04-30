@@ -425,27 +425,6 @@
     }
 })();
 (function() {
-    vc.bindings = {};
-
-    vc.Binding = vc.Class.extend({
-        options: {},
-
-        init: function(app, element, options, bound) {
-            options = vc.utils.merge(this.options, options);
-
-            if (typeof this.setup === 'function') {
-                this.setup(app, element, options, bound);
-            } else if (typeof this.update === 'function') {
-                this.update(app, element, options, bound);
-            }
-        }
-    });
-
-    vc.binding = function(def) {
-        return vc.Binding.extend(def);
-    };
-})();
-(function() {
     vc.Event = vc.Class.extend({
         init: function() {
             this.stack = [];
@@ -1633,28 +1612,30 @@
     };
 })();
 (function() {
-    vc.bindings = {};
+    vc.bindings = {
+        vc: {}
+    };
 })();
 (function() {
-    vc.bindings.attr = vc.binding({
-        update: function(app, element, options) {
+    vc.bindings.vc.attr = function(app, element) {
+        this.update = function(options, bindings) {
             var el = vc.dom(element);
 
             for (var i in options) {
                 el.attr(i, options[i]);
             }
         }
-    });
+    };
 })();
 (function() {
-    vc.bindings.check = vc.binding({
-        changing: false,
+    vc.bindings.vc.check = function(app, element) {
+        var changing = false;
 
-        setup: function(app, element, options, bindings) {
+        this.init = function(options, bindings) {
             var $this = this;
 
             vc.dom(element).on('change', function() {
-                $this.changing = true;
+                changing = true;
 
                 if (element.checked) {
                     bindings.bind(true);
@@ -1662,12 +1643,12 @@
                     bindings.bind(false);
                 }
 
-                $this.changing = false;
+                changing = false;
             });
-        },
+        };
 
-        update: function(app, element, options) {
-            if (this.changing) {
+        this.update = function(options) {
+            if (changing) {
                 return;
             }
 
@@ -1676,19 +1657,19 @@
             } else {
                 element.checked = false;
             }
-        }
-    });
+        };
+    };
 })();
 (function() {
-    vc.bindings.click = vc.binding({
-        update: function(app, element, options) {
+    vc.bindings.vc.click = function (app, element) {
+        this.update = function(options) {
             vc.dom(element).off('click', options.callback).on('click', options.callback);
-        }
-    })
+        };
+    }
 })();
 (function() {
-    vc.bindings.contents = vc.binding({
-        update: function(app, element, options) {
+    vc.bindings.vc.contents = function(app, element) {
+        this.update = function(options) {
             if (typeof options.text !== 'undefined') {
                 vc.dom(element).text(options.text || '');
             } else if (typeof options.html !== 'undefined') {
@@ -1696,67 +1677,48 @@
             } else {
                 vc.utils.throwForElement(element, 'The "content" binding must be given a "text" or "html" option.');
             }
-        }
-    });
+        };
+    };
 })();
 (function() {
-    vc.bindings.css = vc.binding({
-        update: function(app, element, options) {
+    vc.bindings.vc.css = function(app, element) {
+        this.update = function(options) {
             vc.dom(element).css(options);
-        }
-    });
+        };
+    };
 })();
 (function() {
-    vc.bindings.disable = vc.binding({
-        update: function(app, element, options) {
+    vc.bindings.vc.disable = function(app, element) {
+        this.update = function(options) {
             if (options.test) {
                 element.disabled = true;
             } else {
                 element.disabled = false;
             }
-        }
-    });
+        };
+    };
 })();
 (function() {
-    vc.bindings.each = vc.binding({
-        app: null,
+    vc.bindings.vc.each = function(app, element) {
+        var container = element.parentNode;
+        var clones = [];
+        var dom = vc.dom(element).attr('data-vc-each', '');
+        var reference = document.createComment('each placeholder');
+        var template = dom.html();
 
-        clones: null,
+        element.parentNode.insertBefore(reference, element);
+        dom.destroy();
 
-        container: null,
+        this.options = {
+            as: false
+        };
 
-        options: {
-            key: '$key',
-            value: '$value'
-        },
-
-        reference: null,
-
-        template: null,
-
-        setup: function(app, element, options) {
-            var dom = vc.dom(element);
-            dom.attr(app.options.attributePrefix + 'each', '');
-
-            this.app       = app;
-            this.clones    = [];
-            this.container = element.parentNode;
-            this.template  = dom.html();
-            this.reference = document.createComment('each placeholder');
-
-            element.parentNode.insertBefore(this.reference, element);
-            dom.destroy();
-            this.update(app, element, options);
-        },
-
-        update: function(app, element, options) {
-            var $this = this;
-
-            vc.utils.each(this.clones, function(index, clone) {
+        this.update = function(options) {
+            vc.utils.each(clones, function(index, clone) {
                 vc.dom(clone).destroy();
             });
 
-            this.clones = [];
+            clones = [];
 
             if (options.items instanceof vc.Model) {
                 options.items.each(function(key, value) {
@@ -1771,141 +1733,138 @@
             function each(key, value) {
                 var context = vc.utils.isObject(value) ? value : {};
 
-                context[$this.options.key]   = key;
-                context[$this.options.value] = value;
+                context['$index'] = key;
+                context['$data']  = value;
 
-                var clone = vc.dom($this.template).raw();
+                if (options.as) {
+                    context[options.as] = value;
+                }
+
+                var clone = vc.dom(template).raw();
                 app.bind(clone, context);
-                $this.clones.push(clone);
-                $this.container.insertBefore(clone, $this.reference);
+                clones.push(clone);
+                container.insertBefore(clone, reference);
 
-                delete context[$this.options.key];
-                delete context[$this.options.value];
+                delete context['$index'];
+                delete context['$data'];
+
+                if (options.as) {
+                    delete context[options.as];
+                }
             }
-        },
-
-        clean: function(app, element) {
-            element.removeAttribute(app.options.attributePrefix + 'each');
-            return element;
-        }
-    });
+        };
+    };
 })();
 (function() {
-    vc.bindings.enable = vc.binding({
-        update: function(app, element, options) {
+    vc.bindings.vc.enable = function(app, element) {
+        this.update = function(options) {
             if (options.test) {
                 element.disabled = false;
             } else {
                 element.disabled = true;
             }
-        }
-    });
+        };
+    };
 })();
 (function() {
-    vc.bindings.extend = vc.binding({
-        options: {
+    vc.bindings.vc.extend = function(app, element) {
+        var dom = vc.dom(element);
+        var html = dom.contents();
+
+        this.options = {
             path: '',
             view: {}
-        },
+        };
 
-        html: '',
-
-        setup: function(app, element, options) {
-            this.html = vc.dom(element).contents();
-            this.update(app, element, options);
-        },
-
-        update: function(app, element, options) {
-            var view    = options.view instanceof vc.View ? options.view : new vc.View(options.view);
-            var $this   = this;
+        this.update = function(options) {
+            var view = options.view instanceof vc.View ? options.view : new vc.View(options.view);
             var context = app.context();
 
-            context.$content    = this.html;
+            context.$content = html;
             view.options.target = element;
 
             view.render(options.path, function() {
                 app.bindDescendants(element, context);
             });
-        }
-    });
+
+            delete context.$content;
+        };
+    };
 })();
 (function() {
-    vc.bindings.focus = vc.binding({
-        changing: false,
+    vc.bindings.vc.focus = function(app, element) {
+        var changing = false;
+        var dom = vc.dom(element);
 
-        setup: function(app, element, options, bindings) {
-            var $this = this;
+        this.init = function(options, bindings) {
+            dom.on('focus', function() {
+                changing = true;
+                bindings.bind(true);
+                changing = false;
+            }).on('blur', function() {
+                changing = true;
+                bindings.bind(false);
+                changing = false;
+            });
+        };
 
-            vc.dom(element)
-                .on('focus', function() {
-                    $this.changing = true;
-                    bindings.bind(true);
-                    $this.changing = false;
-                })
-                .on('blur', function() {
-                    $this.changing = true;
-                    bindings.bind(false);
-                    $this.changing = false;
-                });
-        },
-
-        update: function(app, element, options, bindings) {
-            if (this.changing) {
+        this.update = function(options, bindings) {
+            if (changing) {
                 return;
             }
 
             if (options.bind) {
                 element.focus();
-                vc.dom(element).fire('focus');
+                dom.fire('focus');
             } else {
                 element.blur();
-                vc.dom(element).fire('blur');
+                dom.fire('blur');
             }
-        }
-    });
+        };
+    };
 })();
 (function() {
-    vc.bindings.hide = vc.binding({
-        update: function(app, element, options) {
+    vc.bindings.vc.hide = function(app, element) {
+        this.update = function(options) {
             if (options.test) {
                 element.style.display = 'none';
             } else {
                 element.style.display = null;
             }
-        }
-    });
+        };
+    };
 })();
 (function() {
-    vc.bindings['if'] = vc.binding({
-        display: 'none',
+    vc.bindings.vc['if'] = function(app, element) {
+        var display = 'none';
 
-        setup: function(app, element, options) {
+        this.init = function(options) {
             this.display = element.style.display;
 
             if (!options.test) {
                 element.style.display = 'none';
             }
-        },
+        };
 
-        update: function(app, element, options) {
+        this.update = function(options) {
             if (options.test) {
                 element.style.display = this.display;
             } else if (element.parentNode) {
                 element.style.display = 'none';
             }
-        }
-    });
+        };
+    };
 })();
 (function() {
-    vc.bindings.include = vc.binding({
-        options: {
+    vc.bindings.vc.include = function(app, element) {
+        this.options = {
             path: '',
             context: false,
             callback: function(){},
             view: {}
-        },
+        };
 
-        update: function(app, element, options) {
+        this.update = function(options) {
             var view = options.view instanceof vc.View ? options.view : new vc.View(options.view);
 
             // ensure the target is fixed to the element
@@ -1926,34 +1885,38 @@
                     options.callback();
                 }
             });
-        }
-    });
+        };
+    };
 })();
 (function() {
-    vc.bindings.on = vc.binding({
-        update: function(app, element, options) {
-            var dom = vc.dom(element);
+    vc.bindings.vc.on = function(app, element) {
+        var dom = vc.dom(element);
 
+        this.update = function(options) {
             vc.utils.each(options, function(name, callback) {
                 dom.off(name, callback).on(name, callback);
             });
-        }
-    });
+        };
+    };
 })();
 (function() {
-    vc.bindings.options = vc.binding({
-        options: {
+    vc.bindings.vc.options = function(app, element) {
+        var dom = vc.dom(element);
+
+        this.options = {
             options: [],
             caption: '',
             text: '',
             value: ''
-        },
+        };
 
-        update: function(app, element, options) {
-            this.check(element);
+        this.update = function(options) {
+            if (dom.tag() !== 'select') {
+                vc.utils.throwForElement(element, 'The options binding can only be bound to select list.');
+            }
 
             if (typeof options.caption !== 'undefined') {
-                vc.dom(element).contents('<option value="">' + extract(options.caption) + '</option>');
+                dom.contents('<option value="">' + extract(options.caption) + '</option>');
             }
 
             if (typeof options.options instanceof vc.Collection) {
@@ -1963,16 +1926,10 @@
             }
 
             function each(index, item) {
-                vc.dom(element).append('<option value="' + extractFrom(item, options.value) + '">' + extractFrom(item, options.text) + '</option>');
+                dom.append('<option value="' + extractFrom(item, options.value) + '">' + extractFrom(item, options.text) + '</option>');
             };
-        },
-
-        check: function(element) {
-            if (vc.dom(element).tag() !== 'select') {
-                vc.utils.throwForElement(element, 'The options binding can only be bound to select list.');
-            }
-        }
-    });
+        };
+    };
 
     function extract(item) {
         if (!item) {
@@ -2003,8 +1960,8 @@
     }
 })();
 (function() {
-    vc.bindings.routable = vc.binding({
-        update: function(app, element, options) {
+    vc.bindings.vc.routable = function(app, element) {
+        this.update = function(options) {
             var router = options.router;
 
             if (!router) {
@@ -2017,82 +1974,81 @@
 
             router.view.options.target = element;
             router.bind();
-        }
-    });
+        };
+    };
 })();
 (function() {
-    vc.bindings.show = vc.binding({
-        update: function(app, element, options) {
+    vc.bindings.vc.show = function(app, element) {
+        this.update = function(options) {
             if (options.test) {
                 element.style.display = null;
             } else {
                 element.style.display = 'none';
             }
-        }
-    });
+        };
+    };
 })();
 (function() {
-    vc.bindings.style = vc.binding({
-        update: function(app, element, options) {
+    vc.bindings.vc.style = function(app, element) {
+        this.update = function(options) {
             for (var i in options) {
                 element.style[i] = typeof options[i] === 'function' ? options[i]() : options[i];
             }
-        }
-    });
+        };
+    };
 })();
 (function() {
-    vc.bindings.submit = vc.binding({
-        setup: function(app, element, options, bindings) {
-            vc.dom(element).on('submit', function(e) {
+    vc.bindings.vc.submit = function(app, element) {
+        var dom = vc.dom(element);
+
+        this.init = function(options, bindings) {
+            dom.on('submit', function(e) {
                 if (options.callback() !== true) {
                     e.preventDefault();
                     e.stopPropagation();
                 }
             });
-        }
-    });
+        };
+    };
 })();
 (function() {
-    vc.bindings.value = vc.binding({
-        options: {
-            on: 'change'
-        },
+    vc.bindings.vc.value = function(app, element) {
+        var dom = vc.dom(element);
 
-        update: function(app, element, options, bindings) {
-            vc.dom(element).off(options.on, update).on(options.on, update);
+        this.options = {
+            on: 'change'
+        };
+
+        this.update = function(options, bindings) {
+            dom.off(options.on, update).on(options.on, update);
 
             element.value = options.value;
 
             function update() {
                 bindings.value(element.value);
             }
-        }
-    });
+        };
+    };
 })();
 (function() {
-    vc.bindings['with'] = vc.binding({
-        update: function(app, element, options) {
+    vc.bindings.vc['with'] = function(app, element) {
+        this.update = function(options) {
             if (!options.context) {
                 vc.utils.throwForElement(element, 'A context option must be specified.');
             }
 
             app.context(options.context);
-        }
-    });
+        };
+    };
 })();
 (function() {
     var _bound = [];
 
-    vc.App = vc.Class.extend({
-        init: function(options) {
-            this.options = vc.utils.merge({
-                attributePrefix: 'data-vc-',
-                bindings: vc.bindings
-            }, options);
+    vc.App = function() {
+        this.contexts = [];
+    };
 
-            this.contexts = [];
-        },
-
+    vc.App.prototype = {
         bind: function(element, context) {
             if (arguments.length === 1) {
                 context = element;
@@ -2142,19 +2098,31 @@
                     return;
                 }
 
-                var name = node.nodeName.substring($this.options.attributePrefix.length);
-
-                if (typeof $this.options.bindings[name] === 'function') {
-                    $this.bindAttribute(element, name, node.nodeValue);
+                // Bindings must be data- attributes.
+                if (node.nodeName.indexOf('data-') === -1) {
+                    return;
                 }
+
+                // A namespace is in the format of "data-[namespace]-[bindingName]".
+                var binding = node.nodeName.match(/^data-([^\-]+)-(.+)/);
+
+                // If there isn't a namespaced binding continue.
+                if (!binding) {
+                    return;
+                }
+
+                // Binding namespace and binding must be registered.
+                if (typeof vc.bindings[binding[1]] === 'undefined' || typeof vc.bindings[binding[1]][binding[2]] === 'undefined') {
+                    return;
+                }
+
+                $this.bindAttribute(element, binding[1], binding[2], node.nodeValue);
             });
 
             return this;
         },
 
-        bindAttribute: function (element, name, value) {
-            var $this = this;
-
+        bindAttribute: function (element, namespace, binding, value) {
             // The context is saved so that if it changes it won't mess up a subscriber.
             var context = this.context();
 
@@ -2163,9 +2131,24 @@
 
             // This will initialise the binding and do any initial changes to the bound elements.
             // Subscribable values are also extracted and passed in so that accessing them is trivial.
-            var binding = new this.options.bindings[name](this, element, parsed.options, parsed.bound);
+            var inst = vc.bindings[namespace][binding];
 
-            if (typeof binding.update === 'function') {
+            // Binding must be newable.
+            if (typeof inst === 'function') {
+                inst = new inst(this, element);
+            } else {
+                throw 'The binding "' + binding + '" must be a function.';
+            }
+
+            // Initialisation.
+            if (typeof inst.init === 'function') {
+                inst.init(vc.utils.merge(inst.options, parsed.options), parsed.bound);
+            } else if (typeof inst.update === 'function') {
+                inst.update(vc.utils.merge(inst.options, parsed.options), parsed.bound);
+            }
+
+            // If an update method is provided, subscribe to updates with it.
+            if (typeof inst.update === 'function') {
                 for (var i in parsed.bound) {
                     parsed.bound[i].subscribe(subscriber);
                 }
@@ -2198,9 +2181,10 @@
                 return comp;
             }
 
+            // Triggers updates within the binding when a observer changes.
             function subscriber() {
                 var refreshed = parse();
-                binding.update($this, element, refreshed.options, refreshed.bound);
+                inst.update(vc.utils.merge(inst.options, refreshed.options), refreshed.bound);
             }
         },
 
@@ -2228,7 +2212,7 @@
 
             return this;
         }
-    });
+    };
 
     vc.app = function(element, model) {
         return new vc.App().bind(element, model);

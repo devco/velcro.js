@@ -15,7 +15,6 @@ module.exports = function(grunt) {
                     'src/velcro/utils.js',
                     'src/velcro/class.js',
                     'src/velcro/dom.js',
-                    'src/velcro/binding.js',
                     'src/velcro/event.js',
                     'src/velcro/http.js',
                     'src/velcro/router.js',

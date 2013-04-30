@@ -1,17 +1,21 @@
 (function() {
-    vc.bindings.options = vc.binding({
-        options: {
+    vc.bindings.vc.options = function(app, element) {
+        var dom = vc.dom(element);
+
+        this.options = {
             options: [],
             caption: '',
             text: '',
             value: ''
-        },
+        };
 
-        update: function(app, element, options) {
-            this.check(element);
+        this.update = function(options) {
+            if (dom.tag() !== 'select') {
+                vc.utils.throwForElement(element, 'The options binding can only be bound to select list.');
+            }
 
             if (typeof options.caption !== 'undefined') {
-                vc.dom(element).contents('<option value="">' + extract(options.caption) + '</option>');
+                dom.contents('<option value="">' + extract(options.caption) + '</option>');
             }
 
             if (typeof options.options instanceof vc.Collection) {
@@ -21,16 +25,10 @@
             }
 
             function each(index, item) {
-                vc.dom(element).append('<option value="' + extractFrom(item, options.value) + '">' + extractFrom(item, options.text) + '</option>');
+                dom.append('<option value="' + extractFrom(item, options.value) + '">' + extractFrom(item, options.text) + '</option>');
             };
-        },
-
-        check: function(element) {
-            if (vc.dom(element).tag() !== 'select') {
-                vc.utils.throwForElement(element, 'The options binding can only be bound to select list.');
-            }
-        }
-    });
+        };
+    };
 
     function extract(item) {
         if (!item) {

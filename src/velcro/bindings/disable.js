@@ -1,11 +1,11 @@
 (function() {
-    vc.bindings.disable = vc.binding({
-        update: function(app, element, options) {
+    vc.bindings.vc.disable = function(app, element) {
+        this.update = function(options) {
             if (options.test) {
                 element.disabled = true;
             } else {
                 element.disabled = false;
             }
-        }
-    });
+        };
+    };
 })();

@@ -1,12 +1,12 @@
 (function() {
-    vc.bindings.check = vc.binding({
-        changing: false,
+    vc.bindings.vc.check = function(app, element) {
+        var changing = false;
 
-        setup: function(app, element, options, bindings) {
+        this.init = function(options, bindings) {
             var $this = this;
 
             vc.dom(element).on('change', function() {
-                $this.changing = true;
+                changing = true;
 
                 if (element.checked) {
                     bindings.bind(true);
@@ -14,12 +14,12 @@
                     bindings.bind(false);
                 }
 
-                $this.changing = false;
+                changing = false;
             });
-        },
+        };
 
-        update: function(app, element, options) {
-            if (this.changing) {
+        this.update = function(options) {
+            if (changing) {
                 return;
             }
 
@@ -28,6 +28,6 @@
             } else {
                 element.checked = false;
             }
-        }
-    });
+        };
+    };
 })();

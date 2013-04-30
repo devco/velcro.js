@@ -1,11 +1,11 @@
 (function() {
-    vc.bindings.attr = vc.binding({
-        update: function(app, element, options) {
+    vc.bindings.vc.attr = function(app, element) {
+        this.update = function(options, bindings) {
             var el = vc.dom(element);
 
             for (var i in options) {
                 el.attr(i, options[i]);
             }
         }
-    });
+    };
 })();

@@ -1,6 +1,6 @@
 (function() {
-    vc.bindings.routable = vc.binding({
-        update: function(app, element, options) {
+    vc.bindings.vc.routable = function(app, element) {
+        this.update = function(options) {
             var router = options.router;
 
             if (!router) {
@@ -13,6 +13,6 @@
 
             router.view.options.target = element;
             router.bind();
-        }
-    });
+        };
+    };
 })();

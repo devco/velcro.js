@@ -1,35 +1,32 @@
 (function() {
-    vc.bindings.focus = vc.binding({
-        changing: false,
+    vc.bindings.vc.focus = function(app, element) {
+        var changing = false;
+        var dom = vc.dom(element);
 
-        setup: function(app, element, options, bindings) {
-            var $this = this;
+        this.init = function(options, bindings) {
+            dom.on('focus', function() {
+                changing = true;
+                bindings.bind(true);
+                changing = false;
+            }).on('blur', function() {
+                changing = true;
+                bindings.bind(false);
+                changing = false;
+            });
+        };
 
-            vc.dom(element)
-                .on('focus', function() {
-                    $this.changing = true;
-                    bindings.bind(true);
-                    $this.changing = false;
-                })
-                .on('blur', function() {
-                    $this.changing = true;
-                    bindings.bind(false);
-                    $this.changing = false;
-                });
-        },
-
-        update: function(app, element, options, bindings) {
-            if (this.changing) {
+        this.update = function(options, bindings) {
+            if (changing) {
                 return;
             }
 
             if (options.bind) {
                 element.focus();
-                vc.dom(element).fire('focus');
+                dom.fire('focus');
             } else {
                 element.blur();
-                vc.dom(element).fire('blur');
+                dom.fire('blur');
             }
-        }
-    });
+        };
+    };
 })();
