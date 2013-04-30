@@ -82,4 +82,12 @@
             return out;
         }
     });
+
+    vc.model = function(def) {
+        return vc.Model.extend(def);
+    };
+
+    vc.model.make = function(def) {
+        return new (this(def))(data);
+    };
 })();

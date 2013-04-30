@@ -494,32 +494,6 @@ test('click', function() {
     ok(yes, 'Click not triggered.');
 });
 
-test('context', function() {
-    var div  = document.createElement('div');
-    var span = document.createElement('span');
-
-    div.setAttribute('data-vc-with', 'context: person');
-    span.setAttribute('data-vc-contents', 'text: name');
-    div.appendChild(span);
-
-    var App = vc.Model.extend({
-        person: vc.value('one', {
-            model: vc.Model.extend({
-                name: vc.value('string', { value: 'Default Value' })
-            })
-        })
-    });
-
-    var appsrawesome = new App;
-
-    new vc.App().bind(div, appsrawesome)
-    ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be initialised.');
-
-    appsrawesome.person().name('Updated Value');
-
-    ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be updated.');
-});
-
 test('css', function() {
     var div   = vc.dom('<div data-vc-css="class1: class1, class2: class2"></div>');
     var app   = new vc.App;
@@ -872,4 +846,50 @@ test('value', function() {
 
     model.value('test2');
     ok(input.raw().value === 'test2', 'Value not updated.');
+});
+
+test('with - model', function() {
+    var div  = document.createElement('div');
+    var span = document.createElement('span');
+
+    div.setAttribute('data-vc-with', 'model: person');
+    span.setAttribute('data-vc-contents', 'text: name');
+    div.appendChild(span);
+
+    var App = vc.model({
+        person: vc.value('one', {
+            model: vc.model({
+                name: vc.value('string', { value: 'Default Value' })
+            })
+        })
+    });
+
+    var app = new App;
+
+    vc.app(div, app);
+
+    ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be initialised.');
+
+    app.person().name('Updated Value');
+
+    ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be updated.');
+});
+
+test('with - controller', function() {
+    var div  = document.createElement('div');
+    var span = document.createElement('span');
+
+    div.setAttribute('data-vc-with', 'controller: person');
+    span.setAttribute('data-vc-contents', 'text: name');
+    div.appendChild(span);
+
+    vc.app(div, {
+        person: function() {
+            return vc.model.make({
+                name: vc.value('string', { value: 'test' })
+            });
+        }
+    });
+
+    ok(div.childNodes[0].innerText === 'test', 'Inner text on div child should be initialised.');
 });
