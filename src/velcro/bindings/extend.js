@@ -17,9 +17,8 @@
 
             view.render(options.path, function() {
                 app.bindDescendants(element, context);
+                delete context.$content;
             });
-
-            delete context.$content;
         };
     };
 })();
