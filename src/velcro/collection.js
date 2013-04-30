@@ -209,8 +209,12 @@
     vc.collection = function(Model) {
         return vc.Collection.extend({
             init: function(data) {
-                this.$super(Model, data);
+                vc.Collection.prototype.init.call(this, Model, data);
             }
         });
+    };
+
+    vc.collection.make = function(Model) {
+        return new (this(Model))();
     };
 })();

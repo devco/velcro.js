@@ -88,6 +88,6 @@
     };
 
     vc.model.make = function(def) {
-        return new (this(def))(data);
+        return new (this(def))();
     };
 })();

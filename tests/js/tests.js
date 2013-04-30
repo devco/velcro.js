@@ -868,11 +868,11 @@ test('with - model', function() {
 
     vc.app(div, app);
 
-    ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be initialised.');
+    ok(div.childNodes[0].innerText === app.person().name(), 'Inner text on div child should be initialised.');
 
     app.person().name('Updated Value');
 
-    ok(div.childNodes[0].innerText === appsrawesome.person().name(), 'Inner text on div child should be updated.');
+    ok(div.childNodes[0].innerText === app.person().name(), 'Inner text on div child should be updated.');
 });
 
 test('with - controller', function() {

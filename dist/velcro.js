@@ -1374,6 +1374,14 @@
             return out;
         }
     });
+
+    vc.model = function(def) {
+        return vc.Model.extend(def);
+    };
+
+    vc.model.make = function(def) {
+        return new (this(def))();
+    };
 })();
 (function() {
     vc.Collection = vc.Class.extend({
@@ -1586,9 +1594,13 @@
     vc.collection = function(Model) {
         return vc.Collection.extend({
             init: function(data) {
-                this.$super(Model, data);
+                vc.Collection.prototype.init.call(this, Model, data);
             }
         });
+    };
+
+    vc.collection.make = function(Model) {
+        return new (this(Model))();
     };
 })();
 (function() {
@@ -2012,32 +2024,28 @@
 (function() {
     vc.bindings.vc['with'] = function(app, element) {
         this.update = function(options) {
-            if (!options.context) {
-                vc.utils.throwForElement(element, 'A context option must be specified.');
+            var context;
+
+            if (typeof options.model === 'object') {
+                context = options.model;
+            } else if (typeof options.controller === 'function') {
+                context = options.controller();
+            } else {
+                vc.utils.throwForElement(element, 'You must either specify a model or controller to the "with" context.');
             }
 
-            var context = options.context;
-
-            if (typeof options.context === 'function') {
-                context = options.context();
-            }
-
-            if (typeof options.context !== 'object') {
-                vc.utils.throwForElement(element, 'The context option must either be a function that returns an object or an object itself.');
-            }
-
-            app.context(context);
+            app.bindDescendants(element, context);
         };
     };
 })();
 (function() {
     var _bound = [];
 
-    vc.App = function() {
-        this.contexts = [];
-    };
+    vc.App = vc.Class.extend({
+        init: function() {
+            this.contexts = [];
+        },
 
-    vc.App.prototype = {
         bind: function(element, context) {
             if (arguments.length === 1) {
                 context = element;
@@ -2201,7 +2209,7 @@
 
             return this;
         }
-    };
+    });
 
     vc.app = function(element, model) {
         return new vc.App().bind(element, model);

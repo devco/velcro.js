@@ -1,11 +1,11 @@
 (function() {
     var _bound = [];
 
-    vc.App = function() {
-        this.contexts = [];
-    };
+    vc.App = vc.Class.extend({
+        init: function() {
+            this.contexts = [];
+        },
 
-    vc.App.prototype = {
         bind: function(element, context) {
             if (arguments.length === 1) {
                 context = element;
@@ -169,7 +169,7 @@
 
             return this;
         }
-    };
+    });
 
     vc.app = function(element, model) {
         return new vc.App().bind(element, model);
