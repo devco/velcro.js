@@ -212,8 +212,8 @@ test('Observable Getters and Setters', function() {
 
     var user = new User({ forename: 'Bob' });
     var html = vc.dom('<div data-vc-contents="text: name"></div>');
-    var app  = vc.app(html, user);
 
+    vc.app(html, user);
     ok(html.contents() === 'Bob', 'Not initialised.');
 
     user.forename('Marge');
@@ -358,12 +358,10 @@ test('Observing Changes', function() {
 
     var dude = new Person;
 
-    new vc.App().bind(div, dude);
-
+    vc.app(div, dude);
     ok(div.childNodes[0].innerText === dude.name(), 'Inner text on div child should be initialised.');
 
     dude.name('Updated Value');
-
     ok(div.childNodes[0].innerText === dude.name(), 'Inner text on div child should be updated.');
 });
 
@@ -383,7 +381,6 @@ asyncTest('Router', function() {
     var div = document.createElement('div');
     div.setAttribute('data-vc-routable', 'router: router');
 
-    var app    = new vc.App()
     var router = new vc.Router();
 
     router.set('index', function() {
@@ -397,7 +394,7 @@ asyncTest('Router', function() {
         start();
     });
 
-    app.bind(div, {
+    vc.app(div, {
         router: router
     });
 
@@ -408,7 +405,7 @@ asyncTest('View', function() {
     var div = document.createElement('div');
     div.setAttribute('data-vc-include', 'path: "index", context: context, callback: callback');
 
-    new vc.App().bind(div, {
+    vc.app(div, {
         context: function() {
             return { name: 'test' };
         },
@@ -422,7 +419,7 @@ asyncTest('View', function() {
 test('Document Binding - Passing Shallow Contexts to Nested Elements', function() {
     document.body.innerHTML = '<ul data-vc-if="test: test"><li data-vc-each="items: items"></li></ul>';
 
-    new vc.App().bind({
+    vc.app({
         test: true,
         items: [
             'Item 1',
@@ -439,14 +436,12 @@ module('Bindings');
 
 test('attr', function() {
     var div   = vc.dom('<div data-vc-attr="\'class\': className, title: title"></div>');
-    var app   = new vc.App;
     var model = new (vc.Model.extend({
         className: vc.value('string', { value: 'test-class1' }),
         title: vc.value('string', { value: 'test title 1' })
     }));
 
-    app.bind(div.raw(), model);
-
+    vc.app(div.raw(), model);
     ok(div.attr('class') === 'test-class1', 'Class attribute not initialised.');
     ok(div.attr('title') === 'test title 1', 'Title attribute not initialised.');
 
@@ -459,12 +454,11 @@ test('attr', function() {
 
 test('check', function() {
     var html  = vc.dom('<input type="checkbox" value="1" data-vc-check="bind: check">');
-    var app   = new vc.App;
     var model = new (vc.Model.extend({
         check: vc.value('bool')
     }));
 
-    app.bind(html.raw(), model);
+    vc.app(html.raw(), model);
     ok(!html.raw().checked, 'Checkbox should not be checked.');
 
     model.check(true);
@@ -481,10 +475,9 @@ test('check', function() {
 
 test('click', function() {
     var div = vc.dom('<div data-vc-click="callback: test"></div>');
-    var app = new vc.App;
     var yes = false;
 
-    app.bind(div.raw(), {
+    vc.app(div.raw(), {
         test: function() {
             yes = true;
         }
@@ -496,13 +489,12 @@ test('click', function() {
 
 test('css', function() {
     var div   = vc.dom('<div data-vc-css="class1: class1, class2: class2"></div>');
-    var app   = new vc.App;
     var model = new (vc.Model.extend({
         class1: vc.value('string', { value: 'test-class1' }),
         class2: vc.value('string', { value: 'test-class2' })
     }));
 
-    app.bind(div.raw(), model);
+    vc.app(div.raw(), model);
 
     ok(div.attr('class').split(' ')[0] === model.class1(), 'Class not initialised.');
     ok(div.attr('class').split(' ')[1] === model.class2(), 'Class not initialised.');
@@ -516,12 +508,11 @@ test('css', function() {
 
 test('disable', function() {
     var input = vc.dom('<input type="text" disabled="disabled" data-vc-disable="test: disabled">');
-    var app   = new vc.App;
     var model = new (vc.Model.extend({
         disabled: vc.value('bool')
     }));
 
-    app.bind(input.raw(), model);
+    vc.app(input.raw(), model);
 
     ok(!input.raw().disabled, 'Input should be enabled.');
 
@@ -545,7 +536,7 @@ test('each', function() {
         items: vc.value('many', { model: Item })
     }));
 
-    var app = new vc.App().bind(ul, ctx);
+    vc.app(ul, ctx);
 
     ctx.items().append({
         text: 'Item 1'
@@ -562,12 +553,11 @@ test('each', function() {
 
 test('enable', function() {
     var input = vc.dom('<input type="text" data-vc-enable="test: enabled">');
-    var app   = new vc.App;
     var model = new (vc.Model.extend({
         enabled: vc.value('bool')
     }));
 
-    app.bind(input.raw(), model);
+    vc.app(input.raw(), model);
 
     ok(input.raw().disabled, 'Input should have been disabled.');
 
@@ -578,13 +568,12 @@ test('enable', function() {
 
 test('extend', function() {
     var html  = vc.dom('<div><div data-vc-extend="path: path">test</div><script id="vc-view-layout1" type="text/html"><h1 data-vc-contents="html: $content"></h1></script><script id="vc-view-layout2" type="text/html"><h2 data-vc-contents="html: $content"></h2></script></div>');
-    var app   = new vc.App();
     var model = new (vc.Model.extend({
         path: vc.value('string', { value: 'layout1' })
     }));
 
     document.body.appendChild(html.raw());
-    app.bind(html.raw(), model);
+    vc.app(html.raw(), model);
 
     ok(html.raw().childNodes[0].childNodes[0].tagName === 'H1', 'The layout was not initialised.');
 
@@ -595,12 +584,11 @@ test('extend', function() {
 test('focus', function() {
     var html  = vc.dom('<input type="text" data-vc-focus="bind: focus">');
     var focus = false;
-    var app   = new vc.App();
     var model = new (vc.Model.extend({
         focus: vc.value('bool')
     }));
 
-    app.bind(html.raw(), model);
+    vc.app(html.raw(), model);
 
     html.on('focus', function() {
         focus = true;
@@ -625,12 +613,11 @@ test('focus', function() {
 
 test('hide', function() {
     var html  = vc.dom('<div data-vc-hide="test: hide"></div>');
-    var app   = new vc.App();
     var model = new (vc.Model.extend({
         hide: vc.value('bool')
     }));
 
-    app.bind(html.raw(), model);
+    vc.app(html.raw(), model);
 
     model.hide(true);
     ok(html.raw().style.display === 'none', 'Div should be hidden.');
@@ -641,12 +628,11 @@ test('hide', function() {
 
 test('html', function() {
     var div   = vc.dom('<div data-vc-contents="html: html"></div>');
-    var app   = new vc.App();
     var model = new (vc.Model.extend({
         html: vc.value('string', { value: '<ul></ul>' })
     }));
 
-    app.bind(div.raw(), model);
+    vc.app(div.raw(), model);
     ok(div.raw().innerHTML === model.html(), 'HTML was not initialised.');
 
     model.html('<ol></ol>');
@@ -655,12 +641,11 @@ test('html', function() {
 
 test('if', function() {
     var div   = vc.dom('<div><ul data-vc-if="test: show"></ul></div>');
-    var app   = new vc.App();
     var model = new (vc.Model.extend({
         show: vc.value('bool')
     }));
 
-    app.bind(div.raw(), model);
+    vc.app(div.raw(), model);
     ok(div.raw().childNodes[0].style.display = 'none');
 
     model.show(true);
@@ -669,12 +654,11 @@ test('if', function() {
 
 test('ifnot', function() {
     var div   = vc.dom('<div><ul data-vc-ifnot="test: show"></ul></div>');
-    var app   = new vc.App();
     var model = new (vc.Model.extend({
         show: vc.value('bool')
     }));
 
-    app.bind(div.raw(), model);
+    vc.app(div.raw(), model);
     ok(div.raw().childNodes[0].style.display = 'block');
 
     model.show(true);
@@ -683,13 +667,12 @@ test('ifnot', function() {
 
 test('include', function() {
     var div   = vc.dom('<div><div data-vc-include="path: path"></div><script id="vc-view-child1" type="text/html">child1</script><script id="vc-view-child2" type="text/html">child2</script></div>');
-    var app   = new vc.App();
     var model = new (vc.Model.extend({
         path: vc.value('string', { value: 'child1' })
     }));
 
     document.body.appendChild(div.raw());
-    app.bind(div.raw(), model);
+    vc.app(div.raw(), model);
     ok(div.raw().childNodes[0].innerHTML === 'child1', 'Include not initialised.');
 
     model.path('child2');
@@ -698,7 +681,6 @@ test('include', function() {
 
 test('on', function() {
     var div   = vc.dom('<div data-vc-on="hide: hide, show: show"></div>');
-    var app   = new vc.App();
     var model = new (vc.Model.extend({
         triggered: vc.value('array'),
         hide: function(e) {
@@ -709,7 +691,7 @@ test('on', function() {
         }
     }));
 
-    app.bind(div.raw(), model);
+    vc.app(div.raw(), model);
 
     div.fire('hide');
     ok(model.triggered().indexOf('hide') !== -1, 'Event "hide" not triggered.');
@@ -720,7 +702,6 @@ test('on', function() {
 
 test('options', function() {
     var select = vc.dom('<select data-vc-options="options: options, caption: caption, text: text, value: value"></select>');
-    var app    = new vc.App();
     var model  = new (vc.Model.extend({
         caption: vc.value('string', { value: 'Choose...' }),
         options: vc.value('many', {
@@ -735,7 +716,7 @@ test('options', function() {
         value: vc.value('string', { value: 'value' })
     }));
 
-    app.bind(select.raw(), model);
+    vc.app(select.raw(), model);
     ok(select.raw().childNodes.length === 1, 'Only the caption should be visible.');
 
     model.options([{
@@ -754,7 +735,6 @@ test('options', function() {
 
 test('routable', function() {
     var div   = vc.dom('<div><div data-vc-routable="router: router"></div><script id="vc-view-test" type="text/html"><span data-vc-contents="text: text"></span></script></div>');
-    var app   = new vc.App();
     var model = {
         router: new vc.Router()
     };
@@ -778,7 +758,7 @@ test('routable', function() {
     });
 
     document.body.appendChild(div.raw());
-    app.bind(div.raw(), model);
+    vc.app(div.raw(), model);
 
     model.router.dispatch('test1');
     ok(div.raw().childNodes[0].childNodes[0].innerText === 'test1', 'Router not initialised.');
@@ -789,12 +769,11 @@ test('routable', function() {
 
 test('show', function() {
     var html  = vc.dom('<div data-vc-show="test: show"></div>');
-    var app   = new vc.App();
     var model = new (vc.Model.extend({
         show: vc.value('bool', { value: true })
     }));
 
-    app.bind(html.raw(), model);
+    vc.app(html.raw(), model);
 
     model.show(false);
     ok(html.raw().style.display === 'none', 'Div should be hidden.');
@@ -805,7 +784,6 @@ test('show', function() {
 
 test('style', function() {
     var html  = vc.dom('<div data-vc-style="display: display, visibility: visibility"></div>');
-    var app   = new vc.App();
     var model = new (vc.Model.extend({
         display: vc.value('string', { value: 'inline' }),
         visibility: function() {
@@ -813,7 +791,7 @@ test('style', function() {
         }
     }));
 
-    app.bind(html.raw(), model);
+    vc.app(html.raw(), model);
 
     ok(html.raw().style.display === 'inline', 'Display should be inline.');
     ok(html.raw().style.visibility === 'hidden', 'Display should be hidden.');
@@ -821,7 +799,6 @@ test('style', function() {
 
 test('submit', function() {
     var form = vc.dom('<form data-vc-submit="callback: callback"></form>');
-    var app   = new vc.App();
     var model = new (vc.Model.extend({
         submitted: vc.value('bool'),
         callback: function() {
@@ -829,19 +806,18 @@ test('submit', function() {
         }
     }));
 
-    app.bind(form.raw(), model);
+    vc.app(form.raw(), model);
     form.fire('submit');
     ok(model.submitted(), 'Form not submitted.');
 });
 
 test('text', function() {
     var div   = vc.dom('<div data-vc-contents="text: text"></div>');
-    var app   = new vc.App();
     var model = new (vc.Model.extend({
         text: vc.value('string', { value: 'test1' })
     }));
 
-    app.bind(div.raw(), model);
+    vc.app(div.raw(), model);
     ok(div.raw().innerText === 'test1', 'Text not initialised.');
 
     model.text('test2');
@@ -850,12 +826,11 @@ test('text', function() {
 
 test('value', function() {
     var input = vc.dom('<input type="text" data-vc-value="value: value">');
-    var app   = new vc.App();
     var model = new (vc.Model.extend({
         value: vc.value('string', { value: 'test1' })
     }));
 
-    app.bind(input.raw(), model);
+    vc.app(input.raw(), model);
     ok(input.raw().value === 'test1', 'Value not initialised.');
 
     model.value('test2');
