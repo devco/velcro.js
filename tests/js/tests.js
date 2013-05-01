@@ -667,6 +667,20 @@ test('if', function() {
     ok(div.raw().childNodes[0].style.display = 'block');
 });
 
+test('ifnot', function() {
+    var div   = vc.dom('<div><ul data-vc-ifnot="test: show"></ul></div>');
+    var app   = new vc.App();
+    var model = new (vc.Model.extend({
+        show: vc.value('bool')
+    }));
+
+    app.bind(div.raw(), model);
+    ok(div.raw().childNodes[0].style.display = 'block');
+
+    model.show(true);
+    ok(div.raw().childNodes[0].style.display = 'none');
+});
+
 test('include', function() {
     var div   = vc.dom('<div><div data-vc-include="path: path"></div><script id="vc-view-child1" type="text/html">child1</script><script id="vc-view-child2" type="text/html">child2</script></div>');
     var app   = new vc.App();
