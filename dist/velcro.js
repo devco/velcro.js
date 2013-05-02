@@ -1264,6 +1264,19 @@
     };
 })();
 (function() {
+    vc.value.date = {
+        init: function() {
+            this.value = new Date();
+        },
+        get: function() {
+            return ths.value;
+        },
+        set: function(value) {
+            this.value = value instanceof Date ? value : new Date(value);
+        }
+    };
+})();
+(function() {
     vc.values['default'] = {
         get: function() {
             return this.value;
