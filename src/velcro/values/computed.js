@@ -9,12 +9,20 @@
             var $this = this;
             var use = this.options.use;
 
-            if (typeof use === 'function') {
+            if (typeof use === 'string') {
+                use = [use];
+            } else if (typeof use === 'function') {
                 use = use.call(this.owner);
             }
 
             for (a = 0; a < use.length; a++) {
-                this.owner[use[a]].subscribe(function() {
+                if (typeof use[a] === 'string') {
+                    use[a] = this.owner[use[a]];
+                }
+            }
+
+            for (b = 0; b < use.length; b++) {
+                use[b].subscribe(function() {
                     $this.publish();
                 });
             }
