@@ -9,10 +9,12 @@
             var $this = this;
             var use = this.options.use;
 
+            if (typeof use === 'function') {
+                use = use.call(this.owner);
+            }
+
             if (typeof use === 'string') {
                 use = [use];
-            } else if (typeof use === 'function') {
-                use = use.call(this.owner);
             }
 
             for (a = 0; a < use.length; a++) {
