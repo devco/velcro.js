@@ -1213,9 +1213,14 @@
         },
         init: function() {
             var $this = this;
+            var use = this.options.use;
 
-            for (a = 0; a < this.options.use.length; a++) {
-                this.owner[this.options.use[a]].subscribe(function() {
+            if (typeof use === 'function') {
+                use = use.call(this.owner);
+            }
+
+            for (a = 0; a < use.length; a++) {
+                this.owner[use[a]].subscribe(function() {
                     $this.publish();
                 });
             }
@@ -1243,6 +1248,32 @@
         },
         set: function(value) {
             this.value = value;
+        }
+    };
+})();
+(function() {
+    vc.values['float'] = {
+        init: function() {
+            this.value = 0;
+        },
+        get: function() {
+            return this.value;
+        },
+        set: function(value) {
+            this.value = parseFloat(value);
+        }
+    };
+})();
+(function() {
+    vc.values['int'] = {
+        init: function() {
+            this.value = 0;
+        },
+        get: function() {
+            return this.value;
+        },
+        set: function(value) {
+            this.value = parseInt(value);
         }
     };
 })();
