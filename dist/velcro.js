@@ -1455,11 +1455,11 @@ velcro.value = function(options) {
 
     function defineIfNotDefined(obj) {
         if (!obj.constructor.definition) {
-            define(obj);
+            defineModel(obj);
         }
     }
 
-    function define(obj) {
+    function defineModel(obj) {
         initDefinition(obj);
         defineCollection(obj);
         definePrototype(obj);
