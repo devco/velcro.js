@@ -1,5 +1,5 @@
 (function() {
-    vc.value.date = {
+    vc.values.date = {
         init: function() {
             this.value = new Date();
         },
