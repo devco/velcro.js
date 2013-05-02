@@ -1103,21 +1103,33 @@
                     vc.values[name].init.call(this);
                 }
 
-                if (typeof this.options.value !== 'undefined') {
-                    this.set(this.options.value);
-                }
+                this.reset();
             };
 
             func.get = function() {
                 if (typeof vc.values[name].get === 'function') {
                     return vc.values[name].get.call(this);
                 }
+
+                return null;
             };
 
             func.set = function(newValue) {
                 if (typeof vc.values[name].set === 'function') {
                     vc.values[name].set.call(this, newValue);
                 }
+
+                return this;
+            };
+
+            func.reset = function() {
+                if (typeof this.options.value !== 'undefined') {
+                    this.set(this.options.value);
+                } else if (typeof this.value === 'undefined') {
+                    this.value = null;
+                }
+
+                return this;
             };
 
             func.subscribe = function(callback) {
@@ -1177,7 +1189,7 @@
 (function() {
     vc.values.array = {
         init: function() {
-            this.value = [];
+            this.options.value = [];
         },
         get: function() {
             return this.value;
@@ -1193,8 +1205,8 @@
 })();
 (function() {
     vc.values.bool = {
-        init: function() {
-            this.value = false;
+        options: {
+            value: false
         },
         get: function() {
             return this.value;
@@ -1263,8 +1275,8 @@
 })();
 (function() {
     vc.values['float'] = {
-        init: function() {
-            this.value = 0;
+        options: {
+            value: 0
         },
         get: function() {
             return this.value;
@@ -1276,8 +1288,8 @@
 })();
 (function() {
     vc.values['int'] = {
-        init: function() {
-            this.value = 0;
+        options: {
+            value: 0
         },
         get: function() {
             return this.value;
@@ -1323,6 +1335,9 @@
 })();
 (function() {
     vc.values.string = {
+        options: {
+            value: ''
+        },
         get: function() {
             return this.value;
         },
@@ -1413,6 +1428,12 @@
             });
 
             return out;
+        },
+
+        reset: function() {
+            return this.each(function(i, v) {
+                v.reset();
+            });
         }
     });
 
@@ -1629,6 +1650,12 @@
 
         findOne: function(query) {
             return this.find(query, 1).first();
+        },
+
+        reset: function() {
+            return this.each(function(i, v) {
+                v.reset();
+            });
         }
     });
 

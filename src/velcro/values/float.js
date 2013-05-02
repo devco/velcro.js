@@ -1,7 +1,7 @@
 (function() {
     vc.values['float'] = {
-        init: function() {
-            this.value = 0;
+        options: {
+            value: 0
         },
         get: function() {
             return this.value;

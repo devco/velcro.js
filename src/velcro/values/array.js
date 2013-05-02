@@ -1,7 +1,7 @@
 (function() {
     vc.values.array = {
         init: function() {
-            this.value = [];
+            this.options.value = [];
         },
         get: function() {
             return this.value;

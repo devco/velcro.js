@@ -1,7 +1,7 @@
 (function() {
     vc.values.bool = {
-        init: function() {
-            this.value = false;
+        options: {
+            value: false
         },
         get: function() {
             return this.value;

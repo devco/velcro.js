@@ -80,6 +80,12 @@
             });
 
             return out;
+        },
+
+        reset: function() {
+            return this.each(function(i, v) {
+                v.reset();
+            });
         }
     });
 

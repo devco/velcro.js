@@ -203,6 +203,12 @@
 
         findOne: function(query) {
             return this.find(query, 1).first();
+        },
+
+        reset: function() {
+            return this.each(function(i, v) {
+                v.reset();
+            });
         }
     });
 
