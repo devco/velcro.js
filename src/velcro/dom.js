@@ -17,12 +17,29 @@
         },
 
         css: function(classes) {
+            if (arguments.length === 0) {
+                var split = this.attr('class').split(/\s+/);
+                var temp = {};
+
+                for (var a = 0; a < split.length; a++) {
+                    temp[split[a]] = true;
+                }
+
+                return temp;
+            }
+
             var css = [];
 
-            for (var name in classes) {
-                if (classes[name]) {
-                    if (css.indexOf(name) === -1) {
-                        css.push(classes[name]);
+            if (typeof classes.length === 'number') {
+                for (var b = 0; b < classes.length; b++) {
+                    css.push(classes[i]);
+                }
+            } else {
+                for (var c in classes) {
+                    if (classes[c]) {
+                        if (css.indexOf(c) === -1) {
+                            css.push(c);
+                        }
                     }
                 }
             }

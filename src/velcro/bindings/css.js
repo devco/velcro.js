@@ -1,7 +1,10 @@
 (function() {
     vc.bindings.vc.css = function(app, element) {
+        var element = vc.dom(element);
+        var originals = element.css();
+
         this.update = function(options) {
-            vc.dom(element).css(options);
+            element.css(vc.utils.merge(originals, options));
         };
     };
 })();

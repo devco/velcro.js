@@ -488,22 +488,23 @@ test('click', function() {
 });
 
 test('css', function() {
-    var div   = vc.dom('<div data-vc-css="class1: class1, class2: class2"></div>');
+    var div = vc.dom('<div class="class1" data-vc-css="class2: class2, class3: class3"></div>');
     var model = new (vc.Model.extend({
-        class1: vc.value('string', { value: 'test-class1' }),
-        class2: vc.value('string', { value: 'test-class2' })
+        class2: vc.value('bool'),
+        class3: vc.value('bool')
     }));
 
     vc.app(div.raw(), model);
 
-    ok(div.attr('class').split(' ')[0] === model.class1(), 'Class not initialised.');
-    ok(div.attr('class').split(' ')[1] === model.class2(), 'Class not initialised.');
+    ok(div.attr('class') === 'class1', 'Class not kept on initialisation.');
+    ok(div.attr('class').split(' ').length === 1, 'Only 1 class should exist.');
 
-    model.class1('test-class1-updated');
-    model.class2('test-class2-updated');
+    model.class2(true);
+    model.class3(true);
 
-    ok(div.attr('class').split(' ')[0] === model.class1(), 'Class not updated.');
-    ok(div.attr('class').split(' ')[1] === model.class2(), 'Class not updated.');
+    ok(div.attr('class').split(' ')[0] === 'class1', 'Class not kept on update.');
+    ok(div.attr('class').split(' ')[1] === 'class2', 'Class not updated.');
+    ok(div.attr('class').split(' ')[2] === 'class3', 'Class not updated.');
 });
 
 test('disable', function() {
