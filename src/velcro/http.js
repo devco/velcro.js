@@ -123,12 +123,21 @@
                 }
 
                 var response = request.responseText;
-                var headers  = request.getAllResponseHeaders();
+                var headers = request.getAllResponseHeaders();
+                var parser = false;
 
                 if (typeof headers['Content-Type'] === 'string' && typeof $this.options.parsers[headers['Content-Type']] === 'function') {
-                    response = $this.options.parsers[headers['Content-Type']](response);
+                    parser = $this.options.parsers[headers['Content-Type']];
                 } else if (typeof $this.options.headers.Accept === 'string' && typeof $this.options.parsers[$this.options.headers.Accept] === 'function') {
-                    response = $this.options.parsers[$this.options.headers.Accept](response);
+                    parser = $this.options.parsers[$this.options.headers.Accept];
+                }
+
+                if (parser) {
+                    try {
+                        response = parser(response);
+                    } catch (e) {
+                        throw 'Cannot parse response from "' + url + '" with message: ' + e;
+                    }
                 }
 
                 options.success.call(options.success, response);
