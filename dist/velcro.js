@@ -558,29 +558,23 @@
                 data = data.raw();
             }
 
+            if (!this.options.cache) {
+                data['_' + new Date().getTime()] = '1';
+            }
+
             if (vc.utils.isObject(data)) {
                 data = this.serialize(data);
             }
 
-            if (data) {
-                if (options.type === 'GET') {
-                    url += '?' + data;
-                } else {
-                    request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                }
-            }
-
-            if (!this.options.cache) {
-                if (data && type === 'GET') {
-                    url += '&';
-                } else {
-                    url += '?';
-                }
-
-                url += new Date().getTime();
+            if (data && options.type === 'GET') {
+                url += '?' + data;
             }
 
             request.open(type, url, this.options.async);
+
+            if (data && options.type !== 'GET') {
+                request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            }
 
             for (var header in this.options.headers) {
                 request.setRequestHeader(header, this.options.headers[header]);
