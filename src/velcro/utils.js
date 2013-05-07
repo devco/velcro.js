@@ -113,7 +113,7 @@
             try {
                 return JSON.parse(json);
             } catch (error) {
-                throw 'Error parsing response "' + response + '" with message "' + error + '".';
+                throw 'Error parsing JSON string "' + json + '" with message "' + error + '".';
             }
         },
 
