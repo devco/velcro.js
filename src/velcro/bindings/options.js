@@ -6,7 +6,18 @@
             options: [],
             caption: '',
             text: '',
+            update: null,
             value: ''
+        };
+
+        this.init = function(options) {
+            if (typeof options.update === 'function') {
+                dom.on('change', function() {
+                    options.update(element.value);
+                });
+            }
+
+            this.update(options);
         };
 
         this.update = function(options) {
