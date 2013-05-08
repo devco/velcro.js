@@ -2176,6 +2176,10 @@
 })();
 (function() {
     vc.bindings.vc['with'] = function(app, element) {
+        var template = element.innerHTML;
+
+        element.innerHTML = '';
+
         this.update = function(options) {
             var context;
 
@@ -2187,6 +2191,7 @@
                 vc.utils.throwForElement(element, 'You must either specify a model or controller to the "with" context.');
             }
 
+            element.innerHTML = template;
             app.bindDescendants(element, context);
         };
     };
