@@ -1,5 +1,6 @@
 (function() {
     vc.bindings.vc.each = function(app, element) {
+        var context = app.context();
         var container = element.parentNode;
         var clones = [];
         var dom = vc.dom(element).attr('data-vc-each', '');
@@ -10,7 +11,8 @@
         dom.destroy();
 
         this.options = {
-            as: false
+            as: false,
+            key: false
         };
 
         this.update = function(options) {
@@ -31,13 +33,16 @@
             }
 
             function each(key, value) {
-                var context = vc.utils.isObject(value) ? value : {};
-
-                context['$index'] = key;
-                context['$data']  = value;
-
                 if (options.as) {
+                    if (options.key) {
+                        context[options.key] = key;
+                    }
+
                     context[options.as] = value;
+                } else {
+                    context = vc.utils.merge(value);
+                    context.$index = key;
+                    context.$data = value;
                 }
 
                 var clone = vc.dom(template).raw();
@@ -45,11 +50,12 @@
                 clones.push(clone);
                 container.insertBefore(clone, reference);
 
-                delete context['$index'];
-                delete context['$data'];
-
                 if (options.as) {
                     delete context[options.as];
+                    delete context[options.key];
+                } else {
+                    delete context.$index;
+                    delete context.$data;
                 }
             }
         };

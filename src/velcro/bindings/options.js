@@ -14,7 +14,7 @@
                 vc.utils.throwForElement(element, 'The options binding can only be bound to select list.');
             }
 
-            if (typeof options.caption !== 'undefined') {
+            if (options.caption) {
                 dom.contents('<option value="">' + extract(options.caption) + '</option>');
             }
 
