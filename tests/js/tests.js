@@ -825,7 +825,7 @@ test('text', function() {
     ok(div.raw().innerText === 'test2', 'Text not updated.');
 });
 
-test('value', function() {
+test('value - input', function() {
     var input = vc.dom('<input type="text" data-vc-value="value: value">');
     var model = new (vc.Model.extend({
         value: vc.value('string', { value: 'test1' })
@@ -836,6 +836,23 @@ test('value', function() {
 
     model.value('test2');
     ok(input.raw().value === 'test2', 'Value not updated.');
+});
+
+test('value - select', function() {
+    var select = vc.dom('<select data-vc-value="value: value"><option value="0"></option><option value="1"></option><option value="2"></option></select>');
+    var model = vc.model.make({
+        value: vc.value('int')
+    });
+
+    vc.app(select.raw(), model);
+    ok(select.raw().value === '0', 'Select should initially have a 0 value.');
+
+    model.value(1);
+    ok(select.raw().value === '1', 'Select should be updated to have a 1 value.');
+
+    select.raw().value = 2;
+    select.fire('change');
+    ok(model.value() === 2, 'When select is updated, model should be updated.');
 });
 
 test('with - model', function() {
