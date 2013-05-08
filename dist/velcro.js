@@ -1799,8 +1799,8 @@
         dom.destroy();
 
         this.options = {
-            as: false,
-            key: false
+            as: '$data',
+            key: '$index'
         };
 
         this.update = function(options) {
@@ -1821,30 +1821,15 @@
             }
 
             function each(key, value) {
-                if (options.as) {
-                    if (options.key) {
-                        context[options.key] = key;
-                    }
-
-                    context[options.as] = value;
-                } else {
-                    context = vc.utils.merge(value);
-                    context.$index = key;
-                    context.$data = value;
-                }
-
+                var childContext = vc.utils.merge(context, value);
                 var clone = vc.dom(template).raw();
-                app.bind(clone, context);
+
+                childContext[options.key] = key;
+                childContext[options.as] = value;
+
+                app.bind(clone, childContext);
                 clones.push(clone);
                 container.insertBefore(clone, reference);
-
-                if (options.as) {
-                    delete context[options.as];
-                    delete context[options.key];
-                } else {
-                    delete context.$index;
-                    delete context.$data;
-                }
             }
         };
     };
