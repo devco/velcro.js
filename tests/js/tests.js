@@ -647,10 +647,10 @@ test('if', function() {
     }));
 
     vc.app(div.raw(), model);
-    ok(div.raw().childNodes[0].style.display = 'none');
+    ok(div.raw().childNodes[0].nodeType === 8, 'Child node should be removed.');
 
     model.show(true);
-    ok(div.raw().childNodes[0].style.display = 'block');
+    ok(div.raw().childNodes[0].tagName === 'UL', 'Child node should be re-inserted.');
 });
 
 test('ifnot', function() {
@@ -660,10 +660,10 @@ test('ifnot', function() {
     }));
 
     vc.app(div.raw(), model);
-    ok(div.raw().childNodes[0].style.display = 'block');
+    ok(div.raw().childNodes[0].tagName === 'UL', 'Child node should be removed.');
 
     model.show(true);
-    ok(div.raw().childNodes[0].style.display = 'none');
+    ok(div.raw().childNodes[0].nodeType === 8, 'Child node should be re-inserted.');
 });
 
 test('include', function() {
@@ -899,4 +899,31 @@ test('with - controller', function() {
     });
 
     ok(div.childNodes[0].innerText === 'test', 'Inner text on div child should be initialised.');
+});
+
+
+
+module('Misc');
+
+test('multiple dom altering bidnings on same element', function() {
+    var dom = vc.dom('<div><ul data-vc-if="test: test" data-vc-with="model: model"><li data-vc-each="items: models, as: \'model\'" data-vc-with="model: model" data-vc-contents="text: text"></li></ul></div>');
+    var app = vc.model.make({
+        test: vc.value('bool'),
+        model: vc.value('one', {
+            model: vc.model({
+                models: vc.value('many', {
+                    model: vc.model({
+                        text: 'testing'
+                    })
+                })
+            })
+        })
+    });
+
+    vc.app(dom.raw(), app);
+
+    app.test(true);
+    app.model().models().append().append();
+
+    ok(dom.html() === '<div><ul data-vc-with="model: model"><li data-vc-with="model: model" data-vc-contents="text: text">testing</li><li data-vc-with="model: model" data-vc-contents="text: text">testing</li><!--each placeholder--></ul><!--if placeholder--></div>');
 });

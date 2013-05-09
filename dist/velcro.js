@@ -273,6 +273,16 @@
             return this;
         },
 
+        removeAttributes: function() {
+            if (this.element.attributes) {
+                for (var a = 0; a < this.element.attributes.length; a++) {
+                    this.attr(this.element.attributes[a].nodeName, '');
+                }
+            }
+
+            return this;
+        },
+
         on: function(name, callback) {
             var $this = this;
 
@@ -339,10 +349,22 @@
         },
 
         destroy: function() {
+            this.removeAttributes();
+            this.empty();
             this.element.parentNode.removeChild(this.element);
+
+            return this;
+        },
+
+        empty: function() {
+            if (this.element.childNodes) {
+                for (var b = 0; b < this.element.childNodes.length; b++) {
+                    vc.dom(this.element.childNodes[b]).destroy();
+                }
+            }
+
             this.element.innerHTML = '';
-            delete this.element.attributes;
-            delete this.element.childNodes;
+
             return this;
         },
 
@@ -1914,21 +1936,24 @@
 })();
 (function() {
     vc.bindings.vc['if'] = function(app, element) {
-        var display = 'none';
+        var container = element.parentNode;
+        var context = app.context();
+        var el = vc.dom(element).attr('data-vc-if', '');
+        var html = el.html();
+        var placeholder = document.createComment('if placeholder');
+        var inserted = false;
 
-        this.init = function(options) {
-            this.display = element.style.display;
-
-            if (!test(options.test)) {
-                element.style.display = 'none';
-            }
-        };
+        container.insertBefore(placeholder, element);
+        el.destroy();
 
         this.update = function(options) {
             if (test(options.test)) {
-                element.style.display = this.display;
-            } else if (element.parentNode) {
-                element.style.display = 'none';
+                inserted = vc.dom(html);
+                container.insertBefore(inserted.raw(), placeholder);
+                app.bind(inserted.raw(), context);
+            } else if (inserted) {
+                inserted.destroy();
+                inserted = false;
             }
         };
     };
@@ -1943,21 +1968,24 @@
 })();
 (function() {
     vc.bindings.vc.ifnot = function(app, element) {
-        var display = 'block';
+        var container = element.parentNode;
+        var context = app.context();
+        var el = vc.dom(element).attr('data-vc-ifnot', '');
+        var html = el.html();
+        var placeholder = document.createComment('ifnot placeholder');
+        var inserted = false;
 
-        this.init = function(options) {
-            this.display = element.style.display;
-
-            if (test(options.test)) {
-                element.style.display = 'none';
-            }
-        };
+        container.insertBefore(placeholder, element);
+        el.destroy();
 
         this.update = function(options) {
-            if (test(options.test)) {
-                element.style.display = 'none';
-            } else if (element.parentNode) {
-                element.style.display = this.display;
+            if (!test(options.test)) {
+                inserted = vc.dom(html);
+                container.insertBefore(inserted.raw(), placeholder);
+                app.bind(inserted.raw(), context);
+            } else if (inserted) {
+                inserted.destroy();
+                inserted = false;
             }
         };
     };
@@ -2230,8 +2258,6 @@
         },
 
         bindOne: function(element) {
-            var $this = this;
-
             element = vc.dom(element).raw();
 
             // Do not bind the same element more than once.
@@ -2241,33 +2267,37 @@
                 return this;
             }
 
-            vc.utils.each(element.attributes, function(i, node) {
-                // An element may have been altered inside of a binding, therefore
-                // we must check if the binding still exists.
-                if (typeof element.attributes[i] === 'undefined') {
-                    return;
+            if (element.attributes) {
+                for (var i = 0; i < element.attributes.length; i++) {
+                    var node = element.attributes[i];
+
+                    // An element may have been altered inside of a binding, therefore
+                    // we must check if the binding still exists.
+                    if (typeof element.attributes[i] === 'undefined') {
+                        continue;
+                    }
+
+                    // Bindings must be data- attributes.
+                    if (node.nodeName.indexOf('data-') === -1) {
+                        continue;
+                    }
+
+                    // A namespace is in the format of "data-[namespace]-[bindingName]".
+                    var binding = node.nodeName.match(/^data-([^\-]+)-(.+)/);
+
+                    // If there isn't a namespaced binding continue.
+                    if (!binding) {
+                        continue;
+                    }
+
+                    // Binding namespace and binding must be registered.
+                    if (typeof vc.bindings[binding[1]] === 'undefined' || typeof vc.bindings[binding[1]][binding[2]] === 'undefined') {
+                        continue;
+                    }
+
+                    this.bindAttribute(element, binding[1], binding[2], node.value);
                 }
-
-                // Bindings must be data- attributes.
-                if (node.nodeName.indexOf('data-') === -1) {
-                    return;
-                }
-
-                // A namespace is in the format of "data-[namespace]-[bindingName]".
-                var binding = node.nodeName.match(/^data-([^\-]+)-(.+)/);
-
-                // If there isn't a namespaced binding continue.
-                if (!binding) {
-                    return;
-                }
-
-                // Binding namespace and binding must be registered.
-                if (typeof vc.bindings[binding[1]] === 'undefined' || typeof vc.bindings[binding[1]][binding[2]] === 'undefined') {
-                    return;
-                }
-
-                $this.bindAttribute(element, binding[1], binding[2], node.nodeValue);
-            });
+            }
 
             return this;
         },

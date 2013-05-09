@@ -32,8 +32,6 @@
         },
 
         bindOne: function(element) {
-            var $this = this;
-
             element = vc.dom(element).raw();
 
             // Do not bind the same element more than once.
@@ -43,33 +41,37 @@
                 return this;
             }
 
-            vc.utils.each(element.attributes, function(i, node) {
-                // An element may have been altered inside of a binding, therefore
-                // we must check if the binding still exists.
-                if (typeof element.attributes[i] === 'undefined') {
-                    return;
+            if (element.attributes) {
+                for (var i = 0; i < element.attributes.length; i++) {
+                    var node = element.attributes[i];
+
+                    // An element may have been altered inside of a binding, therefore
+                    // we must check if the binding still exists.
+                    if (typeof element.attributes[i] === 'undefined') {
+                        continue;
+                    }
+
+                    // Bindings must be data- attributes.
+                    if (node.nodeName.indexOf('data-') === -1) {
+                        continue;
+                    }
+
+                    // A namespace is in the format of "data-[namespace]-[bindingName]".
+                    var binding = node.nodeName.match(/^data-([^\-]+)-(.+)/);
+
+                    // If there isn't a namespaced binding continue.
+                    if (!binding) {
+                        continue;
+                    }
+
+                    // Binding namespace and binding must be registered.
+                    if (typeof vc.bindings[binding[1]] === 'undefined' || typeof vc.bindings[binding[1]][binding[2]] === 'undefined') {
+                        continue;
+                    }
+
+                    this.bindAttribute(element, binding[1], binding[2], node.value);
                 }
-
-                // Bindings must be data- attributes.
-                if (node.nodeName.indexOf('data-') === -1) {
-                    return;
-                }
-
-                // A namespace is in the format of "data-[namespace]-[bindingName]".
-                var binding = node.nodeName.match(/^data-([^\-]+)-(.+)/);
-
-                // If there isn't a namespaced binding continue.
-                if (!binding) {
-                    return;
-                }
-
-                // Binding namespace and binding must be registered.
-                if (typeof vc.bindings[binding[1]] === 'undefined' || typeof vc.bindings[binding[1]][binding[2]] === 'undefined') {
-                    return;
-                }
-
-                $this.bindAttribute(element, binding[1], binding[2], node.nodeValue);
-            });
+            }
 
             return this;
         },

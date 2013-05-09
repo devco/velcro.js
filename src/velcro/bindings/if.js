@@ -1,20 +1,23 @@
 (function() {
     vc.bindings.vc['if'] = function(app, element) {
-        var display = 'none';
+        var container = element.parentNode;
+        var context = app.context();
+        var el = vc.dom(element).attr('data-vc-if', '');
+        var html = el.html();
+        var placeholder = document.createComment('if placeholder');
+        var inserted = false;
 
-        this.init = function(options) {
-            this.display = element.style.display;
-
-            if (!test(options.test)) {
-                element.style.display = 'none';
-            }
-        };
+        container.insertBefore(placeholder, element);
+        el.destroy();
 
         this.update = function(options) {
             if (test(options.test)) {
-                element.style.display = this.display;
-            } else if (element.parentNode) {
-                element.style.display = 'none';
+                inserted = vc.dom(html);
+                container.insertBefore(inserted.raw(), placeholder);
+                app.bind(inserted.raw(), context);
+            } else if (inserted) {
+                inserted.destroy();
+                inserted = false;
             }
         };
     };

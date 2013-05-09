@@ -79,6 +79,16 @@
             return this;
         },
 
+        removeAttributes: function() {
+            if (this.element.attributes) {
+                for (var a = 0; a < this.element.attributes.length; a++) {
+                    this.attr(this.element.attributes[a].nodeName, '');
+                }
+            }
+
+            return this;
+        },
+
         on: function(name, callback) {
             var $this = this;
 
@@ -145,10 +155,22 @@
         },
 
         destroy: function() {
+            this.removeAttributes();
+            this.empty();
             this.element.parentNode.removeChild(this.element);
+
+            return this;
+        },
+
+        empty: function() {
+            if (this.element.childNodes) {
+                for (var b = 0; b < this.element.childNodes.length; b++) {
+                    vc.dom(this.element.childNodes[b]).destroy();
+                }
+            }
+
             this.element.innerHTML = '';
-            delete this.element.attributes;
-            delete this.element.childNodes;
+
             return this;
         },
 
