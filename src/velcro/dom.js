@@ -139,6 +139,17 @@
             return this;
         },
 
+        once: function(name, callback) {
+            var $this = this;
+
+            this.on(name, function(e) {
+                $this.off(name, callback);
+                callback(e);
+            });
+
+            return this;
+        },
+
         fire: function(name) {
             var e;
 
@@ -157,7 +168,10 @@
         destroy: function() {
             this.removeAttributes();
             this.empty();
-            this.element.parentNode.removeChild(this.element);
+
+            if (this.element.parentNode) {
+                this.element.parentNode.removeChild(this.element);
+            }
 
             return this;
         },
