@@ -2,10 +2,10 @@
     vc.bindings.vc.on = function(app, element) {
         var dom = vc.dom(element);
 
-        this.update = function(options) {
-            vc.utils.each(options, function(name, callback) {
-                dom.off(name, callback).on(name, callback);
-            });
+        this.init = function(options) {
+            for (var i in options) {
+                dom.on(i, options[i]);
+            }
         };
     };
 })();

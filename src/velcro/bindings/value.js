@@ -1,6 +1,7 @@
 (function() {
     vc.bindings.vc.value = function(app, element) {
         var changing = false;
+        var firing = false;
         var dom = vc.dom(element);
 
         this.options = {
@@ -8,15 +9,17 @@
         };
 
         this.init = function(options, bindings) {
-            dom.off(options.on, update).on(options.on, update);
+            dom.on(options.on, function() {
+                if (firing) {
+                    return;
+                }
 
-            element.value = options.value;
-
-            function update() {
                 changing = true;
                 bindings.value(element.value);
                 changing = false;
-            }
+            });
+
+            this.update(options, bindings);
         };
 
         this.update = function(options, bindings) {
@@ -25,7 +28,10 @@
             }
 
             element.value = options.value;
+
+            firing = true;
             dom.fire(options.on);
+            firing = false;
         };
     };
 })();

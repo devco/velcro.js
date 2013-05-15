@@ -1,11 +1,17 @@
 (function() {
     vc.bindings.vc.check = function(app, element) {
         var changing = false;
+        var firing = false;
+        var dom = vc.dom(element);
 
         this.init = function(options, bindings) {
             var $this = this;
 
-            vc.dom(element).on('change', function() {
+            dom.on('change', function() {
+                if (firing) {
+                    return;
+                }
+
                 changing = true;
 
                 if (element.checked) {
@@ -28,6 +34,10 @@
             } else {
                 element.checked = false;
             }
+
+            firing = true;
+            dom.fire('change');
+            firing = false;
         };
     };
 })();
