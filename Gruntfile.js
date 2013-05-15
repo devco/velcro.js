@@ -14,6 +14,7 @@ module.exports = function(grunt) {
                     'src/velcro/polyfills.js',
                     'src/velcro/utils.js',
                     'src/velcro/class.js',
+                    'src/velcro/promise.js',
                     'src/velcro/dom.js',
                     'src/velcro/event.js',
                     'src/velcro/http.js',

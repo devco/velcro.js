@@ -327,18 +327,13 @@ asyncTest('Parsing Based on Request Header', function() {
         }
     });
 
-    http.get({
-        url: 'data/bob.json',
-        success: function(response) {
-            ok(response.name === 'Bob Bobberson', 'JSON object should be properly parsed.');
-        },
-        after: function() {
-            start();
-        },
-        error: function(request) {
-            ok(false, request.statusText)
-        }
-    });
+    http.get({ url: 'data/bob.json' })
+        .then(start, start)
+        .then(function(json) {
+            ok(json.name === 'Bob Bobberson', 'JSON object should be properly parsed.');
+        }, function(reason) {
+            ok(false, reason);
+        });
 });
 
 

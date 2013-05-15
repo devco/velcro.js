@@ -62,6 +62,7 @@
         request: function(options) {
             var $this   = this;
             var request = createXmlHttpRequest();
+            var promise = new vc.Promise();
 
             options = vc.utils.merge({
                 url: '',
@@ -103,41 +104,45 @@
                 request.setRequestHeader(header, this.options.headers[header]);
             }
 
-            request.onreadystatechange = function () {
+            request.onreadystatechange = function() {
                 if (request.readyState !== 4) {
                     return;
                 }
 
-                if (request.status !== 200 && request.status !== 304) {
-                    options.error.call(options.error, request);
-                    $this.error.trigger(request);
+                promise.fulfill(function() {
+                    if (request.status !== 200 && request.status !== 304) {
+                        options.error.call(options.error, request);
+                        $this.error.trigger(request);
+                        options.after.call(options.after, request);
+                        $this.after.trigger(request);
+                        throw 'Error ' + request.status + ': ' + request.statusText;
+                    }
+
+                    var response = request.responseText;
+                    var headers = request.getAllResponseHeaders();
+                    var parser = false;
+
+                    if (typeof headers['Content-Type'] === 'string' && typeof $this.options.parsers[headers['Content-Type']] === 'function') {
+                        parser = $this.options.parsers[headers['Content-Type']];
+                    } else if (typeof $this.options.headers.Accept === 'string' && typeof $this.options.parsers[$this.options.headers.Accept] === 'function') {
+                        parser = $this.options.parsers[$this.options.headers.Accept];
+                    }
+
+                    if (parser) {
+                        try {
+                            response = parser(response);
+                        } catch (e) {
+                            throw 'Cannot parse response from "' + url + '" with message: ' + e;
+                        }
+                    }
+
+                    options.success.call(options.success, response);
+                    $this.success.trigger(response);
                     options.after.call(options.after, request);
                     $this.after.trigger(request);
-                    return;
-                }
 
-                var response = request.responseText;
-                var headers = request.getAllResponseHeaders();
-                var parser = false;
-
-                if (typeof headers['Content-Type'] === 'string' && typeof $this.options.parsers[headers['Content-Type']] === 'function') {
-                    parser = $this.options.parsers[headers['Content-Type']];
-                } else if (typeof $this.options.headers.Accept === 'string' && typeof $this.options.parsers[$this.options.headers.Accept] === 'function') {
-                    parser = $this.options.parsers[$this.options.headers.Accept];
-                }
-
-                if (parser) {
-                    try {
-                        response = parser(response);
-                    } catch (e) {
-                        throw 'Cannot parse response from "' + url + '" with message: ' + e;
-                    }
-                }
-
-                options.success.call(options.success, response);
-                $this.success.trigger(response);
-                options.after.call(options.after, request);
-                $this.after.trigger(request);
+                    return response;
+                });
             };
 
             options.before.call(options.before, request);
@@ -149,7 +154,7 @@
                 request.send(data);
             }
 
-            return this;
+            return promise;
         },
 
         serialize: function(obj, prefix) {

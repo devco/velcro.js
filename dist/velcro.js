@@ -193,6 +193,81 @@
     };
 })();
 (function() {
+    vc.Promise = vc.Class.extend({
+        _executed: false,
+        _value: null,
+        _reason: null,
+        _state: 'pending',
+
+        init: function() {
+            this._fulfilledHandlers = [];
+            this._rejectedHandlers = [];
+        },
+
+        then: function(onFulfilled, onRejected) {
+            if (typeof onFulfilled === 'function') {
+                this._fulfilledHandlers.push(onFulfilled);
+            }
+
+            if (typeof onRejected === 'function') {
+                this._rejectedHandlers.push(onRejected);
+            }
+
+            return handler.call(this);
+        },
+
+        fulfill: function(callback) {
+            var $this = this;
+
+            if (this._executed) {
+                throw 'A promise may only be fulfilled once.';
+            }
+
+            this._executed = true;
+
+            setTimeout(function() {
+                try {
+                    $this._value = callback();
+                    $this._state = 'fulfilled';
+                } catch (error) {
+                    $this._reason = error;
+                    $this._state = 'rejected';
+                }
+
+                handler.call($this);
+            }, 1);
+
+            return this;
+        }
+    });
+
+    function handler() {
+        var $this = this;
+
+        setTimeout(function() {
+            switch ($this._state) {
+                case 'fulfilled':
+                    for (var a = 0; a < $this._fulfilledHandlers.length; a++) {
+                        $this._fulfilledHandlers[a]($this._value);
+                    }
+                break;
+                case 'rejected':
+                    for (var b = 0; b < $this._rejectedHandlers.length; b++) {
+                        $this._rejectedHandlers[b]($this._reason);
+                    }
+                break;
+            }
+
+            if ($this._state !== 'pending') {
+                $this._fulfilledHandlers = [];
+                $this._rejectedHandlers = [];
+            }
+        }, 1);
+
+        return this;
+    }
+})();
+(function() {
     vc.Dom = vc.Class.extend({
         element: null,
 
@@ -333,6 +408,17 @@
             return this;
         },
 
+        once: function(name, callback) {
+            var $this = this;
+
+            this.on(name, function(e) {
+                $this.off(name, callback);
+                callback(e);
+            });
+
+            return this;
+        },
+
         fire: function(name) {
             var e;
 
@@ -351,7 +437,10 @@
         destroy: function() {
             this.removeAttributes();
             this.empty();
-            this.element.parentNode.removeChild(this.element);
+
+            if (this.element.parentNode) {
+                this.element.parentNode.removeChild(this.element);
+            }
 
             return this;
         },
@@ -561,6 +650,7 @@
         request: function(options) {
             var $this   = this;
             var request = createXmlHttpRequest();
+            var promise = new vc.Promise();
 
             options = vc.utils.merge({
                 url: '',
@@ -602,41 +692,45 @@
                 request.setRequestHeader(header, this.options.headers[header]);
             }
 
-            request.onreadystatechange = function () {
+            request.onreadystatechange = function() {
                 if (request.readyState !== 4) {
                     return;
                 }
 
-                if (request.status !== 200 && request.status !== 304) {
-                    options.error.call(options.error, request);
-                    $this.error.trigger(request);
+                promise.fulfill(function() {
+                    if (request.status !== 200 && request.status !== 304) {
+                        options.error.call(options.error, request);
+                        $this.error.trigger(request);
+                        options.after.call(options.after, request);
+                        $this.after.trigger(request);
+                        throw 'Error ' + request.status + ': ' + request.statusText;
+                    }
+
+                    var response = request.responseText;
+                    var headers = request.getAllResponseHeaders();
+                    var parser = false;
+
+                    if (typeof headers['Content-Type'] === 'string' && typeof $this.options.parsers[headers['Content-Type']] === 'function') {
+                        parser = $this.options.parsers[headers['Content-Type']];
+                    } else if (typeof $this.options.headers.Accept === 'string' && typeof $this.options.parsers[$this.options.headers.Accept] === 'function') {
+                        parser = $this.options.parsers[$this.options.headers.Accept];
+                    }
+
+                    if (parser) {
+                        try {
+                            response = parser(response);
+                        } catch (e) {
+                            throw 'Cannot parse response from "' + url + '" with message: ' + e;
+                        }
+                    }
+
+                    options.success.call(options.success, response);
+                    $this.success.trigger(response);
                     options.after.call(options.after, request);
                     $this.after.trigger(request);
-                    return;
-                }
 
-                var response = request.responseText;
-                var headers = request.getAllResponseHeaders();
-                var parser = false;
-
-                if (typeof headers['Content-Type'] === 'string' && typeof $this.options.parsers[headers['Content-Type']] === 'function') {
-                    parser = $this.options.parsers[headers['Content-Type']];
-                } else if (typeof $this.options.headers.Accept === 'string' && typeof $this.options.parsers[$this.options.headers.Accept] === 'function') {
-                    parser = $this.options.parsers[$this.options.headers.Accept];
-                }
-
-                if (parser) {
-                    try {
-                        response = parser(response);
-                    } catch (e) {
-                        throw 'Cannot parse response from "' + url + '" with message: ' + e;
-                    }
-                }
-
-                options.success.call(options.success, response);
-                $this.success.trigger(response);
-                options.after.call(options.after, request);
-                $this.after.trigger(request);
+                    return response;
+                });
             };
 
             options.before.call(options.before, request);
@@ -648,7 +742,7 @@
                 request.send(data);
             }
 
-            return this;
+            return promise;
         },
 
         serialize: function(obj, prefix) {
@@ -1127,13 +1221,18 @@
             var subs     = [];
 
             var func = function(newValue) {
+                var oldValue = func.get();
+
                 if (arguments.length) {
-                    func.set(newValue);
-                    func.publish();
+                    if (oldValue !== newValue) {
+                        func.set(newValue);
+                        func.publish();
+                    }
+
                     return func.owner;
                 }
 
-                return func.get();
+                return oldValue;
             };
 
             func.options = options;
@@ -1737,11 +1836,17 @@
 (function() {
     vc.bindings.vc.check = function(app, element) {
         var changing = false;
+        var firing = false;
+        var dom = vc.dom(element);
 
         this.init = function(options, bindings) {
             var $this = this;
 
-            vc.dom(element).on('change', function() {
+            dom.on('change', function() {
+                if (firing) {
+                    return;
+                }
+
                 changing = true;
 
                 if (element.checked) {
@@ -1764,23 +1869,29 @@
             } else {
                 element.checked = false;
             }
+
+            firing = true;
+            dom.fire('change');
+            firing = false;
         };
     };
 })();
 (function() {
     vc.bindings.vc.click = function (app, element) {
-        this.update = function(options) {
-            vc.dom(element).off('click', options.callback).on('click', options.callback);
+        this.init = function(options) {
+            vc.dom(element).on('click', options.callback);
         };
     }
 })();
 (function() {
     vc.bindings.vc.contents = function(app, element) {
+        var dom = vc.dom(element);
+
         this.update = function(options) {
             if (typeof options.text !== 'undefined') {
-                vc.dom(element).text(options.text || '');
+                dom.text(options.text || '');
             } else if (typeof options.html !== 'undefined') {
-                vc.dom(element).contents(options.html || '');
+                dom.contents(options.html || '');
             } else {
                 vc.utils.throwForElement(element, 'The "content" binding must be given a "text" or "html" option.');
             }
@@ -1894,14 +2005,24 @@
 (function() {
     vc.bindings.vc.focus = function(app, element) {
         var changing = false;
+        var firingBlur = false;
+        var firingFocus = false;
         var dom = vc.dom(element);
 
         this.init = function(options, bindings) {
             dom.on('focus', function() {
+                if (firingFocus) {
+                    return;
+                }
+
                 changing = true;
                 bindings.bind(true);
                 changing = false;
             }).on('blur', function() {
+                if (firingBlur) {
+                    return;
+                }
+
                 changing = true;
                 bindings.bind(false);
                 changing = false;
@@ -1915,10 +2036,16 @@
 
             if (options.bind) {
                 element.focus();
+
+                firingFocus = true;
                 dom.fire('focus');
+                firingFocus = false;
             } else {
                 element.blur();
+
+                firingBlur = true;
                 dom.fire('blur');
+                firingBlur = false;
             }
         };
     };
@@ -2035,10 +2162,10 @@
     vc.bindings.vc.on = function(app, element) {
         var dom = vc.dom(element);
 
-        this.update = function(options) {
-            vc.utils.each(options, function(name, callback) {
-                dom.off(name, callback).on(name, callback);
-            });
+        this.init = function(options) {
+            for (var i in options) {
+                dom.on(i, options[i]);
+            }
         };
     };
 })();
@@ -2174,6 +2301,7 @@
 (function() {
     vc.bindings.vc.value = function(app, element) {
         var changing = false;
+        var firing = false;
         var dom = vc.dom(element);
 
         this.options = {
@@ -2181,15 +2309,17 @@
         };
 
         this.init = function(options, bindings) {
-            dom.off(options.on, update).on(options.on, update);
+            dom.on(options.on, function() {
+                if (firing) {
+                    return;
+                }
 
-            element.value = options.value;
-
-            function update() {
                 changing = true;
                 bindings.value(element.value);
                 changing = false;
-            }
+            });
+
+            this.update(options, bindings);
         };
 
         this.update = function(options, bindings) {
@@ -2198,7 +2328,10 @@
             }
 
             element.value = options.value;
+
+            firing = true;
             dom.fire(options.on);
+            firing = false;
         };
     };
 })();
