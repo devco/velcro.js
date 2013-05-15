@@ -115,7 +115,7 @@
                         $this.error.trigger(request);
                         options.after.call(options.after, request);
                         $this.after.trigger(request);
-                        throw 'Error ' + request.status + ': ' + request.statusText;
+                        throw request.status + ': ' + request.statusText;
                     }
 
                     var response = request.responseText;
@@ -166,6 +166,43 @@
             }
 
             return str.join('&');
+        },
+
+        defer: function(url, defaults) {
+            var $this = this;
+            var parts = url.split(' ');
+            var type = 'get';
+
+            if (typeof parts[1] !== 'undefined') {
+                type = parts[0].toLowerCase();
+                url = parts[1];
+            }
+
+            return function(data) {
+                var remove = [];
+                var formatted = url;
+
+                data = vc.utils.merge(defaults, data);
+
+                // replace placeholcers and mark fields for deletion
+                for (var a in data) {
+                    if (url.match(':' + a)) {
+                        formatted = url.replace(':' + a, data[a]);
+                        remove.push(a);
+                    }
+                }
+
+                // remove fields that were replace from the original data hash
+                for (var b = 0; b < remove.length; b++) {
+                    delete data[remove[b]];
+                }
+
+                return $this.request({
+                    type: type,
+                    url: formatted,
+                    data: data
+                });
+            };
         }
     });
 
