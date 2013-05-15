@@ -22,13 +22,18 @@
             var subs     = [];
 
             var func = function(newValue) {
+                var oldValue = func.get();
+
                 if (arguments.length) {
-                    func.set(newValue);
-                    func.publish();
+                    if (oldValue !== newValue) {
+                        func.set(newValue);
+                        func.publish();
+                    }
+
                     return func.owner;
                 }
 
-                return func.get();
+                return oldValue;
             };
 
             func.options = options;
