@@ -1,5 +1,5 @@
 (function() {
-    vc.bindings.vc.on = function(app, element) {
+    vc.bindings.vcOn = function(app, element) {
         var dom = vc.dom(element);
 
         this.init = function(options) {

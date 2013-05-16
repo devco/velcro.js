@@ -1,8 +1,8 @@
 (function() {
-    vc.bindings.vc['if'] = function(app, element) {
+    vc.bindings.vcIf = function(app, element) {
         var container = element.parentNode;
         var context = app.context();
-        var el = vc.dom(element).attr('data-vc-if', '');
+        var el = vc.dom(element).attr('vc-if', '');
         var html = el.html();
         var placeholder = document.createComment('if placeholder');
         var inserted = false;

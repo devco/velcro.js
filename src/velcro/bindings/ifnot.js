@@ -1,8 +1,8 @@
 (function() {
-    vc.bindings.vc.ifnot = function(app, element) {
+    vc.bindings.vcIfnot = function(app, element) {
         var container = element.parentNode;
         var context = app.context();
-        var el = vc.dom(element).attr('data-vc-ifnot', '');
+        var el = vc.dom(element).attr('vc-ifnot', '');
         var html = el.html();
         var placeholder = document.createComment('ifnot placeholder');
         var inserted = false;

@@ -1,5 +1,5 @@
 (function() {
-    vc.bindings.vc.check = function(app, element) {
+    vc.bindings.vcCheck = function(app, element) {
         var changing = false;
         var firing = false;
         var dom = vc.dom(element);

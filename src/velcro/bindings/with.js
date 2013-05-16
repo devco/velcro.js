@@ -1,5 +1,5 @@
 (function() {
-    vc.bindings.vc['with'] = function(app, element) {
+    vc.bindings.vcWith = function(app, element) {
         var template = element.innerHTML;
 
         element.innerHTML = '';

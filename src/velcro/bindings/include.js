@@ -1,5 +1,5 @@
 (function() {
-    vc.bindings.vc.include = function(app, element) {
+    vc.bindings.vcInclude = function(app, element) {
         this.options = {
             path: '',
             context: false,

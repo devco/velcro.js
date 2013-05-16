@@ -1,5 +1,5 @@
 (function() {
-    vc.bindings.vc.css = function(app, element) {
+    vc.bindings.vcCss = function(app, element) {
         var element = vc.dom(element);
         var originals = element.css();
 

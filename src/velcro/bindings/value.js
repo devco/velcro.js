@@ -1,5 +1,5 @@
 (function() {
-    vc.bindings.vc.value = function(app, element) {
+    vc.bindings.vcValue = function(app, element) {
         var changing = false;
         var firing = false;
         var dom = vc.dom(element);

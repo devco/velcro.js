@@ -1,5 +1,5 @@
 (function() {
-    vc.bindings.vc.extend = function(app, element) {
+    vc.bindings.vcExtend = function(app, element) {
         var dom = vc.dom(element);
         var html = dom.contents();
 

@@ -218,7 +218,7 @@
         },
 
         tag: function() {
-            return this.element.tagName.toLowerCase();
+            return this.element.nodeName.toLowerCase();
         }
     });
 

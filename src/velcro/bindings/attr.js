@@ -1,5 +1,5 @@
 (function() {
-    vc.bindings.vc.attr = function(app, element) {
+    vc.bindings.vcAttr = function(app, element) {
         this.update = function(options, bindings) {
             var el = vc.dom(element);
 

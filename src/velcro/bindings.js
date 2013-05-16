@@ -1,5 +1,3 @@
 (function() {
-    vc.bindings = {
-        vc: {}
-    };
+    vc.bindings = {};
 })();

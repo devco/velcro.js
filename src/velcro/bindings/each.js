@@ -1,9 +1,9 @@
 (function() {
-    vc.bindings.vc.each = function(app, element) {
+    vc.bindings.vcEach = function(app, element) {
         var context = app.context();
         var container = element.parentNode;
         var clones = [];
-        var dom = vc.dom(element).attr('data-vc-each', '');
+        var dom = vc.dom(element).attr('vc-each', '');
         var reference = document.createComment('each placeholder');
         var template = dom.html();
 

@@ -1,5 +1,5 @@
 (function() {
-    vc.bindings.vc.options = function(app, element) {
+    vc.bindings.vcOptions = function(app, element) {
         var dom = vc.dom(element);
 
         this.options = {

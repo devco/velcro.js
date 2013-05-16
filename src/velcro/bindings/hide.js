@@ -1,5 +1,5 @@
 (function() {
-    vc.bindings.vc.hide = function(app, element) {
+    vc.bindings.vcHide = function(app, element) {
         this.update = function(options) {
             if (options.test) {
                 element.style.display = 'none';

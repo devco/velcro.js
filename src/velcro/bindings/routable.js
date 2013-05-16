@@ -1,5 +1,5 @@
 (function() {
-    vc.bindings.vc.routable = function(app, element) {
+    vc.bindings.vcRoutable = function(app, element) {
         this.update = function(options) {
             var router = options.router;
 

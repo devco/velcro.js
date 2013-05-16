@@ -487,7 +487,7 @@
         },
 
         tag: function() {
-            return this.element.tagName.toLowerCase();
+            return this.element.nodeName.toLowerCase();
         }
     });
 
@@ -1855,12 +1855,10 @@
     };
 })();
 (function() {
-    vc.bindings = {
-        vc: {}
-    };
+    vc.bindings = {};
 })();
 (function() {
-    vc.bindings.vc.attr = function(app, element) {
+    vc.bindings.vcAttr = function(app, element) {
         this.update = function(options, bindings) {
             var el = vc.dom(element);
 
@@ -1871,7 +1869,7 @@
     };
 })();
 (function() {
-    vc.bindings.vc.check = function(app, element) {
+    vc.bindings.vcCheck = function(app, element) {
         var changing = false;
         var firing = false;
         var dom = vc.dom(element);
@@ -1914,14 +1912,14 @@
     };
 })();
 (function() {
-    vc.bindings.vc.click = function (app, element) {
+    vc.bindings.vcClick = function (app, element) {
         this.init = function(options) {
             vc.dom(element).on('click', options.callback);
         };
     }
 })();
 (function() {
-    vc.bindings.vc.contents = function(app, element) {
+    vc.bindings.vcContent = function(app, element) {
         var dom = vc.dom(element);
 
         this.update = function(options) {
@@ -1936,7 +1934,7 @@
     };
 })();
 (function() {
-    vc.bindings.vc.css = function(app, element) {
+    vc.bindings.vcCss = function(app, element) {
         var element = vc.dom(element);
         var originals = element.css();
 
@@ -1946,7 +1944,7 @@
     };
 })();
 (function() {
-    vc.bindings.vc.disable = function(app, element) {
+    vc.bindings.vcDisable = function(app, element) {
         this.update = function(options) {
             if (options.test) {
                 element.disabled = true;
@@ -1957,11 +1955,11 @@
     };
 })();
 (function() {
-    vc.bindings.vc.each = function(app, element) {
+    vc.bindings.vcEach = function(app, element) {
         var context = app.context();
         var container = element.parentNode;
         var clones = [];
-        var dom = vc.dom(element).attr('data-vc-each', '');
+        var dom = vc.dom(element).attr('vc-each', '');
         var reference = document.createComment('each placeholder');
         var template = dom.html();
 
@@ -2005,7 +2003,7 @@
     };
 })();
 (function() {
-    vc.bindings.vc.enable = function(app, element) {
+    vc.bindings.vcEnable = function(app, element) {
         this.update = function(options) {
             if (options.test) {
                 element.disabled = false;
@@ -2016,7 +2014,7 @@
     };
 })();
 (function() {
-    vc.bindings.vc.extend = function(app, element) {
+    vc.bindings.vcExtend = function(app, element) {
         var dom = vc.dom(element);
         var html = dom.contents();
 
@@ -2040,7 +2038,7 @@
     };
 })();
 (function() {
-    vc.bindings.vc.focus = function(app, element) {
+    vc.bindings.vcFocus = function(app, element) {
         var changing = false;
         var firingBlur = false;
         var firingFocus = false;
@@ -2088,7 +2086,7 @@
     };
 })();
 (function() {
-    vc.bindings.vc.hide = function(app, element) {
+    vc.bindings.vcHide = function(app, element) {
         this.update = function(options) {
             if (options.test) {
                 element.style.display = 'none';
@@ -2099,10 +2097,10 @@
     };
 })();
 (function() {
-    vc.bindings.vc['if'] = function(app, element) {
+    vc.bindings.vcIf = function(app, element) {
         var container = element.parentNode;
         var context = app.context();
-        var el = vc.dom(element).attr('data-vc-if', '');
+        var el = vc.dom(element).attr('vc-if', '');
         var html = el.html();
         var placeholder = document.createComment('if placeholder');
         var inserted = false;
@@ -2131,10 +2129,10 @@
     }
 })();
 (function() {
-    vc.bindings.vc.ifnot = function(app, element) {
+    vc.bindings.vcIfnot = function(app, element) {
         var container = element.parentNode;
         var context = app.context();
-        var el = vc.dom(element).attr('data-vc-ifnot', '');
+        var el = vc.dom(element).attr('vc-ifnot', '');
         var html = el.html();
         var placeholder = document.createComment('ifnot placeholder');
         var inserted = false;
@@ -2163,7 +2161,7 @@
     }
 })();
 (function() {
-    vc.bindings.vc.include = function(app, element) {
+    vc.bindings.vcInclude = function(app, element) {
         this.options = {
             path: '',
             context: false,
@@ -2196,7 +2194,7 @@
     };
 })();
 (function() {
-    vc.bindings.vc.on = function(app, element) {
+    vc.bindings.vcOn = function(app, element) {
         var dom = vc.dom(element);
 
         this.init = function(options) {
@@ -2207,7 +2205,7 @@
     };
 })();
 (function() {
-    vc.bindings.vc.options = function(app, element) {
+    vc.bindings.vcOptions = function(app, element) {
         var dom = vc.dom(element);
 
         this.options = {
@@ -2278,7 +2276,7 @@
     }
 })();
 (function() {
-    vc.bindings.vc.routable = function(app, element) {
+    vc.bindings.vcRoutable = function(app, element) {
         this.update = function(options) {
             var router = options.router;
 
@@ -2296,7 +2294,7 @@
     };
 })();
 (function() {
-    vc.bindings.vc.show = function(app, element) {
+    vc.bindings.vcShow = function(app, element) {
         this.update = function(options) {
             if (options.test) {
                 element.style.display = null;
@@ -2307,7 +2305,7 @@
     };
 })();
 (function() {
-    vc.bindings.vc.style = function(app, element) {
+    vc.bindings.vcStyle = function(app, element) {
         this.update = function(options) {
             for (var i in options) {
                 element.style[i] = typeof options[i] === 'function' ? options[i]() : options[i];
@@ -2316,7 +2314,7 @@
     };
 })();
 (function() {
-    vc.bindings.vc.submit = function(app, element) {
+    vc.bindings.vcSubmit = function(app, element) {
         var dom = vc.dom(element);
 
         this.options = {
@@ -2336,7 +2334,7 @@
     };
 })();
 (function() {
-    vc.bindings.vc.value = function(app, element) {
+    vc.bindings.vcValue = function(app, element) {
         var changing = false;
         var firing = false;
         var dom = vc.dom(element);
@@ -2373,7 +2371,7 @@
     };
 })();
 (function() {
-    vc.bindings.vc['with'] = function(app, element) {
+    vc.bindings.vcWith = function(app, element) {
         var template = element.innerHTML;
 
         element.innerHTML = '';
@@ -2437,68 +2435,63 @@
                 return this;
             }
 
-            if (element.attributes) {
-                for (var i = 0; i < element.attributes.length; i++) {
-                    var node = element.attributes[i];
+            var bindings = this.getBindingsForElement(element);
 
-                    // An element may have been altered inside of a binding, therefore
-                    // we must check if the binding still exists.
-                    if (typeof element.attributes[i] === 'undefined') {
-                        continue;
-                    }
-
-                    // Bindings must be data- attributes.
-                    if (node.nodeName.indexOf('data-') === -1) {
-                        continue;
-                    }
-
-                    // A namespace is in the format of "data-[namespace]-[bindingName]".
-                    var binding = node.nodeName.match(/^data-([^\-]+)-(.+)/);
-
-                    // If there isn't a namespaced binding continue.
-                    if (!binding) {
-                        continue;
-                    }
-
-                    // Binding namespace and binding must be registered.
-                    if (typeof vc.bindings[binding[1]] === 'undefined' || typeof vc.bindings[binding[1]][binding[2]] === 'undefined') {
-                        continue;
-                    }
-
-                    this.bindAttribute(element, binding[1], binding[2], node.value);
-                }
+            for (var name in bindings) {
+                this.applyBinding(element, name, bindings[name], this.context());
             }
 
             return this;
         },
 
-        bindAttribute: function (element, namespace, binding, value) {
-            // The context is saved so that if it changes it won't mess up a subscriber.
-            var context = this.context();
+        getBindingsForElement: function(element) {
+            var bindings = {};
+            var nodeName = camelCase(element.nodeName);
+            var isVcNode = typeof vc.bindings[nodeName] !== 'undefined';
+            var nodeValues = [];
 
-            // Contains parsed information for the initial updates.
-            var parsed = parse();
+            if (element.attributes) {
+                for (var a = 0; a < element.attributes.length; a++) {
+                    var attr = element.attributes[a];
+                    var name = camelCase(attr.nodeName);
+                    var value = attr.nodeValue;
 
-            // This will initialise the binding and do any initial changes to the bound elements.
-            // Subscribable values are also extracted and passed in so that accessing them is trivial.
-            var inst = vc.bindings[namespace][binding];
+                    if (isVcNode) {
+                        nodeValues.push(name + ': ' + value);
+                    } else if (typeof vc.bindings[name] !== 'undefined') {
+                        bindings[name] = value;
+                    }
+                }
+            }
+
+            if (isVcNode) {
+                bindings[nodeName] = nodeValues.join(', ');
+            }
+
+            return bindings;
+        },
+
+        applyBinding: function (element, name, value, context) {
+            var $this = this;
+            var parsed = this.parseBinding(value, context);
+            var binding = vc.bindings[name];
 
             // Binding must be newable.
-            if (typeof inst === 'function') {
-                inst = new inst(this, element);
+            if (typeof binding === 'function') {
+                binding = new binding(this, element);
             } else {
-                throw 'The binding "' + binding + '" must be a function.';
+                throw 'The binding "' + name + '" must be a constructor.';
             }
 
             // Initialisation.
-            if (typeof inst.init === 'function') {
-                inst.init(vc.utils.merge(inst.options, parsed.options), parsed.bound);
-            } else if (typeof inst.update === 'function') {
-                inst.update(vc.utils.merge(inst.options, parsed.options), parsed.bound);
+            if (typeof binding.init === 'function') {
+                binding.init(vc.utils.merge(binding.options, parsed.options), parsed.bound);
+            } else if (typeof binding.update === 'function') {
+                binding.update(vc.utils.merge(binding.options, parsed.options), parsed.bound);
             }
 
             // If an update method is provided, subscribe to updates with it.
-            if (typeof inst.update === 'function') {
+            if (typeof binding.update === 'function') {
                 for (var i in parsed.bound) {
                     parsed.bound[i].subscribe(subscriber);
                 }
@@ -2506,36 +2499,36 @@
 
             return this;
 
-            // Returns an object that conains raw, extracted values from the passed in bindings as well as bindable members.
-            // Bindable members included any vc.value, vc.Model and vc.Collection.
-            function parse() {
-                var temp = vc.utils.parseBinding(value, context);
-                var comp = { options: {}, bound: {} };
-
-                for (var i in temp) {
-                    if (vc.value.isUnwrapped(temp[i])) {
-                        comp.options[i] = temp[i]();
-
-                        if (comp.options[i] instanceof vc.Model || comp.options[i] instanceof vc.Collection) {
-                            comp.bound[i] = comp.options[i]._observer;
-                        } else {
-                            comp.bound[i] = temp[i];
-                        }
-                    } else if (typeof temp[i] === 'function') {
-                        comp.options[i] = temp[i].bind(context);
-                    } else {
-                        comp.options[i] = temp[i];
-                    }
-                }
-
-                return comp;
-            }
-
             // Triggers updates within the binding when a observer changes.
             function subscriber() {
-                var refreshed = parse();
-                inst.update(vc.utils.merge(inst.options, refreshed.options), refreshed.bound);
+                var refreshed = $this.parseBinding(value, context);
+                binding.update(vc.utils.merge(binding.options, refreshed.options), refreshed.bound);
             }
+        },
+
+        // Returns an object that conains raw, extracted values from the passed in bindings as well as bindable members.
+        // Bindable members included any vc.value, vc.Model and vc.Collection.
+        parseBinding: function(value, context) {
+            var temp = vc.utils.parseBinding(value, context);
+            var comp = { options: {}, bound: {} };
+
+            for (var i in temp) {
+                if (vc.value.isUnwrapped(temp[i])) {
+                    comp.options[i] = temp[i]();
+
+                    if (comp.options[i] instanceof vc.Model || comp.options[i] instanceof vc.Collection) {
+                        comp.bound[i] = comp.options[i]._observer;
+                    } else {
+                        comp.bound[i] = temp[i];
+                    }
+                } else if (typeof temp[i] === 'function') {
+                    comp.options[i] = temp[i].bind(context);
+                } else {
+                    comp.options[i] = temp[i];
+                }
+            }
+
+            return comp;
         },
 
         context: function(context) {
@@ -2631,6 +2624,22 @@
             doc[add](pre + 'readystatechange', init, false);
             win[add](pre + 'load', init, false);
         }
+    }
+
+    function camelCase(dashCase) {
+        dashCase = dashCase.toLowerCase();
+
+        if (dashCase.indexOf('-') === -1) {
+            return dashCase;
+        }
+
+        var parts = dashCase.split('-');
+
+        for (var a = 1; a < parts.length; a++) {
+            parts[a] = parts[a].charAt(0).toUpperCase() + parts[a].substring(1);
+        }
+
+        return parts.join('');
     }
 })();
 });

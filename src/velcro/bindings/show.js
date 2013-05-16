@@ -1,5 +1,5 @@
 (function() {
-    vc.bindings.vc.show = function(app, element) {
+    vc.bindings.vcShow = function(app, element) {
         this.update = function(options) {
             if (options.test) {
                 element.style.display = null;

@@ -1,5 +1,5 @@
 (function() {
-    vc.bindings.vc.submit = function(app, element) {
+    vc.bindings.vcSubmit = function(app, element) {
         var dom = vc.dom(element);
 
         this.options = {

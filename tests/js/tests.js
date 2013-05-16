@@ -211,7 +211,7 @@ test('Observable Getters and Setters', function() {
     ok(model.prop(), 'Getter and setter not working.');
 
     var user = new User({ forename: 'Bob' });
-    var html = vc.dom('<div data-vc-contents="text: name"></div>');
+    var html = vc.dom('<div vc-content="text: name"></div>');
 
     vc.app(html, user);
     ok(html.contents() === 'Bob', 'Not initialised.');
@@ -366,7 +366,7 @@ test('Observing Changes', function() {
     var div  = document.createElement('div');
     var span = document.createElement('span');
 
-    span.setAttribute('data-vc-contents', 'text: name');
+    span.setAttribute('vc-content', 'text: name');
     div.appendChild(span);
 
     var Person = vc.Model.extend({
@@ -396,7 +396,7 @@ test('Changing Context and Scoping', function() {
 
 asyncTest('Router', function() {
     var div = document.createElement('div');
-    div.setAttribute('data-vc-routable', 'router: router');
+    div.setAttribute('vc-routable', 'router: router');
 
     var router = new vc.Router();
 
@@ -420,7 +420,7 @@ asyncTest('Router', function() {
 
 asyncTest('View', function() {
     var div = document.createElement('div');
-    div.setAttribute('data-vc-include', 'path: "index", context: context, callback: callback');
+    div.setAttribute('vc-include', 'path: "index", context: context, callback: callback');
 
     vc.app(div, {
         context: function() {
@@ -434,7 +434,7 @@ asyncTest('View', function() {
 });
 
 test('Document Binding - Passing Shallow Contexts to Nested Elements', function() {
-    document.body.innerHTML = '<ul data-vc-if="test: test"><li data-vc-each="items: items"></li></ul>';
+    document.body.innerHTML = '<ul vc-if="test: test"><li vc-each="items: items"></li></ul>';
 
     vc.app({
         test: true,
@@ -449,10 +449,10 @@ test('Document Binding - Passing Shallow Contexts to Nested Elements', function(
 
 
 
-module('Bindings');
+module('Attribute Bindings');
 
 test('attr', function() {
-    var div   = vc.dom('<div data-vc-attr="\'class\': className, title: title"></div>');
+    var div   = vc.dom('<div vc-attr="\'class\': className, title: title"></div>');
     var model = new (vc.Model.extend({
         className: vc.value('string', { value: 'test-class1' }),
         title: vc.value('string', { value: 'test title 1' })
@@ -470,7 +470,7 @@ test('attr', function() {
 });
 
 test('check', function() {
-    var html  = vc.dom('<input type="checkbox" value="1" data-vc-check="bind: check">');
+    var html  = vc.dom('<input type="checkbox" value="1" vc-check="bind: check">');
     var model = new (vc.Model.extend({
         check: vc.value('bool')
     }));
@@ -491,7 +491,7 @@ test('check', function() {
 });
 
 test('click', function() {
-    var div = vc.dom('<div data-vc-click="callback: test"></div>');
+    var div = vc.dom('<div vc-click="callback: test"></div>');
     var yes = false;
 
     vc.app(div.raw(), {
@@ -505,7 +505,7 @@ test('click', function() {
 });
 
 test('css', function() {
-    var div = vc.dom('<div class="class1" data-vc-css="class2: class2, class3: class3"></div>');
+    var div = vc.dom('<div class="class1" vc-css="class2: class2, class3: class3"></div>');
     var model = new (vc.Model.extend({
         class2: vc.value('bool'),
         class3: vc.value('bool')
@@ -525,7 +525,7 @@ test('css', function() {
 });
 
 test('disable', function() {
-    var input = vc.dom('<input type="text" disabled="disabled" data-vc-disable="test: disabled">');
+    var input = vc.dom('<input type="text" disabled="disabled" vc-disable="test: disabled">');
     var model = new (vc.Model.extend({
         disabled: vc.value('bool')
     }));
@@ -540,37 +540,32 @@ test('disable', function() {
 });
 
 test('each', function() {
-    var ul   = document.createElement('ul');
-    var li   = document.createElement('li');
+    var dom = vc.dom('<ul><li vc-each="items: items"><span vc-content="text: text"></span></li></ul>')
     var Item = vc.Model.extend({
         text: vc.value('string')
     });
 
-    ul.appendChild(li);
-    li.setAttribute('data-vc-each', 'items: items');
-    li.setAttribute('data-vc-contents', 'text: text');
-
-    var ctx = new (vc.Model.extend({
+    var ctx = vc.model.make({
         items: vc.value('many', { model: Item })
-    }));
+    });
 
-    vc.app(ul, ctx);
+    vc.app(dom.raw(), ctx);
 
     ctx.items().append({
         text: 'Item 1'
     });
 
-    ok(ul.childNodes[0].innerText === 'Item 1', 'One item should exist as "Item 1".');
+    ok(dom.raw().childNodes[0].innerText === 'Item 1', 'One item should exist as "Item 1".');
 
     ctx.items().append({
         text: 'Item 2'
     });
 
-    ok(ul.childNodes[1].innerText === 'Item 2', 'Two items should exist as "Item 1, Item 2".');
+    ok(dom.raw().childNodes[1].innerText === 'Item 2', 'Two items should exist as "Item 1, Item 2".');
 });
 
 test('enable', function() {
-    var input = vc.dom('<input type="text" data-vc-enable="test: enabled">');
+    var input = vc.dom('<input type="text" vc-enable="test: enabled">');
     var model = new (vc.Model.extend({
         enabled: vc.value('bool')
     }));
@@ -585,7 +580,7 @@ test('enable', function() {
 });
 
 test('extend', function() {
-    var html  = vc.dom('<div><div data-vc-extend="path: path">test</div><script id="vc-view-layout1" type="text/html"><h1 data-vc-contents="html: $content"></h1></script><script id="vc-view-layout2" type="text/html"><h2 data-vc-contents="html: $content"></h2></script></div>');
+    var html  = vc.dom('<div><div vc-extend="path: path">test</div><script id="vc-view-layout1" type="text/html"><h1 vc-content="html: $content"></h1></script><script id="vc-view-layout2" type="text/html"><h2 vc-content="html: $content"></h2></script></div>');
     var model = new (vc.Model.extend({
         path: vc.value('string', { value: 'layout1' })
     }));
@@ -600,7 +595,7 @@ test('extend', function() {
 });
 
 test('focus', function() {
-    var html  = vc.dom('<input type="text" data-vc-focus="bind: focus">');
+    var html  = vc.dom('<input type="text" vc-focus="bind: focus">');
     var focus = false;
     var model = new (vc.Model.extend({
         focus: vc.value('bool')
@@ -630,7 +625,7 @@ test('focus', function() {
 });
 
 test('hide', function() {
-    var html  = vc.dom('<div data-vc-hide="test: hide"></div>');
+    var html  = vc.dom('<div vc-hide="test: hide"></div>');
     var model = new (vc.Model.extend({
         hide: vc.value('bool')
     }));
@@ -645,7 +640,7 @@ test('hide', function() {
 });
 
 test('html', function() {
-    var div   = vc.dom('<div data-vc-contents="html: html"></div>');
+    var div   = vc.dom('<div vc-content="html: html"></div>');
     var model = new (vc.Model.extend({
         html: vc.value('string', { value: '<ul></ul>' })
     }));
@@ -658,7 +653,7 @@ test('html', function() {
 });
 
 test('if', function() {
-    var div   = vc.dom('<div><ul data-vc-if="test: show"></ul></div>');
+    var div   = vc.dom('<div><ul vc-if="test: show"></ul></div>');
     var model = new (vc.Model.extend({
         show: vc.value('bool')
     }));
@@ -671,7 +666,7 @@ test('if', function() {
 });
 
 test('ifnot', function() {
-    var div   = vc.dom('<div><ul data-vc-ifnot="test: show"></ul></div>');
+    var div   = vc.dom('<div><ul vc-ifnot="test: show"></ul></div>');
     var model = new (vc.Model.extend({
         show: vc.value('bool')
     }));
@@ -684,7 +679,7 @@ test('ifnot', function() {
 });
 
 test('include', function() {
-    var div   = vc.dom('<div><div data-vc-include="path: path"></div><script id="vc-view-child1" type="text/html">child1</script><script id="vc-view-child2" type="text/html">child2</script></div>');
+    var div   = vc.dom('<div><div vc-include="path: path"></div><script id="vc-view-child1" type="text/html">child1</script><script id="vc-view-child2" type="text/html">child2</script></div>');
     var model = new (vc.Model.extend({
         path: vc.value('string', { value: 'child1' })
     }));
@@ -698,7 +693,7 @@ test('include', function() {
 });
 
 test('on', function() {
-    var div   = vc.dom('<div data-vc-on="hide: hide, show: show"></div>');
+    var div   = vc.dom('<div vc-on="hide: hide, show: show"></div>');
     var model = new (vc.Model.extend({
         triggered: vc.value('array'),
         hide: function(e) {
@@ -719,7 +714,7 @@ test('on', function() {
 });
 
 test('options', function() {
-    var select = vc.dom('<select data-vc-options="options: options, caption: caption, text: text, value: value"></select>');
+    var select = vc.dom('<select vc-options="options: options, caption: caption, text: text, value: value"></select>');
     var model  = new (vc.Model.extend({
         caption: vc.value('string', { value: 'Choose...' }),
         options: vc.value('many', {
@@ -752,7 +747,7 @@ test('options', function() {
 });
 
 test('routable', function() {
-    var div   = vc.dom('<div><div data-vc-routable="router: router"></div><script id="vc-view-test" type="text/html"><span data-vc-contents="text: text"></span></script></div>');
+    var div   = vc.dom('<div><div vc-routable="router: router"></div><script id="vc-view-test" type="text/html"><span vc-content="text: text"></span></script></div>');
     var model = {
         router: new vc.Router()
     };
@@ -786,7 +781,7 @@ test('routable', function() {
 });
 
 test('show', function() {
-    var html  = vc.dom('<div data-vc-show="test: show"></div>');
+    var html  = vc.dom('<div vc-show="test: show"></div>');
     var model = new (vc.Model.extend({
         show: vc.value('bool', { value: true })
     }));
@@ -801,7 +796,7 @@ test('show', function() {
 });
 
 test('style', function() {
-    var html  = vc.dom('<div data-vc-style="display: display, visibility: visibility"></div>');
+    var html  = vc.dom('<div vc-style="display: display, visibility: visibility"></div>');
     var model = new (vc.Model.extend({
         display: vc.value('string', { value: 'inline' }),
         visibility: function() {
@@ -816,7 +811,7 @@ test('style', function() {
 });
 
 test('submit', function() {
-    var form = vc.dom('<form data-vc-submit="callback: callback"></form>');
+    var form = vc.dom('<form vc-submit="callback: callback"></form>');
     var model = new (vc.Model.extend({
         submitted: vc.value('bool'),
         callback: function() {
@@ -830,7 +825,7 @@ test('submit', function() {
 });
 
 test('text', function() {
-    var div   = vc.dom('<div data-vc-contents="text: text"></div>');
+    var div   = vc.dom('<div vc-content="text: text"></div>');
     var model = new (vc.Model.extend({
         text: vc.value('string', { value: 'test1' })
     }));
@@ -843,7 +838,7 @@ test('text', function() {
 });
 
 test('value - input', function() {
-    var input = vc.dom('<input type="text" data-vc-value="value: value">');
+    var input = vc.dom('<input type="text" vc-value="value: value">');
     var model = new (vc.Model.extend({
         value: vc.value('string', { value: 'test1' })
     }));
@@ -856,7 +851,7 @@ test('value - input', function() {
 });
 
 test('value - select', function() {
-    var select = vc.dom('<select data-vc-value="value: value"><option value="0"></option><option value="1"></option><option value="2"></option></select>');
+    var select = vc.dom('<select vc-value="value: value"><option value="0"></option><option value="1"></option><option value="2"></option></select>');
     var model = vc.model.make({
         value: vc.value('int')
     });
@@ -876,8 +871,8 @@ test('with - model', function() {
     var div  = document.createElement('div');
     var span = document.createElement('span');
 
-    div.setAttribute('data-vc-with', 'model: person');
-    span.setAttribute('data-vc-contents', 'text: name');
+    div.setAttribute('vc-with', 'model: person');
+    span.setAttribute('vc-content', 'text: name');
     div.appendChild(span);
 
     var App = vc.model({
@@ -903,8 +898,8 @@ test('with - controller', function() {
     var div  = document.createElement('div');
     var span = document.createElement('span');
 
-    div.setAttribute('data-vc-with', 'controller: person');
-    span.setAttribute('data-vc-contents', 'text: name');
+    div.setAttribute('vc-with', 'controller: person');
+    span.setAttribute('vc-content', 'text: name');
     div.appendChild(span);
 
     vc.app(div, {
@@ -920,27 +915,37 @@ test('with - controller', function() {
 
 
 
-module('Misc');
+module('Element Bindings');
 
-test('multiple dom altering bidnings on same element', function() {
-    var dom = vc.dom('<div><ul data-vc-if="test: test" data-vc-with="model: model"><li data-vc-each="items: models, as: \'model\'" data-vc-with="model: model" data-vc-contents="text: text"></li></ul></div>');
-    var app = vc.model.make({
-        test: vc.value('bool'),
-        model: vc.value('one', {
+test('contents', function() {
+    var dom = vc.dom('<vc-content text="test"></vc-content>');
+    var model = vc.model.make({
+        test: vc.value('string', { value: 'testing' })
+    });
+
+    vc.app(dom, model);
+
+    ok(dom.html() === '<vc-content text="test">testing</vc-content>', 'Node did not update.');
+});
+
+test('each', function() {
+    var dom = vc.dom('<div><vc-each items="tests"><vc-content text="test"></vc-content></vc-each></div>');
+    var model = vc.model.make({
+        tests: vc.value('many', {
             model: vc.model({
-                models: vc.value('many', {
-                    model: vc.model({
-                        text: 'testing'
-                    })
-                })
+                test: vc.value('string')
             })
         })
     });
 
-    vc.app(dom.raw(), app);
+    vc.app(dom, model.from({
+        tests: [{
+            test: 'first'
+        }, {
+            test: 'second'
+        }]
+    }));
 
-    app.test(true);
-    app.model().models().append().append();
-
-    ok(dom.html() === '<div><ul data-vc-with="model: model"><li data-vc-with="model: model" data-vc-contents="text: text">testing</li><li data-vc-with="model: model" data-vc-contents="text: text">testing</li><!--each placeholder--></ul><!--if placeholder--></div>');
+    console.log(dom.html());
+    ok(dom.html() === '<div><vc-each><vc-content>first</vc-content></vc-each><vc-each><vc-content>second</vc-content></vc-each></div>', 'Node did not update.');
 });

@@ -1,5 +1,5 @@
 (function() {
-    vc.bindings.vc.focus = function(app, element) {
+    vc.bindings.vcFocus = function(app, element) {
         var changing = false;
         var firingBlur = false;
         var firingFocus = false;
