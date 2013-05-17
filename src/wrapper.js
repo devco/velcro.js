@@ -8,4 +8,15 @@
     }
 }(function(vc) {
 {content}
+
+// Allow a velcro configuration object to be defined.
+if (typeof window.velcro === 'object') {
+    var config = vc.utils.merge({
+        autorun: true
+    }, window.velcro);
+
+    if (config.autorun) {
+        vc.app();
+    }
+}
 });

@@ -24,6 +24,7 @@ module.exports = function(grunt) {
                     'src/velcro/values/*.js',
                     'src/velcro/model.js',
                     'src/velcro/collection.js',
+                    'src/velcro/modules.js',
                     'src/velcro/bindings.js',
                     'src/velcro/bindings/*.js',
                     'src/velcro/app.js'

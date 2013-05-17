@@ -488,6 +488,13 @@
 
         tag: function() {
             return this.element.nodeName.toLowerCase();
+        },
+
+        replaceWith: function(element) {
+            element = vc.dom(element);
+            this.element.parentNode.insertBefore(element.raw(), this.element);
+            this.destroy();
+            return element;
         }
     });
 
@@ -1855,6 +1862,9 @@
     };
 })();
 (function() {
+    vc.modules = {};
+})();
+(function() {
     vc.bindings = {};
 })();
 (function() {
@@ -2393,11 +2403,37 @@
     };
 })();
 (function() {
-    var _bound = [];
-
     vc.App = vc.Class.extend({
         init: function() {
+            this.bound = [];
             this.contexts = [];
+            currentModule = null;
+            previousModule = null;
+        },
+
+        context: function(context) {
+            // Getting.
+            if (arguments.length === 0) {
+                if (!this.contexts.length) {
+                    this.context({});
+                }
+
+                return this.contexts[this.contexts.length - 1];
+            }
+
+            // We must emulate a context hierarchy.
+            if (this.contexts.length) {
+                context.$parent = this.contexts[this.contexts.length - 1];
+                context.$root   = this.contexts[0];
+            } else {
+                context.$parent = false;
+                context.$root   = false;
+            }
+
+            // The youngest descendant in the context hierarchy is the last one in the list.
+            this.contexts.push(context);
+
+            return this;
         },
 
         bind: function(element, context) {
@@ -2429,12 +2465,98 @@
             element = vc.dom(element).raw();
 
             // Do not bind the same element more than once.
-            if (_bound.indexOf(element) === -1) {
-                _bound.push(element);
+            if (this.bound.indexOf(element) === -1) {
+                this.bound.push(element);
             } else {
                 return this;
             }
 
+            var module = this.getModuleForElement(element);
+
+            if (module) {
+                this.applyModule(element, module);
+            } else {
+                this.applyBindings(element);
+            }
+
+            return this;
+        },
+
+        applyModule: function(element, module) {
+            var $this = this;
+            var name = camelCase(element.nodeName);
+            var parents = module.parents;
+
+            // Keep track of which module we are currently rendering.
+            this.previousModule = this.currentModule;
+            this.currentModule = name;
+
+            // Normalise the container parameter.
+            if (typeof parents === 'function') {
+                parents = parents();
+            }
+
+            if (typeof parents === 'string') {
+                parents = [parents];
+            }
+
+            // Ensure the module we are applying can be contained within the
+            // current module.
+            if (parents) {
+                if (parents.indexOf(this.previousModule)) {
+                    vc.utils.throwForElement(element, 'The module "' + this.currentModule + '" must not be a child of "' + this.previousModule + '". Valid parents are "' + parents.join(', ') + '".');
+                }
+            }
+
+            // The element we are replacing.
+            var domElement = vc.dom(element);
+
+            // Replaces the element with a placeholder.
+            var domPlaceholder = domElement.replaceWith('<!-- module -->');
+
+            // The tempalte defaults to the element content.
+            var template = domElement.contents();
+
+            // A template specification can either be a string or a function.
+            // If it is a function, it's return value is used as the template.
+            // If it does not return anything, it is given a second argument
+            // that it can use to render the descendant bindings.
+            if (typeof module.template === 'string') {
+                template = module.template;
+            } else if (typeof module.template === 'function') {
+                template = module.template(template, render);
+            }
+
+            // A module does not require a controller. If no controller
+            // is specified, then the current context is simply passed
+            // on to the module. If a controller is present, the current
+            // context is passed to it and the return value from the
+            // controller is used as the context that is passed to the
+            // descendant modules and bindings.
+            if (typeof module.controller === 'function') {
+                context = module.controller(context);
+            }
+
+            // Only render a template if something was returned,
+            // otherwise assume the template is using the renderer.
+            if (template) {
+                render(template);
+            }
+
+            // Reset the currently rendering module.
+            this.currentModule = this.previousModule;
+
+            // This is used to bind the rest of the module contents.
+            // If a template is returned, this is called immediately.
+            // If a template does not return anything, it is up to the
+            // template to ensure this is called. This allows for asyc
+            // templates to be used.
+            function render(template) {
+                $this.bind(domPlaceholder.replaceWith(template), context);
+            }
+        },
+
+        applyBindings: function(element) {
             var bindings = this.getBindingsForElement(element);
 
             for (var name in bindings) {
@@ -2444,44 +2566,15 @@
             return this;
         },
 
-        getBindingsForElement: function(element) {
-            var bindings = {};
-            var nodeName = camelCase(element.nodeName);
-            var isVcNode = typeof vc.bindings[nodeName] !== 'undefined';
-            var nodeValues = [];
-
-            if (element.attributes) {
-                for (var a = 0; a < element.attributes.length; a++) {
-                    var attr = element.attributes[a];
-                    var name = camelCase(attr.nodeName);
-                    var value = attr.nodeValue;
-
-                    if (isVcNode) {
-                        nodeValues.push(name + ': ' + value);
-                    } else if (typeof vc.bindings[name] !== 'undefined') {
-                        bindings[name] = value;
-                    }
-                }
-            }
-
-            if (isVcNode) {
-                bindings[nodeName] = nodeValues.join(', ');
-            }
-
-            return bindings;
-        },
-
-        applyBinding: function (element, name, value, context) {
+        applyBinding: function(element, name, value, context) {
             var $this = this;
             var parsed = this.parseBinding(value, context);
-            var binding = vc.bindings[name];
 
-            // Binding must be newable.
-            if (typeof binding === 'function') {
-                binding = new binding(this, element);
-            } else {
-                throw 'The binding "' + name + '" must be a constructor.';
+            if (typeof vc.bindings[name] !== 'function') {
+                vc.utils.throwForElement(element, 'The binding "' + name + '" must be a constructor.');
             }
+
+            var binding = new vc.bindings[name](this, element);
 
             // Initialisation.
             if (typeof binding.init === 'function') {
@@ -2531,38 +2624,49 @@
             return comp;
         },
 
-        context: function(context) {
-            // Getting.
-            if (arguments.length === 0) {
-                if (!this.contexts.length) {
-                    this.context({});
+        getModuleForElement: function(element) {
+            var nodeName = camelCase(element.nodeName);
+
+            if (typeof vc.modules[nodeName] === 'function') {
+                return new vc.modules[nodeName](this);
+            }
+        },
+
+        getBindingsForElement: function(element) {
+            var bindings = {};
+
+            if (element.attributes) {
+                for (var a = 0; a < element.attributes.length; a++) {
+                    var attr = element.attributes[a];
+                    var name = camelCase(attr.nodeName);
+                    var value = attr.nodeValue;
+
+                    if (typeof vc.bindings[name] === 'function') {
+                        bindings[name] = value;
+                    }
                 }
-
-                return this.contexts[this.contexts.length - 1];
             }
 
-            // We must emulate a context hierarchy.
-            if (this.contexts.length) {
-                context.$parent = this.contexts[this.contexts.length - 1];
-                context.$root   = this.contexts[0];
-            } else {
-                context.$parent = false;
-                context.$root   = false;
-            }
-
-            // The youngest descendant in the context hierarchy is the last one in the list.
-            this.contexts.push(context);
-
-            return this;
+            return bindings;
         }
     });
 
     vc.app = function(element, context) {
         var app = new vc.App();
 
-        if (typeof context === 'undefined') {
-            context = element;
-            element = document;
+        switch (arguments.length) {
+            case 0:
+                element = document;
+                context = window;
+            break;
+            case 1:
+                if (typeof element === 'object') {
+                    context = element;
+                    element = document;
+                } else {
+                    context = window;
+                }
+            break;
         }
 
         onready(function() {
@@ -2642,4 +2746,15 @@
         return parts.join('');
     }
 })();
+
+// Allow a velcro configuration object to be defined.
+if (typeof window.velcro === 'object') {
+    var config = vc.utils.merge({
+        autorun: true
+    }, window.velcro);
+
+    if (config.autorun) {
+        vc.app();
+    }
+}
 });

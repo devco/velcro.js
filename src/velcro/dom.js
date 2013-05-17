@@ -219,6 +219,13 @@
 
         tag: function() {
             return this.element.nodeName.toLowerCase();
+        },
+
+        replaceWith: function(element) {
+            element = vc.dom(element);
+            this.element.parentNode.insertBefore(element.raw(), this.element);
+            this.destroy();
+            return element;
         }
     });
 
