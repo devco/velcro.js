@@ -78,7 +78,7 @@
 
         applyModule: function(element, module) {
             var $this = this;
-            var context = this.context();
+            var context = this.parseModuleContext(element, this.context());
             var name = camelCase(element.nodeName);
             var parents = module.parents;
 
@@ -163,7 +163,7 @@
 
         applyBinding: function(element, name, value, context) {
             var $this = this;
-            var parsed = this.parseBinding(value, context);
+            var parsed = this.parseBindingContext(value, context);
 
             if (typeof vc.bindings[name] !== 'function') {
                 vc.utils.throwForElement(element, 'The binding "' + name + '" must be a constructor.');
@@ -189,14 +189,28 @@
 
             // Triggers updates within the binding when a observer changes.
             function subscriber() {
-                var refreshed = $this.parseBinding(value, context);
+                var refreshed = $this.parseBindingContext(value, context);
                 binding.update(vc.utils.merge(binding.options, refreshed.options), refreshed.bound);
             }
         },
 
+        parseModuleContext: function(element, context) {
+            var parts = [];
+
+            if (element.attributes) {
+                for (var a = 0; a < element.attributes.length; a++) {
+                    var name = camelCase(element.attributes[a].nodeName);
+                    var value = element.attributes[a].nodeValue;
+                    parts.push(name + ': ' + value);
+                }
+            }
+
+            return vc.utils.parseBinding(parts.join(', '), context);
+        },
+
         // Returns an object that conains raw, extracted values from the passed in bindings as well as bindable members.
         // Bindable members included any vc.value, vc.Model and vc.Collection.
-        parseBinding: function(value, context) {
+        parseBindingContext: function(value, context) {
             var temp = vc.utils.parseBinding(value, context);
             var comp = { options: {}, bound: {} };
 
