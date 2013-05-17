@@ -19,9 +19,7 @@
 
     vc.modules.vcTest5 = function() {
         this.controller = function(context) {
-            return {
-                text: context.text
-            };
+            return context;
         }
     };
 
@@ -52,7 +50,7 @@
     });
 
     test('Controller Returning Context', function() {
-        var dom = vc.dom('<div><vc-test5 text="test"><span vc-content="text: text"></span></vc-test5></div>');
+        var dom = vc.dom('<div><vc-test5 text="text"><span vc-content="text: text"></span></vc-test5></div>');
         vc.app(dom, {
             text: 'test'
         });
