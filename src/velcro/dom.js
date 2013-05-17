@@ -189,7 +189,7 @@
         },
 
         html: function() {
-            var div = document.createElement(detectParentTagName(this.element.tagName));
+            var div = document.createElement(detectParentTagName(this.element.nodeName));
             div.appendChild(this.element.cloneNode(true));
             return div.innerHTML;
         },

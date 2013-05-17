@@ -458,7 +458,7 @@
         },
 
         html: function() {
-            var div = document.createElement(detectParentTagName(this.element.tagName));
+            var div = document.createElement(detectParentTagName(this.element.nodeName));
             div.appendChild(this.element.cloneNode(true));
             return div.innerHTML;
         },
@@ -2462,8 +2462,6 @@
         },
 
         bindOne: function(element) {
-            element = vc.dom(element).raw();
-
             // Do not bind the same element more than once.
             if (this.bound.indexOf(element) === -1) {
                 this.bound.push(element);
@@ -2484,6 +2482,7 @@
 
         applyModule: function(element, module) {
             var $this = this;
+            var context = this.context();
             var name = camelCase(element.nodeName);
             var parents = module.parents;
 
@@ -2511,11 +2510,11 @@
             // The element we are replacing.
             var domElement = vc.dom(element);
 
-            // Replaces the element with a placeholder.
-            var domPlaceholder = domElement.replaceWith('<!-- module -->');
-
             // The tempalte defaults to the element content.
             var template = domElement.contents();
+
+            // Replaces the element with a placeholder.
+            var domPlaceholder = domElement.replaceWith('<!-- module -->');
 
             // A template specification can either be a string or a function.
             // If it is a function, it's return value is used as the template.
@@ -2552,7 +2551,7 @@
             // template to ensure this is called. This allows for asyc
             // templates to be used.
             function render(template) {
-                $this.bind(domPlaceholder.replaceWith(template), context);
+                $this.bind(domPlaceholder.replaceWith(template).raw(), context);
             }
         },
 
@@ -2654,23 +2653,8 @@
     vc.app = function(element, context) {
         var app = new vc.App();
 
-        switch (arguments.length) {
-            case 0:
-                element = document;
-                context = window;
-            break;
-            case 1:
-                if (typeof element === 'object') {
-                    context = element;
-                    element = document;
-                } else {
-                    context = window;
-                }
-            break;
-        }
-
         onready(function() {
-            app.bind(element, context);
+            app.bind(vc.dom(element).raw() || document, context || window);
         });
 
         return app;
