@@ -1880,44 +1880,24 @@
 })();
 (function() {
     vc.bindings.vcCheck = function(app, element) {
-        var changing = false;
-        var firing = false;
         var dom = vc.dom(element);
 
         this.init = function(options, bindings) {
-            var $this = this;
-
             dom.on('change', function() {
-                if (firing) {
-                    return;
-                }
-
-                changing = true;
-
                 if (element.checked) {
                     bindings.bind(true);
                 } else {
                     bindings.bind(false);
                 }
-
-                changing = false;
             });
         };
 
         this.update = function(options) {
-            if (changing) {
-                return;
-            }
-
             if (options.bind) {
                 element.checked = true;
             } else {
                 element.checked = false;
             }
-
-            firing = true;
-            dom.fire('change');
-            firing = false;
         };
     };
 })();
@@ -2049,48 +2029,21 @@
 })();
 (function() {
     vc.bindings.vcFocus = function(app, element) {
-        var changing = false;
-        var firingBlur = false;
-        var firingFocus = false;
         var dom = vc.dom(element);
 
         this.init = function(options, bindings) {
             dom.on('focus', function() {
-                if (firingFocus) {
-                    return;
-                }
-
-                changing = true;
                 bindings.bind(true);
-                changing = false;
             }).on('blur', function() {
-                if (firingBlur) {
-                    return;
-                }
-
-                changing = true;
                 bindings.bind(false);
-                changing = false;
             });
         };
 
         this.update = function(options, bindings) {
-            if (changing) {
-                return;
-            }
-
             if (options.bind) {
                 element.focus();
-
-                firingFocus = true;
-                dom.fire('focus');
-                firingFocus = false;
             } else {
                 element.blur();
-
-                firingBlur = true;
-                dom.fire('blur');
-                firingBlur = false;
             }
         };
     };
@@ -2345,8 +2298,6 @@
 })();
 (function() {
     vc.bindings.vcValue = function(app, element) {
-        var changing = false;
-        var firing = false;
         var dom = vc.dom(element);
 
         this.options = {
@@ -2355,28 +2306,14 @@
 
         this.init = function(options, bindings) {
             dom.on(options.on, function() {
-                if (firing) {
-                    return;
-                }
-
-                changing = true;
                 bindings.value(element.value);
-                changing = false;
             });
 
             this.update(options, bindings);
         };
 
         this.update = function(options, bindings) {
-            if (changing) {
-                return;
-            }
-
             element.value = options.value;
-
-            firing = true;
-            dom.fire(options.on);
-            firing = false;
         };
     };
 })();
@@ -2744,15 +2681,4 @@
         return parts.join('');
     }
 })();
-
-// Allow a velcro configuration object to be defined.
-if (typeof window.velcro === 'object') {
-    var config = vc.utils.merge({
-        autorun: true
-    }, window.velcro);
-
-    if (config.autorun) {
-        vc.app();
-    }
-}
 });

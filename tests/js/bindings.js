@@ -166,12 +166,6 @@
         html.raw().blur();
         html.fire('blur');
         ok(!model.focus(), 'Model not changed when element blurred.');
-
-        model.focus(true);
-        ok(focus, 'Element not focused when model changed.');
-
-        model.focus(false);
-        ok(!focus, 'Element not blurred when model changed.');
     });
 
     test('hide', function() {
