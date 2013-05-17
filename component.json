@@ -1,6 +1,6 @@
 {
   "name": "velcro.js",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "main": "src/velcro.js",
   "dependencies": {
     "bootstrap": "latest",
