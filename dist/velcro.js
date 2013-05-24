@@ -952,6 +952,8 @@
 
                 this.enter.trigger(this, request, route, params);
                 this.handler(_makeHandler(route, params));
+
+                break;
             }
 
             return this;
