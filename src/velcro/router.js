@@ -195,6 +195,8 @@
         enabled: false,
 
         init: function(options) {
+            this.enabled = options.enabled || false;
+            
             this.options = vc.utils.merge({
                 scroll: false
             });
@@ -208,7 +210,7 @@
 
         get: function() {
             if (this.enabled && window.history.pushState) {
-                return removeHostPart(window.location.href);
+                return window.location.pathname.substring(1);
             }
             return window.location.hash.substring(1);
         },
