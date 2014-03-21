@@ -1118,11 +1118,11 @@
     }
 
     function bind(e) {
-        if (window.addEventListener) {
-            window.addEventListener(e, dispatch, false);
-        } else {
+        // if (window.addEventListener) {
+        //     window.addEventListener(e, dispatch, false);
+        // } else {
             window['on' + e] = dispatch;
-        }
+        // }
     }
 
     function trigger(e) {
